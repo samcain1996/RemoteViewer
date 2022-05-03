@@ -1,6 +1,7 @@
 #pragma once
 #include "NetAgent.h"
 #include <fstream>
+#include <thread>
 
 class Client : public NetAgent {
 private:

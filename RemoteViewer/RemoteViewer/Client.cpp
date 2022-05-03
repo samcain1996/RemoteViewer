@@ -14,13 +14,15 @@ void Client::ProcessPacket(const Packet packet) {
 }
 
 void Client::PacketWatcher() {
-    outer:
+
     while (true) {
 
         // Sleep while not allowed to check packets
         while (!_checkPackets) { std::this_thread::yield(); }
 
         ThreadLock lock(m_mutex);  // Lock variables in scope to current thread
+
+        if (stoken.stop_requested()) { return; }
 
         _checkPackets = false;  // Reset flag
 
@@ -110,6 +112,9 @@ void Client::Receive() {
 
         // Copy buffer to dummy packet
         ProcessPacket(Packet(packetData));
+
+        _packetWatcherThr.request_stop();
+        _packetWatcherThr.join();
 
     }
 }
