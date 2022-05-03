@@ -1,3 +1,4 @@
+#if defined(_WIN32)
 #include "Capture.h"
 
 ByteVec CaptureScreen() {
@@ -92,3 +93,4 @@ ByteVec CaptureScreen() {
 
     return screenBuf;
 }
+#endif
