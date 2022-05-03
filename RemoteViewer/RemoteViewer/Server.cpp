@@ -20,16 +20,13 @@ void Server::Listen() {
 void Server::Serve() {
     bool keepAlive = true;
     //while (keepAlive) {
-        std::string message = "Hello, World!";
-        ushort len = static_cast<ushort>(strlen(message.c_str()));
-        /*std::string& nextMessage = messageQueue.GetNext();*/
-        std::vector<Byte> nextMsgBytes{ 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!' };
+    ByteVec image = CaptureScreen();
 
-        Send(nextMsgBytes);
+        Send(image);
     //}
 }
 
-void Server::Send(std::vector<Byte>& bytes) {
+void Server::Send(ByteVec& bytes) {
 
     // Convert the message into a list of packets
     PacketList packets = ConvertToPackets(bytes);
@@ -47,7 +44,7 @@ void Server::Send(std::vector<Byte>& bytes) {
 
 }
 
-PacketList Server::ConvertToPackets(std::vector<Byte>& bytes)
+PacketList Server::ConvertToPackets(ByteVec& bytes)
 {
     // Assign all packets that are part of this message to a group
     PacketHeader header;
@@ -69,9 +66,9 @@ PacketList Server::ConvertToPackets(std::vector<Byte>& bytes)
     packets.push_back(Packet(header, payload));  // Add header to list of packets to send
 
     // Break message down into packets
-    for (ushort bytesRemaining = bytes.size(), iteration = 0; bytesRemaining > 0; iteration++) {
+    for (size_t bytesRemaining = bytes.size(), iteration = 0; bytesRemaining > 0; iteration++) {
 
-        ushort offset = iteration * MAX_PACKET_PAYLOAD_SIZE;                // Current offset in message for current packet
+        size_t offset = iteration * MAX_PACKET_PAYLOAD_SIZE;                // Current offset in message for current packet
 
         // Payload will always be the maximum size, unless less room is needed
         ushort payloadSize = bytesRemaining < MAX_PACKET_PAYLOAD_SIZE ? bytesRemaining : MAX_PACKET_PAYLOAD_SIZE;

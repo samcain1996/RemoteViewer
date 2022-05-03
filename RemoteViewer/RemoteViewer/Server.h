@@ -1,6 +1,7 @@
 #pragma once
 #include "NetAgent.h"
 #include <random>
+#include "Capture.h"
 
 class Server : public NetAgent {
 private:
@@ -8,7 +9,7 @@ private:
 	std::mt19937 randomGenerator;
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	PacketList ConvertToPackets(std::vector<Byte>&);
+	PacketList ConvertToPackets(ByteVec&);
 public:
 	Server() = delete;
 	Server(const Server&&) = delete;
@@ -21,5 +22,5 @@ public:
 	void Serve();
 
 	// Send array of bytes to Client
-	void Send(std::vector<Byte>&);
+	void Send(ByteVec&);
 };

@@ -1,26 +1,27 @@
 #pragma once
 #include "NetAgent.h"
+#include <fstream>
 
 class Client : public NetAgent {
 private:
-	std::string m_hostname;
+	std::string _hostname;
 
-	ByteArrayMap<PacketPrioQueue> m_incompletePackets;
-	ByteArrayMap<size_t> m_packetGroupMsgSizes;
+	ByteArrayMap<PacketPrioQueue> _incompletePackets;
 
-	std::thread packetWatcherThr;
+	std::thread _packetWatcherThr;
 
-	std::atomic<bool> m_checkPackets;
+	std::atomic<bool> _checkPackets;
 
 	void ProcessPacket(const Packet);
 	void PacketWatcher();
 public:
-	Client() = delete;
-	Client(const Client&&) = delete;
+	Client()				= delete;
+	Client(const Client&)	= delete;
+	Client(Client&&)		= delete;
 
 	Client(const ushort, const std::string&);
 
 	bool Connect(const std::string&);
-	std::vector<Byte> AssembleMessage(const PacketGroup&);
+	ByteVec AssembleMessage(const PacketGroup&);
 	void Receive();
 };

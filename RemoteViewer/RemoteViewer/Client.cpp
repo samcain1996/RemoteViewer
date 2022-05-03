@@ -7,27 +7,25 @@ void Client::ProcessPacket(const Packet packet) {
     ThreadLock lock(m_mutex);  // Prevent other threads from accessing variables used in scope
 
     // Add packet to list of packets in its group
-    PacketPrioQueue& packetGroupBucket = m_incompletePackets[group];
+    PacketPrioQueue& packetGroupBucket = _incompletePackets[group];
     packetGroupBucket.push(packet);
 
-    // Add payload size of packet to total message size
-    m_packetGroupMsgSizes[group] += packet.Header().size - PACKET_HEADER_SIZE;
-
-    m_checkPackets = true;  // Allow PacketWatcher to check for complete messages
+    _checkPackets = true;  // Allow PacketWatcher to check for complete messages
 }
 
 void Client::PacketWatcher() {
+    outer:
     while (true) {
 
         // Sleep while not allowed to check packets
-        while (!m_checkPackets) { std::this_thread::yield(); }
+        while (!_checkPackets) { std::this_thread::yield(); }
 
         ThreadLock lock(m_mutex);  // Lock variables in scope to current thread
 
-        m_checkPackets = false;  // Reset flag
+        _checkPackets = false;  // Reset flag
 
         // Check each group for a full queue
-        for (auto& [group, prioQ] : m_incompletePackets) {
+        for (auto& [group, prioQ] : _incompletePackets) {
 
             // Get first packet in group that has arrived so far
             const Packet& packet = prioQ.top();
@@ -39,7 +37,12 @@ void Client::PacketWatcher() {
             if (packet.Header().sequence == 0) {
 
                 if (prioQ.size() == packet.Header().size) {
-                    AssembleMessage(packet.Header().group);
+                    ByteVec img = AssembleMessage(packet.Header().group);
+                    std::ofstream out("received.bmp", std::ios_base::binary);
+                    for (auto& x : img) {
+                        out << x; 
+                    }
+                    out.close();
                 }
             }
 
@@ -50,9 +53,9 @@ void Client::PacketWatcher() {
 
 Client::Client(const ushort port, const std::string& hostname) : NetAgent(port) {
 
-	m_hostname = hostname;
+	_hostname = hostname;
 
-	packetWatcherThr = std::thread(&Client::PacketWatcher, this);
+	_packetWatcherThr = std::thread(&Client::PacketWatcher, this);
 }
 
 
@@ -60,7 +63,7 @@ bool Client::Connect(const std::string& serverPort) {
 
     // Find endpoint to connect to
     udp::resolver resolver(io_context);
-    m_remoteEndpoint = *resolver.resolve(udp::v4(), m_hostname, serverPort).begin();
+    m_remoteEndpoint = *resolver.resolve(udp::v4(), _hostname, serverPort).begin();
 
     // Handshake
     Byte handshakeBuf[sizeof HANDSHAKE_MESSAGE];
@@ -77,7 +80,7 @@ bool Client::Connect(const std::string& serverPort) {
 
 std::vector<Byte> Client::AssembleMessage(const PacketGroup& group) {
 
-    PacketPrioQueue& queue = m_incompletePackets[group];
+    PacketPrioQueue& queue = _incompletePackets[group];
 
     std::vector<Byte> fullMessage;
 

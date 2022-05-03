@@ -24,6 +24,6 @@ protected:
 	boost::system::error_code m_errcode;
 
 	const Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
-public:
+
 	NetAgent(const NetAgent&&) = delete;
 };

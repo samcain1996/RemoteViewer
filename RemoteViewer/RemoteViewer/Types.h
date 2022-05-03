@@ -19,6 +19,7 @@
 
 /*------------------TYPES--------------------*/
 using Byte				= unsigned char;
+using ByteVec			= std::vector<Byte>;
 
 using ByteEncodedUint32 = Byte[4];
 
