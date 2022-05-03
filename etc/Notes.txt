@@ -1,0 +1,13 @@
+1. A trivial move constructor is a constructor that performs the same action as the trivial copy constructor, that is, 
+   makes a copy of the object representation as if by std::memmove. All data types compatible with the C language (POD types) are trivially movable. 
+
+   1a. A Plain Old Data Structure in C++ is an aggregate class that contains only PODS as members, has no user-defined destructor, 
+	   no user-defined copy assignment operator, and no nonstatic members of pointer-to-member type.
+
+2. The implicitly-declared copy constructor for class T is undefined if T has a user-defined move constructor
+   or move assignment operator (this condition only causes the implicitly-declared, not the defaulted, copy constructor to be deleted). 
+
+3. A class defined with the keyword class has private access for its members and its base classes by default. A class defined with the
+   keyword struct has public access for its members and its base classes by default
+
+4. Const before pointer means the objected pointed at is const. Const after pointer means the pointer itself can not be changed.
