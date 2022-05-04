@@ -11,8 +11,6 @@
 */
 #include <mutex>
 #include <unordered_map>
-#include <array>
-#include <string>
 
 #define ONE_BYTE	8
 #define TWO_BYTES	(ONE_BYTE + ONE_BYTE)

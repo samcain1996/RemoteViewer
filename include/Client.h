@@ -1,6 +1,6 @@
 #pragma once
-#include "NetAgent.h"
 #include <fstream>
+#include "NetAgent.h"
 
 using PacketGroupPriorityQueueMap = std::unordered_map<uint32, PacketPrioQueue>;
 

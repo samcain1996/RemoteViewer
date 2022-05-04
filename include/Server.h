@@ -1,6 +1,6 @@
 #pragma once
-#include "NetAgent.h"
 #include <random>
+#include "NetAgent.h"
 #include "Capture.h"
 
 class Server : public NetAgent {
@@ -16,9 +16,9 @@ private:
 public:
 
 	// Severs should only be instantiated with a port number
-	Server() = delete;
+	Server() 			  = delete;
 	Server(const Server&) = delete;
-	Server(Server&&) = delete;
+	Server(Server&&) 	  = delete;
 	
 	Server(const unsigned short listenPort);
 
