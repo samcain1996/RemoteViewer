@@ -1,96 +1,159 @@
-#if defined(_WIN32)
 #include "Capture.h"
 
-ByteVec CaptureScreen() {
-    ByteVec screenBuf;
+#if defined(_WIN32) 
+Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWidth, const ushort dstHeight) {
+    SetProcessDPIAware();
 
-	HDC srcHDC = GetDC(GetDesktopWindow());
-	HDC memHDC = CreateCompatibleDC(srcHDC);
+    _srcWidth = srcWidth;
+    _srcHeight = srcHeight;
 
-	HBITMAP hScreen = CreateCompatibleBitmap(srcHDC, WIDTH, HEIGHT);
+    _dstWidth = dstWidth;
+    _dstHeight = dstHeight;
 
-	SelectObject(memHDC, hScreen);
+    _srcHDC = GetDC(GetDesktopWindow());
+    _memHDC = CreateCompatibleDC(_srcHDC);
 
-    SetStretchBltMode(memHDC, HALFTONE);
+    _hScreen = CreateCompatibleBitmap(_srcHDC, dstWidth, dstHeight);
 
-    StretchBlt(memHDC, 0, 0, WIDTH, HEIGHT, srcHDC, 0, 0, 1920, 1080, SRCCOPY);
+    SelectObject(_memHDC, _hScreen);
 
-	BITMAP screenBMP;
-	GetObject(hScreen, sizeof BITMAP, &screenBMP);
+    SetStretchBltMode(_memHDC, HALFTONE);
 
-    BITMAPFILEHEADER   bmfHeader;
-    BITMAPINFOHEADER   bi;
-    DWORD dwBytesWritten = 0;
-    DWORD dwSizeofDIB = 0;
-    HANDLE hFile = NULL;
-    char* lpbitmap = NULL;
-    HANDLE hDIB = NULL;
-    DWORD dwBmpSize = 0;
+    _hDIB = NULL;
+    _lpbitmap = NULL;
 
-    bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = screenBMP.bmWidth;
-    bi.biHeight = screenBMP.bmHeight;
-    bi.biPlanes = 1;
-    bi.biBitCount = 32;
-    bi.biCompression = BI_RGB;
-    bi.biSizeImage = 0;
-    bi.biXPelsPerMeter = 0;
-    bi.biYPelsPerMeter = 0;
-    bi.biClrUsed = 0;
-    bi.biClrImportant = 0;
+    InitializeBMPHeader();
 
-    dwBmpSize = ((screenBMP.bmWidth * bi.biBitCount + 31) / 32) * 4 * screenBMP.bmHeight;
+    _currentCapture = new Byte[TotalSize()];
+    _previousCapture = new Byte[TotalSize()];
+    _differenceMap = new Byte[TotalSize()];
 
-    // Starting with 32-bit Windows, GlobalAlloc and LocalAlloc are implemented as wrapper functions that 
-    // call HeapAlloc using a handle to the process's default heap. Therefore, GlobalAlloc and LocalAlloc 
-    // have greater overhead than HeapAlloc.
-    hDIB = GlobalAlloc(GHND, dwBmpSize);
-    lpbitmap = (char*)GlobalLock(hDIB);
+    _differences = 0;
+}
 
-    // Gets the "bits" from the bitmap, and copies them into a buffer 
-    // that's pointed to by lpbitmap.
-    GetDIBits(memHDC, hScreen, 0,
-        (UINT)screenBMP.bmHeight,
-        lpbitmap,
-        (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+Screen::Screen() : Screen(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(GetDC(NULL), VERTRES), 1920, 1080) {}
 
-    // A file is created, this is where we will save the screen capture.
-    /*hFile = CreateFile(L"captureqwsx.bmp",
-        GENERIC_WRITE,
-        0,
-        NULL,
-        CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL, NULL);*/
+Screen::~Screen() {
+    GlobalUnlock(_hDIB);
+    GlobalFree(_hDIB);
 
-    // Add the size of the headers to the size of the bitmap to get the total file size.
-    dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    DeleteObject(_hScreen);
 
-    // Offset to where the actual bitmap bits start.
-    bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+    ReleaseDC(NULL, _srcHDC);
+    DeleteObject(_memHDC);
+    
+    delete[] _currentCapture;  
+    delete[] _previousCapture; 
+}
+
+void Screen::InitializeBMPHeader() {
+    _bmpInfo.biSize = sizeof(BITMAPINFOHEADER);
+    _bmpInfo.biWidth = _dstWidth;
+    _bmpInfo.biHeight = _dstHeight;
+    _bmpInfo.biPlanes = 1;
+    _bmpInfo.biBitCount = 32;
+    _bmpInfo.biCompression = BI_RGB;
+    _bmpInfo.biSizeImage = 0;
+    _bmpInfo.biXPelsPerMeter = 0;
+    _bmpInfo.biYPelsPerMeter = 0;
+    _bmpInfo.biClrUsed = 0;
+    _bmpInfo.biClrImportant = 0;
+
+    _bitmapSize = ((_dstWidth * _bmpInfo.biBitCount + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
+
+    _hDIB = GlobalAlloc(GHND, _bitmapSize);
+    _lpbitmap = (char*)GlobalLock(_hDIB);
 
     // Size of the file.
-    bmfHeader.bfSize = dwSizeofDIB;
+    _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + sizeof(BITMAPFILEHEADER);
 
     // bfType must always be BM for Bitmaps.
-    bmfHeader.bfType = 0x4D42; // BM.
-    //buf = new char[dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)];
-    //memcpy(buf, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER));
-    //memcpy(&buf[sizeof(BITMAPFILEHEADER)], (LPSTR)&bi, sizeof(BITMAPINFOHEADER));
-    //memcpy(&buf[sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)], (LPSTR)lpbitmap, dwBmpSize);
-    //WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
-    std::copy((LPSTR)&bmfHeader, (LPSTR)&bmfHeader + sizeof(BITMAPFILEHEADER), std::back_inserter(screenBuf));
-    //WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
-    std::copy((LPSTR)&bi, (LPSTR)&bi + sizeof(BITMAPINFOHEADER), std::back_inserter(screenBuf));
-    //WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
-    std::copy((LPSTR)lpbitmap, (LPSTR)lpbitmap + dwBmpSize, std::back_inserter(screenBuf));
+    _bmpHeader.bfType = 0x4D42; // BM.
 
-    // Unlock and Free the DIB from the heap.
-    GlobalUnlock(hDIB);
-    GlobalFree(hDIB);
+    // Offset to where the actual bitmap bits start.
+    _bmpHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+}
 
-    // Close the handle for the file that was created.
-    //CloseHandle(hFile);
+void Screen::CalculateDifference() {
+    _differences = 0;
+    for (size_t index = 0; index < TotalSize(); index++) {
 
-    return screenBuf;
+        if (_previousCapture[index] != _currentCapture[index]) {
+            _differenceMap[_differences++] = _currentCapture[index];
+        }
+    }
+}
+
+void Screen::RecalculateSize() {
+    _bmpInfo.biWidth = _dstWidth;
+    _bmpInfo.biHeight = _dstHeight;
+
+    _bitmapSize = ( (_dstWidth * _bmpInfo.biBitCount + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
+    _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + sizeof(BITMAPFILEHEADER);
+
+    DeleteObject(_hScreen);
+
+    _hScreen = CreateCompatibleBitmap(_srcHDC, _dstWidth, _dstHeight);
+    SelectObject(_memHDC, _hScreen);
+
+    delete[] _currentCapture;
+    delete[] _previousCapture;
+    delete[] _differenceMap;
+
+    _currentCapture = new Byte[TotalSize()];
+    _previousCapture = new Byte[TotalSize()];
+    _differenceMap = new Byte[TotalSize()];
+
+    // Free _hDIB and recalculate
+    GlobalUnlock(_hDIB);
+    GlobalFree(_hDIB);
+
+    _hDIB = GlobalAlloc(GHND, _bitmapSize);
+    _lpbitmap = (char*)GlobalLock(_hDIB);
+}
+
+const size_t Screen::TotalSize() const {
+    return _bitmapSize;
+}
+
+void Screen::Resize(const ushort width, const ushort height) {
+    _dstWidth = width;
+    _dstHeight = height;
+    RecalculateSize();
+}
+
+const ByteArray Screen::Bitmap() const {
+    return _currentCapture;
+}
+
+const size_t Screen::GetDifferences(ByteArray differenceMap) {
+    std::memmove(differenceMap, _differenceMap, _differences);
+    return _differences;
+}
+
+void Screen::CaptureScreen() {
+
+    std::memmove(_previousCapture, _currentCapture, _bitmapSize);
+
+    StretchBlt(_memHDC, 0, 0, _dstWidth, _dstHeight, _srcHDC, 0, 0, _srcWidth, _srcHeight, SRCCOPY);
+
+    GetObject(_hScreen, sizeof BITMAP, &_screenBMP);
+
+    // Gets the "bits" from the bitmap, and copies them into a buffer 
+    // that's pointed to by _lpbitmap.
+    GetDIBits(_memHDC, _hScreen, 0,
+        (UINT)_screenBMP.bmHeight,
+        _lpbitmap,
+        (BITMAPINFO*)&_bmpInfo, DIB_RGB_COLORS);
+
+    std::memcpy(_currentCapture, _lpbitmap, _bitmapSize);
+
+    CalculateDifference();
+
+}
+
+void Screen::GetHeader(ByteArray arr) {
+    std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
+    std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
 }
 #endif

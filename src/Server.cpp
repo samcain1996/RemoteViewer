@@ -57,7 +57,7 @@ PacketList Server::ConvertToPackets(ByteVec& message)
 
     // Calculate the number of packets that will
     // need to be send in order to send entire message
-    uint32 numberOfPackets = std::ceil(
+    uint32 numberOfPackets = (uint32)std::ceil(
         ((float)message.size() / MAX_PACKET_PAYLOAD_SIZE)) + 1;
 
     // Create the first packet, the first packet
@@ -79,7 +79,7 @@ PacketList Server::ConvertToPackets(ByteVec& message)
         ushort totalSize = payloadSize + PACKET_HEADER_SIZE;  // Size of the entire packet
 
         // Assemble packet
-        PacketPayload payload = PacketPayload();
+        PacketPayload payload = PacketPayload();  // Ensure payload is empty
 
         header.size     = totalSize;     // Packet length in bytes
         header.sequence = iteration + 1; // Packet sequence in group
