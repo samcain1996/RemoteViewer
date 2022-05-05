@@ -1,14 +1,15 @@
 #include "Capture.h"
 
-#if defined(_WIN32) 
 Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWidth, const ushort dstHeight) {
-    SetProcessDPIAware();
 
-    _srcWidth = srcWidth;
+    _srcWidth  = srcWidth;
     _srcHeight = srcHeight;
 
-    _dstWidth = dstWidth;
+    _dstWidth  = dstWidth;
     _dstHeight = dstHeight;
+
+#if defined(_WIN32)
+    SetProcessDPIAware();
 
     _srcHDC = GetDC(GetDesktopWindow());
     _memHDC = CreateCompatibleDC(_srcHDC);
@@ -24,16 +25,33 @@ Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWi
 
     InitializeBMPHeader();
 
-    _currentCapture = new Byte[TotalSize()];
+    _currentCapture  = new Byte[TotalSize()];
     _previousCapture = new Byte[TotalSize()];
-    _differenceMap = new Byte[TotalSize()];
+    _differenceMap   = new Byte[TotalSize()];
 
+#elif defined(_APPLE_)
+
+    context = CGBitmapContextCreate(_currentCapture, srcWidth, srcHeight, 
+        8, width * 4, colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+
+#endif
     _differences = 0;
 }
 
+#if defined(_WIN32)
+
 Screen::Screen() : Screen(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(GetDC(NULL), VERTRES), 1920, 1080) {}
 
+#elif defined(_APPLE_)
+
+Screen::Screen() : Screen(CGDisplayPixelWide(CGMainDisplayID()), CGDisplayPixelHigh(CGMainDisplayID())) {}
+
+#endif
+
 Screen::~Screen() {
+
+#if defined(_WIN32)
+
     GlobalUnlock(_hDIB);
     GlobalFree(_hDIB);
 
@@ -41,23 +59,31 @@ Screen::~Screen() {
 
     ReleaseDC(NULL, _srcHDC);
     DeleteObject(_memHDC);
+
+#elif
+
+    CGImageRelease(_image);
+    CGContextRelease(_context);
+    CGColorSpaceRelease(_colorspace);
+
+#endif
     
     delete[] _currentCapture;  
     delete[] _previousCapture; 
 }
 
 void Screen::InitializeBMPHeader() {
-    _bmpInfo.biSize = sizeof(BITMAPINFOHEADER);
-    _bmpInfo.biWidth = _dstWidth;
-    _bmpInfo.biHeight = _dstHeight;
-    _bmpInfo.biPlanes = 1;
-    _bmpInfo.biBitCount = 32;
-    _bmpInfo.biCompression = BI_RGB;
-    _bmpInfo.biSizeImage = 0;
-    _bmpInfo.biXPelsPerMeter = 0;
-    _bmpInfo.biYPelsPerMeter = 0;
-    _bmpInfo.biClrUsed = 0;
-    _bmpInfo.biClrImportant = 0;
+    _bmpInfo.biSize             = sizeof(BITMAPINFOHEADER);
+    _bmpInfo.biWidth            = _dstWidth;
+    _bmpInfo.biHeight           = _dstHeight;
+    _bmpInfo.biPlanes           = 1;
+    _bmpInfo.biBitCount         = 32;
+    _bmpInfo.biCompression      = BI_RGB;
+    _bmpInfo.biSizeImage        = 0;
+    _bmpInfo.biXPelsPerMeter    = 0;
+    _bmpInfo.biYPelsPerMeter    = 0;
+    _bmpInfo.biClrUsed          = 0;
+    _bmpInfo.biClrImportant     = 0;
 
     _bitmapSize = ((_dstWidth * _bmpInfo.biBitCount + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
 
@@ -85,7 +111,7 @@ void Screen::CalculateDifference() {
 }
 
 void Screen::RecalculateSize() {
-    _bmpInfo.biWidth = _dstWidth;
+    _bmpInfo.biWidth  = _dstWidth;
     _bmpInfo.biHeight = _dstHeight;
 
     _bitmapSize = ( (_dstWidth * _bmpInfo.biBitCount + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
@@ -100,9 +126,9 @@ void Screen::RecalculateSize() {
     delete[] _previousCapture;
     delete[] _differenceMap;
 
-    _currentCapture = new Byte[TotalSize()];
+    _currentCapture  = new Byte[TotalSize()];
     _previousCapture = new Byte[TotalSize()];
-    _differenceMap = new Byte[TotalSize()];
+    _differenceMap   = new Byte[TotalSize()];
 
     // Free _hDIB and recalculate
     GlobalUnlock(_hDIB);
@@ -117,7 +143,7 @@ const size_t Screen::TotalSize() const {
 }
 
 void Screen::Resize(const ushort width, const ushort height) {
-    _dstWidth = width;
+    _dstWidth  = width;
     _dstHeight = height;
     RecalculateSize();
 }
@@ -135,6 +161,8 @@ void Screen::CaptureScreen() {
 
     std::memmove(_previousCapture, _currentCapture, _bitmapSize);
 
+#if defined(_WIN32)
+
     StretchBlt(_memHDC, 0, 0, _dstWidth, _dstHeight, _srcHDC, 0, 0, _srcWidth, _srcHeight, SRCCOPY);
 
     GetObject(_hScreen, sizeof BITMAP, &_screenBMP);
@@ -148,6 +176,13 @@ void Screen::CaptureScreen() {
 
     std::memcpy(_currentCapture, _lpbitmap, _bitmapSize);
 
+#elif defined(_APPLE_)
+
+    image = CGDisplayCreateImage(CGMainDisplayID());
+    CGContextDrawImage(context, CGRectMake(0, 0, _srcWidth, _srcWidth), image);
+
+#endif
+
     CalculateDifference();
 
 }
@@ -156,4 +191,4 @@ void Screen::GetHeader(ByteArray arr) {
     std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
     std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
 }
-#endif
+
