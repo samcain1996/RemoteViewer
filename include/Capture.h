@@ -4,14 +4,14 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #include <ShellScalingApi.h>
-#elif defined(_APPLE_)
+#elif defined(__APPLE__)
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
 class Screen {
 private:
-    ushort _srcWidth, _srcHeight;  // Resolution of source screen
-    ushort _dstWidth, _dstHeight;  // Resolution of destination screen
+    size_t _srcWidth, _srcHeight;  // Resolution of source screen
+    size_t _dstWidth, _dstHeight;  // Resolution of destination screen
 
     ByteArray _currentCapture;     // Buffer holding screen capture
     ByteArray _previousCapture;    // Buffer holding previous screen capture
@@ -19,6 +19,8 @@ private:
     // Buffer holding the difference between current and previous captures
     ByteArray _differenceMap;      
     size_t _differences;  // Number of differences in differenceMap
+
+    DWORD _bitmapSize;
 
 #if defined(_WIN32)
 
@@ -28,13 +30,12 @@ private:
     // Bitmap data
     HBITMAP _hScreen;
     BITMAP _screenBMP;
-    DWORD _bitmapSize;
     BITMAPFILEHEADER _bmpHeader;
     BITMAPINFOHEADER _bmpInfo;
     HANDLE _hDIB;
     char* _lpbitmap;
 
-#elif defined(_APPLE_)
+#elif defined(__APPLE__)
 
     CGColorSpace* _colorspace = nullptr;
     CGContext*    _context    = nullptr;
@@ -49,7 +50,7 @@ private:
 public:
 
     Screen();
-    Screen(const ushort, const ushort, const ushort, const ushort);
+    Screen(const size_t, const size_t, const size_t, const size_t);
 
     Screen(const Screen&) = delete;
     Screen(Screen&&) = delete;

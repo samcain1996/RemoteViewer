@@ -28,6 +28,9 @@ using ushort			= std::uint16_t;
 
 using ThreadLock		= std::lock_guard<std::mutex>;
 
+#if defined(__APPLE__)
+using DWORD = unsigned int;
+#endif
 /*----------------FUNCTIONS--------------------*/
 
 constexpr void encode256(ByteEncodedUint32 encodedNumber, const uint32 numberToEncode) {

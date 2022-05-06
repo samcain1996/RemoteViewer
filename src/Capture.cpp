@@ -1,6 +1,6 @@
 #include "Capture.h"
 
-Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWidth, const ushort dstHeight) {
+Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) {
 
     // Set the X and Y resolution of the source machine and the destination
     _srcWidth  = srcWidth;
@@ -31,18 +31,20 @@ Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWi
 
     InitializeBMPHeader();
 
+#elif defined(__APPLE__)
+
+    _context = CGBitmapContextCreate(_currentCapture, _srcWidth, _srcHeight, 
+        8, _srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+
+    _bitmapSize = ( (_dstWidth * 32 + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
+
+#endif
+
     _currentCapture  = new Byte[TotalSize()];
     _previousCapture = new Byte[TotalSize()];
     _differenceMap   = new Byte[TotalSize()];
     
     _differences = 0;
-
-#elif defined(_APPLE_)
-
-    context = CGBitmapContextCreate(_currentCapture, srcWidth, srcHeight, 
-        8, width * 4, colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
-
-#endif
 
 }
 
@@ -50,9 +52,10 @@ Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWi
 
 Screen::Screen() : Screen(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(GetDC(NULL), VERTRES), 1920, 1080) {}
 
-#elif defined(_APPLE_)
+#elif defined(__APPLE__)
 
-Screen::Screen() : Screen(CGDisplayPixelWide(CGMainDisplayID()), CGDisplayPixelHigh(CGMainDisplayID())) {}
+Screen::Screen() : Screen(CGDisplayPixelsWide(CGMainDisplayID()), CGDisplayPixelsHigh(CGMainDisplayID()),
+900, 1440) {}
 
 #endif
 
@@ -68,7 +71,7 @@ Screen::~Screen() {
     ReleaseDC(NULL, _srcHDC);
     DeleteObject(_memHDC);
 
-#elif
+#elif defined(__APPLE__)
 
     CGImageRelease(_image);
     CGContextRelease(_context);
@@ -82,6 +85,8 @@ Screen::~Screen() {
 }
 
 void Screen::InitializeBMPHeader() {
+
+    #if defined(_WIN32)
     _bmpInfo.biSize             = sizeof(BITMAPINFOHEADER);
     _bmpInfo.biWidth            = _dstWidth;
     _bmpInfo.biHeight           = _dstHeight;
@@ -107,6 +112,7 @@ void Screen::InitializeBMPHeader() {
 
     // Offset to where the actual bitmap bits start.
     _bmpHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+#endif
 }
 
 void Screen::CalculateDifference() {
@@ -120,6 +126,8 @@ void Screen::CalculateDifference() {
 }
 
 void Screen::RecalculateSize() {
+#if defined(_WIN32)
+
     // Resize bitmap
     _bmpInfo.biWidth  = _dstWidth;
     _bmpInfo.biHeight = _dstHeight;
@@ -147,6 +155,7 @@ void Screen::RecalculateSize() {
 
     _hDIB = GlobalAlloc(GHND, _bitmapSize);
     _lpbitmap = (char*)GlobalLock(_hDIB);
+    #endif
 }
 
 const size_t Screen::TotalSize() const {
@@ -189,10 +198,10 @@ void Screen::CaptureScreen() {
 
     std::memcpy(_currentCapture, _lpbitmap, _bitmapSize);
 
-#elif defined(_APPLE_)
+#elif defined(__APPLE__)
 
-    image = CGDisplayCreateImage(CGMainDisplayID());
-    CGContextDrawImage(context, CGRectMake(0, 0, _srcWidth, _srcWidth), image);
+    _image = CGDisplayCreateImage(CGMainDisplayID());
+    CGContextDrawImage(_context, CGRectMake(0, 0, _srcWidth, _srcWidth), _image);
 
 #endif
 
@@ -201,9 +210,17 @@ void Screen::CaptureScreen() {
 }
 
 const size_t Screen::GetHeader(ByteArray& arr) const {
+
+    #if defined(_WIN32)
     std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
     std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
 
     return sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    #elif defined(__APPLE__)
+
+    // TODO
+    return 0;
+
+    #endif
 }
 
