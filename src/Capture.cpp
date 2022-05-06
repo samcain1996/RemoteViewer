@@ -2,6 +2,7 @@
 
 Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWidth, const ushort dstHeight) {
 
+    // Set the X and Y resolution of the source machine and the destination
     _srcWidth  = srcWidth;
     _srcHeight = srcHeight;
 
@@ -9,15 +10,20 @@ Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWi
     _dstHeight = dstHeight;
 
 #if defined(_WIN32)
-    SetProcessDPIAware();
 
-    _srcHDC = GetDC(GetDesktopWindow());
-    _memHDC = CreateCompatibleDC(_srcHDC);
+    // TODO: Move this somewhere else
+    SetProcessDPIAware();  // Needed to get the correct resolution in Windows
 
+    _srcHDC = GetDC(GetDesktopWindow());    // Get the device context of the monitor *[1]
+    _memHDC = CreateCompatibleDC(_srcHDC);  // Creates a new device context from previous context
+
+    // Create bitmap from the source using the destination's resolution
     _hScreen = CreateCompatibleBitmap(_srcHDC, dstWidth, dstHeight);
 
-    SelectObject(_memHDC, _hScreen);
+    SelectObject(_memHDC, _hScreen);  // Select bitmap into DC *[2]
 
+    // Not likely that source and destination are same resolution.
+    // Tell system how to stretch the image
     SetStretchBltMode(_memHDC, HALFTONE);
 
     _hDIB = NULL;
@@ -28,6 +34,8 @@ Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWi
     _currentCapture  = new Byte[TotalSize()];
     _previousCapture = new Byte[TotalSize()];
     _differenceMap   = new Byte[TotalSize()];
+    
+    _differences = 0;
 
 #elif defined(_APPLE_)
 
@@ -35,7 +43,7 @@ Screen::Screen(const ushort srcWidth, const ushort srcHeight, const ushort dstWi
         8, width * 4, colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
 #endif
-    _differences = 0;
+
 }
 
 #if defined(_WIN32)
@@ -70,6 +78,7 @@ Screen::~Screen() {
     
     delete[] _currentCapture;  
     delete[] _previousCapture; 
+    delete[] _differenceMap;
 }
 
 void Screen::InitializeBMPHeader() {
@@ -111,17 +120,19 @@ void Screen::CalculateDifference() {
 }
 
 void Screen::RecalculateSize() {
+    // Resize bitmap
     _bmpInfo.biWidth  = _dstWidth;
     _bmpInfo.biHeight = _dstHeight;
 
     _bitmapSize = ( (_dstWidth * _bmpInfo.biBitCount + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
     _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + sizeof(BITMAPFILEHEADER);
 
+    // Recreate bitmap with new dimensions
     DeleteObject(_hScreen);
-
     _hScreen = CreateCompatibleBitmap(_srcHDC, _dstWidth, _dstHeight);
     SelectObject(_memHDC, _hScreen);
 
+    // Reallocate the necessary size to store data
     delete[] _currentCapture;
     delete[] _previousCapture;
     delete[] _differenceMap;
@@ -130,7 +141,7 @@ void Screen::RecalculateSize() {
     _previousCapture = new Byte[TotalSize()];
     _differenceMap   = new Byte[TotalSize()];
 
-    // Free _hDIB and recalculate
+    // Free _hDIB and re-lock
     GlobalUnlock(_hDIB);
     GlobalFree(_hDIB);
 
@@ -152,7 +163,9 @@ const ByteArray Screen::Bitmap() const {
     return _currentCapture;
 }
 
-const size_t Screen::GetDifferences(ByteArray differenceMap) {
+const size_t Screen::GetDifferences(ByteArray& differenceMap) {
+    if (differenceMap) { delete[] differenceMap; }
+    differenceMap = new Byte[_differences];
     std::memmove(differenceMap, _differenceMap, _differences);
     return _differences;
 }
@@ -187,8 +200,10 @@ void Screen::CaptureScreen() {
 
 }
 
-void Screen::GetHeader(ByteArray arr) {
+const size_t Screen::GetHeader(ByteArray& arr) const {
     std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
     std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
+
+    return sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 }
 

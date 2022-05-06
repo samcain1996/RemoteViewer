@@ -37,11 +37,14 @@ void Client::PacketWatcher() {
             if (packet.Header().sequence == 0) {
 
                 if (prioQ.size() == packet.Header().size) {
-                    ByteVec img = AssembleMessage(packet.Header().group);
+                    ByteArray arr;
+
+                    size_t size = AssembleMessage(packet.Header().group, arr);
+
+                    _incompletePackets.erase(packet.Header().group);
+
                     std::ofstream out("received.bmp", std::ios_base::binary);
-                    for (auto& x : img) {
-                        out << x; 
-                    }
+                    out.write((char*)arr, size);
                     out.close();
                 }
             }
@@ -79,27 +82,30 @@ bool Client::Connect(const std::string& serverPort) {
     return true;
 }
 
-ByteVec Client::AssembleMessage(const PacketGroup& group) {
+size_t Client::AssembleMessage(const PacketGroup& group, ByteArray& arr) {
 
     PacketPrioQueue& queue = _incompletePackets[group];
 
-    ByteVec fullMessage;
+    //ByteVec fullMessage;
 
     queue.pop();  // Do not count the 'head' packet
+
+    size_t size = 0;
+    arr = new Byte[queue.size() * MAX_PACKET_PAYLOAD_SIZE];
 
     for (size_t packetNo = 0; !queue.empty(); packetNo++) {
 
         // Retrieve payload from top packet
         const Packet& packet = queue.top();
-        PacketPayload p(packet.Payload());  // TODO: There's got to be a better way
 
         // Append payload to vector
-        std::copy(p.begin(), p.end(), std::back_inserter(fullMessage));
+        size += packet.Header().size - PACKET_HEADER_SIZE;
+        std::memcpy(&arr[(packet.Header().sequence - 1) * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), packet.Header().size - PACKET_HEADER_SIZE);
 
         queue.pop();  // Remove packet from queue
     }
 
-    return fullMessage;
+    return size;
 }
 
 void Client::Receive() {

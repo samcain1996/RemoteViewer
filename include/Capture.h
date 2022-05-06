@@ -50,16 +50,19 @@ public:
 
     Screen();
     Screen(const ushort, const ushort, const ushort, const ushort);
+
+    Screen(const Screen&) = delete;
+    Screen(Screen&&) = delete;
     ~Screen();
 
     void CaptureScreen();  // Capture the screen and store in _currentCapture
 
-    void GetHeader(ByteArray);
     void Resize(const ushort width, const ushort height);  // Resize the destination screen
 
-    const size_t TotalSize() const; 
-    const ByteArray Bitmap() const;  
-    const size_t GetDifferences(ByteArray);
+    const size_t TotalSize() const;  // Size of header and data
+    const size_t GetHeader(ByteArray&) const;
+    const ByteArray Bitmap() const;  // Return the bitmap data
+    const size_t GetDifferences(ByteArray&);
 };
 
   

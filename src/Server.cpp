@@ -19,13 +19,15 @@ void Server::Listen() {
 
 void Server::Serve() {
     bool keepAlive = false;
-
+    std::ifstream img("capture2.bmp", std::ios_base::binary);
     // Loop indefinitely
     do {
-        std::string test = "Hello, my name is Sam Cain";
-        ByteVec message(test.begin(), test.end());
+        ByteVec msg;
+        Byte b;
+        while (img >> std::noskipws >> b) 
+        { msg.push_back(b); };
 
-        Send(message);
+        Send(msg);
     } while(keepAlive);
 }
 

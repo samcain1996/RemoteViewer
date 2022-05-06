@@ -6,7 +6,7 @@
 
 // Defines related to packets
 
-#define MAX_PACKET_SIZE					20
+#define MAX_PACKET_SIZE					4096
 
 #define PACKET_HEADER_COUNT				3
 #define PACKET_HEADER_ELEMENT_SIZE		4

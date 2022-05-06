@@ -1,5 +1,4 @@
 #pragma once
-#include <fstream>
 #include "NetAgent.h"
 
 using PacketGroupPriorityQueueMap = std::unordered_map<uint32, PacketPrioQueue>;
@@ -56,7 +55,7 @@ public:
 	 * @param const PacketGroup& 	Packet group to assemble
 	 * @return ByteVec 				Vector of bytes representing the message
 	 */
-	ByteVec AssembleMessage(const PacketGroup&);
+	size_t AssembleMessage(const PacketGroup&, ByteArray&);
 
 	/**
 	 * @brief Receive data from server
