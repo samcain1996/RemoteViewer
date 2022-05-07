@@ -6,6 +6,8 @@
 #include <ShellScalingApi.h>
 #elif defined(_APPLE_)
 #include <ApplicationServices/ApplicationServices.h>
+#define sizeof(BITMAPFILEHEADER) 14
+#define sizeof(BITMAPINFOHEADER) 40
 #endif
 
 class Screen {
