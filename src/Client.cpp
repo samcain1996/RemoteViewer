@@ -43,7 +43,7 @@ void Client::PacketWatcher() {
 
                     _incompletePackets.erase(packet.Header().group);
 
-                    std::ofstream out("received.bmp", std::ios_base::binary);
+                    std::ofstream out("received.jpg", std::ios_base::binary);
                     out.write((char*)arr, size);
                     out.close();
                 }

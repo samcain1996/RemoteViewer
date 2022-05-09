@@ -16,12 +16,12 @@ void y(int port) {
 
 int main() {
 
-	std::thread server(y, 10008);
-	std::thread client(x, 10009, "192.168.50.160");
-
-	server.join();
-	client.join();
-
+	//std::thread server(y, 10008);
+	//std::thread client(x, 10009, "192.168.50.160");
+	Client client(10009, "192.168.50.160");
+	//server.join();
+	//client.join();
+	client.Connect("30027");
 	//Screen screen;
 	//screen.CaptureScreen();
 
