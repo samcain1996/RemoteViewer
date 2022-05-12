@@ -9,6 +9,14 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
     _dstWidth  = dstWidth;
     _dstHeight = dstHeight;
 
+    _bitmapSize = ( (_dstWidth * 32 + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
+
+    _currentCapture  = new Byte[TotalSize()];
+    _previousCapture = new Byte[TotalSize()];
+    _differenceMap   = new Byte[TotalSize()];
+    
+    _differences = 0;
+
 #if defined(_WIN32)
 
     // TODO: Move this somewhere else
@@ -33,18 +41,41 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
 
 #elif defined(__APPLE__)
 
+    _colorspace = CGColorSpaceCreateDeviceRGB();
+
+    std::memset(_bitmapHeader, 0x00, BITMAPFILEHEADER_SIZE);
+    
+    _bitmapHeader[0] = 0x42;
+    _bitmapHeader[1] = 0x4D;
+    
+    Byte temp[4];
+    encode256(temp, 
+        _srcWidth * _srcHeight * 4 + BITMAPFILEHEADER_SIZE + BITMAPINFOHEADER_SIZE,
+        Endianess::Little);
+
+    std::memmove(&_bitmapHeader[2], temp, 4);
+
+    _bitmapHeader[10] = 0x36;
+
+
+    std::memset(_bitmapInfo, 0x00, BITMAPINFOHEADER_SIZE);
+
+    _bitmapInfo[0] = 0x28;
+
+    encode256(temp, _srcWidth, Endianess::Little);
+    std::memmove(&_bitmapInfo[4], temp, 4);
+
+    encode256(temp, _srcHeight, Endianess::Little);
+    std::memmove(&_bitmapInfo[8], temp, 4);
+
+    _bitmapInfo[9] = 1;
+
+    _bitmapInfo[11] = 4;
+
     _context = CGBitmapContextCreate(_currentCapture, _srcWidth, _srcHeight, 
         8, _srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
-    _bitmapSize = ( (_dstWidth * 32 + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
-
 #endif
-
-    _currentCapture  = new Byte[TotalSize()];
-    _previousCapture = new Byte[TotalSize()];
-    _differenceMap   = new Byte[TotalSize()];
-    
-    _differences = 0;
 
 }
 
@@ -55,7 +86,7 @@ Screen::Screen() : Screen(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(Get
 #elif defined(__APPLE__)
 
 Screen::Screen() : Screen(CGDisplayPixelsWide(CGMainDisplayID()), CGDisplayPixelsHigh(CGMainDisplayID()),
-900, 1440) {}
+1440, 900) {}
 
 #endif
 
@@ -218,8 +249,10 @@ const size_t Screen::GetHeader(ByteArray& arr) const {
     return sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
     #elif defined(__APPLE__)
 
-    // TODO
-    return 0;
+    std::memcpy(arr, _bitmapHeader, BITMAPFILEHEADER_SIZE);
+    std::memcpy(&arr[BITMAPFILEHEADER_SIZE], _bitmapInfo, BITMAPINFOHEADER_SIZE);
+
+    return BITMAPFILEHEADER_SIZE + BITMAPINFOHEADER_SIZE;
 
     #endif
 }

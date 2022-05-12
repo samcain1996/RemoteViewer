@@ -11,3 +11,6 @@
    keyword struct has public access for its members and its base classes by default
 
 4. Const before pointer means the objected pointed at is const. Const after pointer means the pointer itself can not be changed.
+
+
+979,776
