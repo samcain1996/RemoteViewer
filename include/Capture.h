@@ -2,12 +2,17 @@
 #include "Types.h"
 
 #if defined(_WIN32)
+
 #include <Windows.h>
 #include <ShellScalingApi.h>
+
 #elif defined(__APPLE__)
+
 #include <ApplicationServices/ApplicationServices.h>
-#define sizeof(BITMAPFILEHEADER) 14
-#define sizeof(BITMAPINFOHEADER) 40
+
+#define BITMAPFILEHEADER_SIZE 14
+#define BITMAPINFOHEADER_SIZE 40
+
 #endif
 
 class Screen {
@@ -38,6 +43,9 @@ private:
     char* _lpbitmap;
 
 #elif defined(__APPLE__)
+
+    Byte _bitmapHeader[BITMAPFILEHEADER_SIZE];
+    Byte _bitmapInfo[BITMAPINFOHEADER_SIZE];
 
     CGColorSpace* _colorspace = nullptr;
     CGContext*    _context    = nullptr;

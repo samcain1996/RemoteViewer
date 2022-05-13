@@ -28,16 +28,27 @@ using ushort			= std::uint16_t;
 
 using ThreadLock		= std::lock_guard<std::mutex>;
 
+enum class Endianess { Little, Big };
+
 #if defined(__APPLE__)
 using DWORD = unsigned int;
 #endif
 /*----------------FUNCTIONS--------------------*/
 
-constexpr void encode256(ByteEncodedUint32 encodedNumber, const uint32 numberToEncode) {
-    encodedNumber[0] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
-    encodedNumber[1] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
-    encodedNumber[2] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
-    encodedNumber[3] = (Byte)(numberToEncode) & 0xFF;
+constexpr void encode256(ByteEncodedUint32 encodedNumber, const uint32 numberToEncode,
+Endianess endianess = Endianess::Big) {
+    if (endianess == Endianess::Big) {
+        encodedNumber[0] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
+        encodedNumber[1] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
+        encodedNumber[2] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
+        encodedNumber[3] = (Byte)(numberToEncode) & 0xFF;
+    }
+    else {
+        encodedNumber[3] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
+        encodedNumber[2] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
+        encodedNumber[1] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
+        encodedNumber[0] = (Byte)(numberToEncode) & 0xFF; 
+    }
 }
 
 constexpr uint32 decode256(const ByteEncodedUint32 encodedNumber) {
