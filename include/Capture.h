@@ -24,7 +24,7 @@ private:
     ByteArray _previousCapture;    // Buffer holding previous screen capture
 
     // Buffer holding the difference between current and previous captures
-    DiffArray _differenceArray;      
+    // DiffArray _differenceArray;      
 
     DWORD _bitmapSize;
 
@@ -67,15 +67,15 @@ public:
 
     void CaptureScreen();  // Capture the screen and store in _currentCapture
 
-    void Resize(const ushort width, const ushort height);  // Resize the destination screen
+    void Resize(const Ushort width, const Ushort height);  // Resize the destination screen
 
     const size_t TotalSize() const;  // Size of header and data
-    const size_t GetHeader(ByteArray&) const;
-    const size_t Bitmap(ByteArray&) const;  // Return the bitmap data
+    const size_t GetHeader(ByteArray& arr) const;
+    const size_t Bitmap(ByteArray& arr) const;  // Return the bitmap data
 
     const size_t WholeDeal(ByteArray& arr) const;
 
-    const DiffArray& GetDifferences() const;
+    // const DiffArray& GetDifferences() const;
 };
 
   

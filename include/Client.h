@@ -1,11 +1,11 @@
 #pragma once
 #include "NetAgent.h"
 #include "ClientWindow.h"
-#include "Capture.h"
 
 class Client : public NetAgent {
 
-	using GroupReadyWriter = MessageWriter<std::pair<ByteArray, uint32> >;
+	using GroupReadyReader = MessageReader<PacketGroup>;
+	using GroupReadyWriter = MessageWriter<PacketGroup>;
 
 private:
 	std::string _hostname;  // Hostname of computer to connect to
@@ -13,12 +13,12 @@ private:
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
 
-	GroupReadyWriter _msgWriter;
+	GroupReadyWriter _msgWriter;  // Used to send messages to _window
 
-	ClientWindow _window;
+	ClientWindow _window;  // Object to handle window rendering
 
 	// Thread to assemble data from packets
-	std::thread _packetWatcherThr;
+	std::jthread _packetWatcherThr;
 
 	// Thread to display remote screen
 	std::thread _windowThr;
@@ -40,9 +40,8 @@ private:
 	 *        all packets for a given message have arrived
 	 * 
 	 */
-	void PacketWatcher();
+	void PacketWatcher(std::stop_token);
 
-	void ScreenDisp();
 public:
 
 	// Constructors
@@ -50,7 +49,7 @@ public:
 	Client(const Client&)	= delete;
 	Client(Client&&)		= delete;
 
-	Client(const ushort, const std::string&);
+	Client(const Ushort, const std::string&);
 
 	~Client();
 

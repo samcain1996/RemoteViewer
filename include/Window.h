@@ -7,30 +7,31 @@
 class Window {
 
 protected:
-	SDL_Window* _window;
-	SDL_Surface* _surface;
-	SDL_Texture* _texture;
-
-	SDL_DisplayMode _displayData;
-
-	SDL_Event _event;
-
-	int _width, _height;
-	int _posX, _posY;
-
-	uint32 _targetFPS;
-
-	virtual void Draw();
-	virtual void Update();
-
-	void CapFPS(const uint32 prevTicks);
 
 	Window() = delete;
-	
+
 	Window(const std::string& title);
 
 	Window(const Window&) = delete;
 	Window(Window&&) = delete;
 
 	~Window();
+
+	SDL_Window* _window;	// Window to render to
+	SDL_Surface* _surface;	// Pixel data to render to window
+	SDL_Texture* _texture;	// Driver-specific, pixel data used to render
+
+	SDL_DisplayMode _displayData;  // Data about connected monitors
+
+	SDL_Event _event;  // Used to get input from user
+
+	int _width, _height;  // Width and height of window
+	int _posX, _posY;	  // X and Y position of window
+
+	Uint32 _targetFPS;	  // FPS to target
+
+	virtual void Draw();  // Draw to window
+	virtual void Update();  // Update window
+
+	void CapFPS(const Uint32 prevTicks);  // Limit FPS
 };

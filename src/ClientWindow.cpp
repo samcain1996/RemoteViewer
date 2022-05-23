@@ -1,66 +1,63 @@
 #include "ClientWindow.h"
 
 ClientWindow::ClientWindow(const std::string& title, PacketGroupPriorityQueueMap* const messages,
-	MessageWriter< std::pair<ByteArray, uint32> >& messageWriter) : Window(title), _bmpPiecesPtr(*messages),
-	_messages(&messageWriter), _bitmap(nullptr), _bitmapSize(0) {
+	MessageWriter<PacketGroup>& messageWriter) : Window(title), _bmpPiecesPtr(*messages),
+	_msgReader(&messageWriter), _bitmap(nullptr), _bitmapSize(0) {
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
-	_bmpDataStream = nullptr;
+	_bitmapSize = 54 + CalculateTheoreticalBMPSize(_width, _height);
+	_bitmap = new Byte[_bitmapSize];
+
+	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
 }
 
 void ClientWindow::Draw() {
 
-	while (_messages.Empty()) {}
+	while (_msgReader.Empty()) {} // No image is ready, skip frame
 
-	PacketGroup group = decode256(_messages.ReadMessage().first);
+	// Assemble image buffer
+	const PacketGroup group = _msgReader.ReadMessage();
+	AssembleImage(group);
 
-	AssembleMessage(group);
-
-	_bmpDataStream = SDL_RWFromMem(_bitmap,_bitmapSize);
-
+	// Create image to render
 	_surface = SDL_LoadBMP_RW(_bmpDataStream, SDL_TRUE);
-
 	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
 
+	// Render image
 	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
 	SDL_RenderPresent(_renderer);
 
+	// Free resources
 	SDL_DestroyTexture(_texture);
 	SDL_FreeSurface(_surface);
-
 }
 
 void ClientWindow::Run() { Update(); }
 
-void ClientWindow::AssembleMessage(const PacketGroup& group) {
+void ClientWindow::AssembleImage(const PacketGroup group) {
 
-	PacketPrioQueue& queue = _bmpPiecesPtr[group];
+	PacketPriorityQueue& queue = _bmpPiecesPtr[group];
 
-	size_t size = 0;
-	if (_bitmap == nullptr) {
-		_bitmapSize = queue.size() * MAX_PACKET_PAYLOAD_SIZE;
-		_bitmap = new Byte[_bitmapSize];
-	}
-
+	// Build image from packets
 	for (size_t packetNo = 0; !queue.empty(); packetNo++) {
+
+		// Offset in full image to location that this fragment belongs
+		const Uint32 offset = packetNo * MAX_PACKET_PAYLOAD_SIZE;
 
 		// Retrieve payload from top packet_bitmapData
 		const Packet& packet = queue.top();
 
 		// Append payload to vector
-		size += packet.Header().size - PACKET_HEADER_SIZE;
-		std::memcpy(&_bitmap[(packet.Header().sequence - 1) * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), packet.Header().size - PACKET_HEADER_SIZE);
+		std::memcpy(&_bitmap[offset], packet.Payload().data(), packet.Header().size - PACKET_HEADER_SIZE);
 
 		queue.pop();  // Remove packet from queue
 	}
 
-	_bmpPiecesPtr.erase(group);
+	_bmpPiecesPtr.erase(group); // Erase queue
 }
 
-//void ClientWindow::ParseHeader(const ByteArray header, const uint32 headerSize) {
-//	//_bmpHeaderSize = headerSize;
-//	//_shid = new Byte[headerSize];
-//	//std::memcpy(_shid, header, headerSize);
-//
-//
-//}
+ClientWindow::~ClientWindow() {
+	SDL_DestroyRenderer(_renderer);
+
+	delete[] _bitmap;
+}

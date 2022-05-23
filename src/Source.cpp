@@ -24,6 +24,8 @@ int main(int argc, char* argv[]) {
 
 	serverThr.join();
 	clientThr.join();
+
+	SDL_Quit();
 	
 	//std::ifstream in("capture2.dat", std::ios_base::binary);
 	//ByteArray arr = new Byte[5184000];

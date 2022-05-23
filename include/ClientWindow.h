@@ -4,33 +4,36 @@
 
 class ClientWindow : Window {
 	
-	using GroupReadyReader = MessageReader<std::pair<ByteArray, uint32> >;
-
+	using GroupReadyReader = MessageReader<PacketGroup>;
 	using ScreenFragmentsRef = PacketGroupPriorityQueueMap&;
 
 private:
 
-	SDL_Renderer* _renderer;
-	SDL_RWops* _bmpDataStream;
+	SDL_Renderer* _renderer;	// Render remote screen to window
+	SDL_RWops* _bmpDataStream;  // Current image to render
 
-	ScreenFragmentsRef _bmpPiecesPtr;
+	ScreenFragmentsRef _bmpPiecesPtr;  // Fragments of images to render
 
-	GroupReadyReader _messages;
+	// Message reader receives messages when image is ready to render
+	GroupReadyReader _msgReader;	   
 
-	ByteArray _bitmap;
+	ByteArray _bitmap;  // Buffer to hold image to render
 
-	uint32 _bitmapSize;
+	Uint32 _bitmapSize; // Buffer size
 
-	void Draw();
-	void AssembleMessage(const PacketGroup&);
+	void Draw() override;  // Draws _bitmap to the window
+	void AssembleImage(const PacketGroup group);  // Assembles _bitmap from image fragments
 
 public:
 	ClientWindow() = delete;
+
 	ClientWindow(const std::string& title, PacketGroupPriorityQueueMap* const messages,
-		MessageWriter<std::pair<ByteArray, uint32> >& messageWriter);
+		MessageWriter<PacketGroup>& messageWriter);
 
 	ClientWindow(const ClientWindow&) = delete;
 	ClientWindow(ClientWindow&&) = delete;
 
-	void Run();
+	~ClientWindow();
+
+	void Run();  // Update window
 };

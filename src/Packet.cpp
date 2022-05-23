@@ -22,7 +22,7 @@ Packet::Packet(Packet&& other) noexcept {
 
 Packet::Packet(PacketBuffer packetData) {
 	
-	ByteEncodedUint32 encoded;  // Temp variable to store encoded uint32 values
+	ByteEncodedUint32 encoded;  // Temp variable to store encoded Uint32 values
 
 	// Retrieve encoded size
 	std::memmove(encoded, packetData.data(), sizeof encoded);

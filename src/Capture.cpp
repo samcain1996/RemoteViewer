@@ -2,7 +2,8 @@
 
 Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
     _srcWidth(srcWidth), _srcHeight(srcHeight), _dstWidth(dstWidth), _dstHeight(dstHeight),
-    _bitmapSize(((dstWidth * 32 + 31) / 32) * 4 * dstHeight), _differenceArray(((dstWidth * 32 + 31) / 32) * 4 * dstHeight) {
+    _bitmapSize(((dstWidth * 32 + 31) / 32) * 4 * dstHeight)//, _differenceArray(((dstWidth * 32 + 31) / 32) * 4 * dstHeight) 
+{
 
     _currentCapture  = new Byte[_bitmapSize];
     _previousCapture = new Byte[_bitmapSize];
@@ -138,19 +139,19 @@ void Screen::InitializeBMPHeader() {
 
 void Screen::CalculateDifference() {
 
-    _differenceArray.Clear();
-    
-    for (size_t index = 0; index < _bitmapSize; index++) {
+    //_differenceArray.Clear();
+    //
+    //for (size_t index = 0; index < _bitmapSize; index++) {
 
-        if (_previousCapture[index] != _currentCapture[index]) {
-            uint32 beginIdx = index;
+    //    if (_previousCapture[index] != _currentCapture[index]) {
+    //        Uint32 beginIdx = index;
 
-            for (++index; index < _bitmapSize && _previousCapture[index] != _currentCapture[index]; index++) {};
+    //        for (++index; index < _bitmapSize && _previousCapture[index] != _currentCapture[index]; index++) {};
 
-            _differenceArray.AddDifference(beginIdx, index, &_currentCapture[beginIdx]);
+    //        _differenceArray.AddDifference(beginIdx, index, &_currentCapture[beginIdx]);
 
-        }
-    }
+    //    }
+    //}
 }
 
 void Screen::RecalculateSize() {
@@ -190,7 +191,7 @@ const size_t Screen::TotalSize() const {
     return _bitmapSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 }
 
-void Screen::Resize(const ushort width, const ushort height) {
+void Screen::Resize(const Ushort width, const Ushort height) {
     _dstWidth  = width;
     _dstHeight = height;
     RecalculateSize();
@@ -216,9 +217,9 @@ const size_t Screen::WholeDeal(ByteArray& arr) const {
     return TotalSize();
 }
 
-const DiffArray& Screen::GetDifferences() const {
-    return _differenceArray;
-}
+//const DiffArray& Screen::GetDifferences() const {
+//    return _differenceArray;
+//}
 
 void Screen::CaptureScreen() {
 

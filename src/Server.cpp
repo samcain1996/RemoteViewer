@@ -63,8 +63,10 @@ PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)
 
     // Calculate the number of packets that will
     // need to be send in order to send entire message
-    uint32 numberOfPackets = (uint32)std::ceil(
+    Uint32 numberOfPackets = (Uint32)std::ceil(
         ((float)len / MAX_PACKET_PAYLOAD_SIZE)) + 1;
+
+    packets.reserve(numberOfPackets);
 
     // Create the first packet, the first packet
     // has a sequence of 0 and its size is the
@@ -81,8 +83,8 @@ PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)
         size_t offset = iteration * MAX_PACKET_PAYLOAD_SIZE; // Current offset in message for current packet
 
         // Payload will always be the maximum size, unless less room is needed
-        ushort payloadSize = bytesRemaining < MAX_PACKET_PAYLOAD_SIZE ? bytesRemaining : MAX_PACKET_PAYLOAD_SIZE;
-        ushort totalSize = payloadSize + PACKET_HEADER_SIZE;  // Size of the entire packet
+        Ushort payloadSize = bytesRemaining < MAX_PACKET_PAYLOAD_SIZE ? bytesRemaining : MAX_PACKET_PAYLOAD_SIZE;
+        Ushort totalSize = payloadSize + PACKET_HEADER_SIZE;  // Size of the entire packet
 
         // Assemble packet
         PacketPayload payload = PacketPayload();  // Ensure payload is empty

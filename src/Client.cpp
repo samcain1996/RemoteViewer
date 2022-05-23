@@ -1,19 +1,10 @@
 #include "Client.h"
 
-Client::Client(const ushort port, const std::string& hostname) : NetAgent(port),
+Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port),
     _window(hostname, &_incompletePackets, _msgWriter) {
     _hostname = hostname;
-    Screen screen(1920, 1080, 1920, 1080);
-    screen.CaptureScreen();
-
-    ByteArray header = nullptr;
-    size_t headerSize = screen.GetHeader(header);
-
-    ByteArray data = nullptr;
-    size_t dataSize = screen.Bitmap(data);
-
-    //_window.ParseHeader(header, headerSize);
-    _packetWatcherThr = std::thread(&Client::PacketWatcher, this);
+    
+    _packetWatcherThr = std::jthread(&Client::PacketWatcher, this, _packetWatcherThr.get_stop_token());
     _windowThr = std::thread([&](){ 
         _window.Run(); 
         });
@@ -23,20 +14,20 @@ Client::Client(const ushort port, const std::string& hostname) : NetAgent(port),
 
 void Client::ProcessPacket(const Packet packet) {
     // Get packet group
-    uint32 group = packet.Header().group;
+    Uint32 group = packet.Header().group;
 
     ThreadLock lock(_mutex);  // Prevent other threads from accessing variables used in scope
 
     // Add packet to list of packets in its group
-    PacketPrioQueue& packetGroupBucket = _incompletePackets[group];
+    PacketPriorityQueue& packetGroupBucket = _incompletePackets[group];
     packetGroupBucket.push(packet);
 
     _checkPackets = true;  // Allow PacketWatcher to check for complete messages
 }
 
-void Client::PacketWatcher() {
-    int count = 0;
-    while (true) {
+void Client::PacketWatcher(std::stop_token st) {
+
+    while (!st.stop_requested()) {
 
         // Sleep while not allowed to check packets
         while (!_checkPackets) { std::this_thread::yield(); }
@@ -58,23 +49,15 @@ void Client::PacketWatcher() {
             if (packet.Header().sequence == 0) {
 
                 if (prioQ.size() == packet.Header().size) {
-                    Byte tmp[4];
-                    encode256(tmp, packet.Header().group);
+                    prioQ.pop();  // Remove 'Header' packet
 
-                    prioQ.pop();
-                    _msgWriter.WriteMessage(std::make_pair(tmp, 4));
+                    _msgWriter.WriteMessage(packet.Header().group);
                 }
             }
 
         }
 
     }
-}
-
-void Client::ScreenDisp() {
-   
-   // _window.Run();
-
 }
 
 bool Client::Connect(const std::string& serverPort) {
@@ -98,6 +81,7 @@ bool Client::Connect(const std::string& serverPort) {
 }
 
 void Client::Receive() {
+    int i = 0;
     bool keepAlive = true;
     
     PacketBuffer packetData;
@@ -110,13 +94,14 @@ void Client::Receive() {
 
         // Copy buffer to dummy packet
         ProcessPacket(Packet(packetData));
-
     }
 
 
 }
 
 Client::~Client() {
-    //_windowThr.join();
+    _packetWatcherThr.request_stop();
+
+    _packetWatcherThr.join();  // Unnecessary?
 }
 

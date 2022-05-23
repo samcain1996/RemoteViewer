@@ -2,14 +2,18 @@
 
 Window::Window(const std::string& title) {
 
+	// TODO: Make following line more safe
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
-	_width = _displayData.w * 0.75f;
+	// Set width and height to be 75% monitor values
+	_width  = _displayData.w * 0.75f;
 	_height = _displayData.h * 0.75f;
 
+	// Center window
 	_posX = (_displayData.w - _width) / 2;
 	_posY = (_displayData.h - _height) / 2;
 
+	// Create window
 	_window = SDL_CreateWindow(title.c_str(), _posX, _posY, _width, _height, NULL);
 
 	_surface = nullptr;
@@ -20,22 +24,22 @@ Window::Window(const std::string& title) {
 
 Window::~Window() {
 	SDL_DestroyWindow(_window);
-	SDL_Quit();
 }
 
 void Window::Draw() {}
 
 void Window::Update() {
 
-	uint32 ticks;
+	Uint32 ticks;  
 	bool exit = false;
 
 	while (!exit) {
 		
 		ticks = SDL_GetTicks();
 
-		Draw();
+		Draw();  // Draw content to window
 		
+		// Get events
 		while (SDL_PollEvent(&_event)) {
 
 			if (_event.type == SDL_QUIT) {
@@ -51,7 +55,7 @@ void Window::Update() {
 
 }
 
-void Window::CapFPS(const uint32 prevTicks) {
+void Window::CapFPS(const Uint32 prevTicks) {
 	if ((1000 / _targetFPS) > SDL_GetTicks() - prevTicks) { 
 		SDL_Delay(1000 / _targetFPS - (SDL_GetTicks() - prevTicks)); 
 	}

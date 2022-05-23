@@ -1,28 +1,51 @@
 #pragma once
-#include <queue>
 #include "Types.h"
+
+// Aliases for classes
+template <typename Message>
+class MessageHandler;
+template <typename Message>
+using MsgHandlerPtr = MessageHandler<Message>*;
+template <typename Message>
+using MsgHandlerRef = MessageHandler<Message>&;
+
+template <typename Message>
+class MessageReader;
+template <typename Message>
+using MsgReaderPtr = MessageReader<Message>*;
+template <typename Message>
+using MsgReaderRef = MessageReader<Message>&;
+
+template <typename Message>
+class MessageWriter;
+template <typename Message>
+using MsgWriterPtr = MessageWriter<Message>*;
+template <typename Message>
+using MsgWriterRef = MessageWriter<Message>&;
 
 template <typename Message>
 class MessageHandler {
 
 private:
-
-	//~MessageHandler() { delete _queuePtr; };  // Leak ??
+	const bool _ownsQueue;				// Flag to check whether the MessageHandler "owns" the queue
 
 protected:
-	Message _msg;
-	std::mutex	_mutex;
-	std::queue<Message>* _queuePtr;
+	Message _msg;						// Last message read from queue
+	std::mutex	_mutex;					// Mutex to ensure only 1 thread access queue at one time
+	std::queue<Message>* _queuePtr;	    // Pointer to queue holding messages
 
 	MessageHandler(const MessageHandler&) = delete;
 	MessageHandler(MessageHandler&&) = delete;
 
-	MessageHandler() : _queuePtr(new std::queue<Message>) {};
+	// If constructed by itself, create a new queue
+	MessageHandler() : _queuePtr(new std::queue<Message>), _ownsQueue(true) {};
 
-	void SetQueuePtr(MessageHandler* msgHandler) {
-		msgHandler->_queuePtr = _queuePtr;
-	}
+	// If constructed from another MessageHandler, share its queue
+	MessageHandler(MsgHandlerPtr<Message> msgHandler) : _queuePtr(msgHandler->_queuePtr), _ownsQueue(false) {};
 
+	~MessageHandler() { if (_ownsQueue) { delete _queuePtr; } };
+
+	// Put message in back of queue
 	bool Push(const Message message) {
 		ThreadLock lock(_mutex);
 
@@ -31,6 +54,7 @@ protected:
 		return true;
 	}
 
+	// Remove message from the front of the queue
 	Message* Pop() {
 		ThreadLock lock(_mutex);
 
@@ -43,21 +67,25 @@ protected:
 	};
 
 public:
+	// Return if the queue is empty
 	bool Empty() const { return _queuePtr->empty(); }
 };
 
+// Read-only end of MessageHandler
 template <typename Message>
 class MessageReader : public MessageHandler<Message>{
 public:
+	// Create new queue
 	MessageReader() : MessageHandler<Message>() {};
 
-	MessageReader(MessageHandler<Message>* writer) {
-		this->SetQueuePtr(writer);
-	};
+	// Create from existing queue
+	MessageReader(MsgWriterPtr<Message> writer) : MessageHandler<Message>(writer) {}
 
+	// Do not allow copying
 	MessageReader(const MessageReader&) = delete;
 	MessageReader(MessageReader&&) = delete;
 
+	// Read message from queue
 	const Message ReadMessage() {
 		Message* msgPtr = this->Pop();
 
@@ -67,18 +95,21 @@ public:
 	}
 };
 
+// Write-only end of MessageHandler
 template <typename Message>
 class MessageWriter : public MessageHandler<Message>{
 public:
+	// Create new queue
 	MessageWriter() : MessageHandler<Message>() {};
 
-	MessageWriter(MessageHandler<Message>* reader) {
-		SetQueuePtr(reader);
-	};
+	// Create from existing queue
+	MessageWriter(MsgReaderPtr<Message> reader) : MessageHandler<Message>(reader) {}
 
+	// Do not allow copying
 	MessageWriter(const MessageWriter&) = delete;
 	MessageWriter(MessageWriter&&) = delete;
 
+	// Write message to queue
 	bool WriteMessage(const Message& message) {
 		return this->Push(message);
 	}

@@ -1,6 +1,5 @@
 #pragma once
 #include <boost/asio.hpp>
-#include <fstream>
 #include "Packet.h"
 
 using boost::asio::ip::udp;
@@ -25,7 +24,7 @@ protected:
 	udp::socket _socket;
 	boost::system::error_code _errcode;
 
-	const static ushort HANDSHAKE_SIZE = 4;
+	const static Ushort HANDSHAKE_SIZE = 4;
 	const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE];
 };
 
