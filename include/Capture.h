@@ -10,10 +10,11 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#define BITMAPFILEHEADER_SIZE 14
-#define BITMAPINFOHEADER_SIZE 40
-
 #endif
+
+constexpr const Ushort BMP_FILE_HEADER_SIZE = 14;
+constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
+constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE;
 
 class Screen {
 private:
@@ -43,8 +44,8 @@ private:
 
 #elif defined(__APPLE__)
 
-    Byte _bitmapHeader[BITMAPFILEHEADER_SIZE];
-    Byte _bitmapInfo[BITMAPINFOHEADER_SIZE];
+    Byte _bitmapHeader[BMP_FILE_HEADER_SIZE];
+    Byte _bitmapInfo[BMP_INFO_HEADER_SIZE];
 
     CGColorSpace* _colorspace = nullptr;
     CGContext*    _context    = nullptr;

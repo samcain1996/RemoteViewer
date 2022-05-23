@@ -26,22 +26,6 @@ int main(int argc, char* argv[]) {
 	clientThr.join();
 
 	SDL_Quit();
-	
-	//std::ifstream in("capture2.dat", std::ios_base::binary);
-	//ByteArray arr = new Byte[5184000];
-	//in.read((char*)arr,5184000);
-	//out.write((char*)arr, 5184000);
-
-	//Byte* header = new Byte[sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)];
-	//screen.GetHeader(header);
-
-	
-
-	
-
-	//std::ofstream capture2("capture2.bmp", std::ios_base::binary);
-	//capture2.write((char*)header, sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER));
-	//capture2.close();
 
 	return 0;
 }

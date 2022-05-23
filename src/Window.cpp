@@ -1,5 +1,6 @@
 #include "Window.h"
 
+#pragma warning(suppress: 26495)
 Window::Window(const std::string& title) {
 
 	// TODO: Make following line more safe
@@ -23,10 +24,11 @@ Window::Window(const std::string& title) {
 }
 
 Window::~Window() {
+	SDL_FreeSurface(_surface);
 	SDL_DestroyWindow(_window);
 }
 
-void Window::Draw() {}
+bool Window::Draw() { return true; }
 
 void Window::Update() {
 
@@ -34,10 +36,6 @@ void Window::Update() {
 	bool exit = false;
 
 	while (!exit) {
-		
-		ticks = SDL_GetTicks();
-
-		Draw();  // Draw content to window
 		
 		// Get events
 		while (SDL_PollEvent(&_event)) {
@@ -48,6 +46,10 @@ void Window::Update() {
 			}
 
 		}
+
+		ticks = SDL_GetTicks();
+
+		Draw();  // Draw content to window
 
 		CapFPS(ticks);
 

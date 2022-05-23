@@ -11,9 +11,9 @@ ClientWindow::ClientWindow(const std::string& title, PacketGroupPriorityQueueMap
 	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
 }
 
-void ClientWindow::Draw() {
+bool ClientWindow::Draw() {
 
-	while (_msgReader.Empty()) {} // No image is ready, skip frame
+	if (_msgReader.Empty()) { return false; } // No image is ready, skip frame
 
 	// Assemble image buffer
 	const PacketGroup group = _msgReader.ReadMessage();
@@ -30,6 +30,8 @@ void ClientWindow::Draw() {
 	// Free resources
 	SDL_DestroyTexture(_texture);
 	SDL_FreeSurface(_surface);
+
+	return true;
 }
 
 void ClientWindow::Run() { Update(); }

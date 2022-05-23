@@ -30,7 +30,7 @@ protected:
 
 	Uint32 _targetFPS;	  // FPS to target
 
-	virtual void Draw();  // Draw to window
+	virtual bool Draw();  // Draw to window
 	virtual void Update();  // Update window
 
 	void CapFPS(const Uint32 prevTicks);  // Limit FPS

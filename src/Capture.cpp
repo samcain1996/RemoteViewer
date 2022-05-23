@@ -2,8 +2,7 @@
 
 Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
     _srcWidth(srcWidth), _srcHeight(srcHeight), _dstWidth(dstWidth), _dstHeight(dstHeight),
-    _bitmapSize(((dstWidth * 32 + 31) / 32) * 4 * dstHeight)//, _differenceArray(((dstWidth * 32 + 31) / 32) * 4 * dstHeight) 
-{
+    _bitmapSize(((dstWidth * 32 + 31) / 32) * 4 * dstHeight) {
 
     _currentCapture  = new Byte[_bitmapSize];
     _previousCapture = new Byte[_bitmapSize];
@@ -13,13 +12,13 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
     // TODO: Move this somewhere else
     SetProcessDPIAware();  // Needed to get the correct resolution in Windows
 
-    _srcHDC = GetDC(GetDesktopWindow());    // Get the device context of the monitor *[1]
-    _memHDC = CreateCompatibleDC(_srcHDC);  // Creates a new device context from previous context
+    _srcHDC = GetDC(GetDesktopWindow());  // Get the device context of the monitor [1]
+    _memHDC = CreateCompatibleDC(_srcHDC);    // Creates a new device context from previous context
 
     // Create bitmap from the source using the destination's resolution
-    _hScreen = CreateCompatibleBitmap(_srcHDC, dstWidth, dstHeight);
+    _hScreen = CreateCompatibleBitmap(_srcHDC, _dstWidth, _dstHeight);
 
-    SelectObject(_memHDC, _hScreen);  // Select bitmap into DC *[2]
+    SelectObject(_memHDC, _hScreen);  // Select bitmap into DC [2]
 
     // Not likely that source and destination are same resolution.
     // Tell system how to stretch the image
@@ -34,22 +33,21 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
 
     _colorspace = CGColorSpaceCreateDeviceRGB();
 
-    std::memset(_bitmapHeader, 0x00, BITMAPFILEHEADER_SIZE);
+    std::memset(_bitmapHeader, 0x00, BMP_FILE_HEADER_SIZE);
     
     _bitmapHeader[0] = 0x42;
     _bitmapHeader[1] = 0x4D;
     
     Byte temp[4];
     encode256(temp, 
-        _srcWidth * _srcHeight * 4 + BITMAPFILEHEADER_SIZE + BITMAPINFOHEADER_SIZE,
+        _srcWidth * _srcHeight * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
         Endianess::Little);
 
     std::memmove(&_bitmapHeader[2], temp, 4);
 
     _bitmapHeader[10] = 0x36;
 
-
-    std::memset(_bitmapInfo, 0x00, BITMAPINFOHEADER_SIZE);
+    std::memset(_bitmapInfo, 0x00, BMP_INFO_HEADER_SIZE);
 
     _bitmapInfo[0] = 0x28;
 
@@ -109,7 +107,7 @@ Screen::~Screen() {
 void Screen::InitializeBMPHeader() {
 
     #if defined(_WIN32)
-    _bmpInfo.biSize             = sizeof(BITMAPINFOHEADER);
+    _bmpInfo.biSize             = BMP_INFO_HEADER_SIZE;
     _bmpInfo.biWidth            = _dstWidth;
     _bmpInfo.biHeight           = _dstHeight;
     _bmpInfo.biPlanes           = 1;
@@ -127,13 +125,13 @@ void Screen::InitializeBMPHeader() {
     _lpbitmap = (char*)GlobalLock(_hDIB);
 
     // Size of the file.
-    _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + sizeof(BITMAPFILEHEADER);
+    _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + BMP_FILE_HEADER_SIZE;
 
     // bfType must always be BM for Bitmaps.
     _bmpHeader.bfType = 0x4D42; // BM.
 
     // Offset to where the actual bitmap bits start.
-    _bmpHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+    _bmpHeader.bfOffBits = (DWORD)BMP_FILE_HEADER_SIZE + (DWORD)BMP_INFO_HEADER_SIZE;
 #endif
 }
 
@@ -162,7 +160,7 @@ void Screen::RecalculateSize() {
     _bmpInfo.biHeight = _dstHeight;
 
     _bitmapSize = ( (_dstWidth * _bmpInfo.biBitCount + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
-    _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + sizeof(BITMAPFILEHEADER);
+    _bmpHeader.bfSize = _bitmapSize + _bmpInfo.biSize + BMP_FILE_HEADER_SIZE;
 
     // Recreate bitmap with new dimensions
     DeleteObject(_hScreen);
@@ -188,7 +186,7 @@ void Screen::RecalculateSize() {
 }
 
 const size_t Screen::TotalSize() const {
-    return _bitmapSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    return _bitmapSize + BMP_HEADER_SIZE;
 }
 
 void Screen::Resize(const Ushort width, const Ushort height) {
@@ -209,10 +207,10 @@ const size_t Screen::WholeDeal(ByteArray& arr) const {
 
     if (arr == nullptr) { arr = new Byte[TotalSize()]; }
 
-    std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
-    std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
+    std::memcpy(arr, (LPSTR)&_bmpHeader, BMP_FILE_HEADER_SIZE);
+    std::memcpy(&arr[BMP_FILE_HEADER_SIZE], (LPSTR)&_bmpInfo, BMP_INFO_HEADER_SIZE);
 
-    std::memcpy(&arr[sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)], _currentCapture, _bitmapSize);
+    std::memcpy(&arr[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
 
     return TotalSize();
 }
@@ -253,20 +251,19 @@ void Screen::CaptureScreen() {
 
 const size_t Screen::GetHeader(ByteArray& arr) const {
 
-    if (arr == nullptr) { arr = new Byte[sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)]; }
+    if (arr == nullptr) { arr = new Byte[BMP_HEADER_SIZE]; }
 
     #if defined(_WIN32)
-    std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
-    std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
+    std::memcpy(arr, (LPSTR)&_bmpHeader, BMP_FILE_HEADER_SIZE);
+    std::memcpy(&arr[BMP_FILE_HEADER_SIZE], (LPSTR)&_bmpInfo, BMP_INFO_HEADER_SIZE);
 
-    return sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
     #elif defined(__APPLE__)
 
-    std::memcpy(arr, _bitmapHeader, BITMAPFILEHEADER_SIZE);
-    std::memcpy(&arr[BITMAPFILEHEADER_SIZE], _bitmapInfo, BITMAPINFOHEADER_SIZE);
-
-    return BITMAPFILEHEADER_SIZE + BITMAPINFOHEADER_SIZE;
+    std::memcpy(arr, _bitmapHeader, BMP_FILE_HEADER_SIZE);
+    std::memcpy(&arr[BMP_FILE_HEADER_SIZE], _bitmapInfo, BMP_INFO_HEADER_SIZE);
 
     #endif
+
+    return BMP_HEADER_SIZE;
 }
 
