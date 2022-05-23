@@ -1,13 +1,11 @@
 #include "ClientWindow.h"
 
 ClientWindow::ClientWindow(const std::string& title, PacketGroupPriorityQueueMap* const messages,
-	ApplicationMessageWriter& messageWriter) : Window(title),
-	_messages(&messageWriter ) {
+	MessageWriter< std::pair<ByteArray, uint32> >& messageWriter) : Window(title), _bmpPiecesPtr(*messages),
+	_messages(&messageWriter), _bitmap(nullptr), _bitmapSize(0) {
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
 	_bmpDataStream = nullptr;
-
-	_bmpPiecesPtr = messages;
 }
 
 void ClientWindow::Draw() {
@@ -36,7 +34,7 @@ void ClientWindow::Run() { Update(); }
 
 void ClientWindow::AssembleMessage(const PacketGroup& group) {
 
-	PacketPrioQueue& queue = (*_bmpPiecesPtr)[group];
+	PacketPrioQueue& queue = _bmpPiecesPtr[group];
 
 	size_t size = 0;
 	if (_bitmap == nullptr) {
@@ -56,7 +54,7 @@ void ClientWindow::AssembleMessage(const PacketGroup& group) {
 		queue.pop();  // Remove packet from queue
 	}
 
-	_bmpPiecesPtr->erase(group);
+	_bmpPiecesPtr.erase(group);
 }
 
 //void ClientWindow::ParseHeader(const ByteArray header, const uint32 headerSize) {

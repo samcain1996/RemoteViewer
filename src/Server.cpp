@@ -23,7 +23,6 @@ void Server::Serve() {
 
     ByteArray capture = nullptr;
 
-   
     // Loop indefinitely
     do {
 

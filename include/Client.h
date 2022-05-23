@@ -4,13 +4,16 @@
 #include "Capture.h"
 
 class Client : public NetAgent {
+
+	using GroupReadyWriter = MessageWriter<std::pair<ByteArray, uint32> >;
+
 private:
 	std::string _hostname;  // Hostname of computer to connect to
 
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
 
-	ApplicationMessageWriter _msgWriter;
+	GroupReadyWriter _msgWriter;
 
 	ClientWindow _window;
 

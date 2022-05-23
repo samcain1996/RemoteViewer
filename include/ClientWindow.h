@@ -3,18 +3,23 @@
 #include "Messages.h"
 
 class ClientWindow : Window {
+	
+	using GroupReadyReader = MessageReader<std::pair<ByteArray, uint32> >;
+
+	using ScreenFragmentsRef = PacketGroupPriorityQueueMap&;
+
 private:
 
 	SDL_Renderer* _renderer;
 	SDL_RWops* _bmpDataStream;
 
-	PacketGroupPriorityQueueMap* _bmpPiecesPtr;
+	ScreenFragmentsRef _bmpPiecesPtr;
 
-	ApplicationMessageReader _messages;
+	GroupReadyReader _messages;
 
-	ByteArray _bitmap = nullptr;
+	ByteArray _bitmap;
 
-	uint32 _bitmapSize = 0;
+	uint32 _bitmapSize;
 
 	void Draw();
 	void AssembleMessage(const PacketGroup&);
@@ -22,11 +27,10 @@ private:
 public:
 	ClientWindow() = delete;
 	ClientWindow(const std::string& title, PacketGroupPriorityQueueMap* const messages,
-		ApplicationMessageWriter& messageWriter);
+		MessageWriter<std::pair<ByteArray, uint32> >& messageWriter);
 
 	ClientWindow(const ClientWindow&) = delete;
 	ClientWindow(ClientWindow&&) = delete;
 
 	void Run();
-	//void ParseHeader(const ByteArray header, const uint32 headerSize);
 };

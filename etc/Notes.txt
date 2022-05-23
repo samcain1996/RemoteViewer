@@ -12,5 +12,3 @@
 
 4. Const before pointer means the objected pointed at is const. Const after pointer means the pointer itself can not be changed.
 
-
-979,776

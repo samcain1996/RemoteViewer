@@ -2,33 +2,36 @@
 #include <queue>
 #include "Types.h"
 
-using ApplicationMessage = std::pair<ByteArray, uint32>;
-using MessageQueue = std::queue<ApplicationMessage>;
+template <typename Message>
+class MessageHandler {
 
-class ApplicationMessageHandler {
+private:
+
+	//~MessageHandler() { delete _queuePtr; };  // Leak ??
 
 protected:
+	Message _msg;
 	std::mutex	_mutex;
-	ApplicationMessage _msg;
-	MessageQueue* _queuePtr;
+	std::queue<Message>* _queuePtr;
 
-	ApplicationMessageHandler(const ApplicationMessageHandler&) = delete;
-	ApplicationMessageHandler(ApplicationMessageHandler&&) = delete;
+	MessageHandler(const MessageHandler&) = delete;
+	MessageHandler(MessageHandler&&) = delete;
 
-	ApplicationMessageHandler() : _queuePtr(new MessageQueue) {};
+	MessageHandler() : _queuePtr(new std::queue<Message>) {};
 
-	void SetQueuePtr(ApplicationMessageHandler* amh) {
-		amh->_queuePtr = _queuePtr;
+	void SetQueuePtr(MessageHandler* msgHandler) {
+		msgHandler->_queuePtr = _queuePtr;
 	}
 
-	bool Push(const ApplicationMessage message) {
+	bool Push(const Message message) {
 		ThreadLock lock(_mutex);
 
 		_queuePtr->push(message);
 
 		return true;
 	}
-	ApplicationMessage* Pop() {
+
+	Message* Pop() {
 		ThreadLock lock(_mutex);
 
 		if (_queuePtr->empty()) { return nullptr; }
@@ -43,19 +46,20 @@ public:
 	bool Empty() const { return _queuePtr->empty(); }
 };
 
-class ApplicationMessageReader : public ApplicationMessageHandler {
+template <typename Message>
+class MessageReader : public MessageHandler<Message>{
 public:
-	ApplicationMessageReader() : ApplicationMessageHandler() {};
+	MessageReader() : MessageHandler<Message>() {};
 
-	ApplicationMessageReader(ApplicationMessageHandler* writer) {
-		SetQueuePtr(writer);
+	MessageReader(MessageHandler<Message>* writer) {
+		this->SetQueuePtr(writer);
 	};
 
-	ApplicationMessageReader(const ApplicationMessageReader&) = delete;
-	ApplicationMessageReader(ApplicationMessageReader&&) = delete;
+	MessageReader(const MessageReader&) = delete;
+	MessageReader(MessageReader&&) = delete;
 
-	const ApplicationMessage ReadMessage() {
-		ApplicationMessage* msgPtr = Pop();
+	const Message ReadMessage() {
+		Message* msgPtr = this->Pop();
 
 		if (msgPtr != nullptr) {
 			return *msgPtr;
@@ -63,18 +67,19 @@ public:
 	}
 };
 
-class ApplicationMessageWriter : public ApplicationMessageHandler {
+template <typename Message>
+class MessageWriter : public MessageHandler<Message>{
 public:
-	ApplicationMessageWriter() : ApplicationMessageHandler() {};
+	MessageWriter() : MessageHandler<Message>() {};
 
-	ApplicationMessageWriter(ApplicationMessageHandler* reader) {
+	MessageWriter(MessageHandler<Message>* reader) {
 		SetQueuePtr(reader);
 	};
 
-	ApplicationMessageWriter(const ApplicationMessageWriter&) = delete;
-	ApplicationMessageWriter(ApplicationMessageWriter&&) = delete;
+	MessageWriter(const MessageWriter&) = delete;
+	MessageWriter(MessageWriter&&) = delete;
 
-	bool WriteMessage(const ApplicationMessage& message) {
-		return Push(message);
+	bool WriteMessage(const Message& message) {
+		return this->Push(message);
 	}
 };
