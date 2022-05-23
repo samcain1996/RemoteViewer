@@ -19,22 +19,27 @@ void Server::Listen() {
 
 void Server::Serve() {
     bool keepAlive = false;
-    std::ifstream img("capture2.bmp", std::ios_base::binary);
+    Screen screen(1920, 1080, 1920, 1080);
+
+    ByteArray capture = nullptr;
+
+   
     // Loop indefinitely
     do {
-        ByteVec msg;
-        Byte b;
-        while (img >> std::noskipws >> b) 
-        { msg.push_back(b); };
 
-        Send(msg);
+        screen.CaptureScreen();
+
+        size_t captureSize = screen.WholeDeal(capture);
+
+        Send(capture, captureSize);
+
     } while(keepAlive);
 }
 
-void Server::Send(ByteVec& bytes) {
+void Server::Send(ByteArray bytes, size_t len) {
 
     // Convert the message into a list of packets
-    PacketList packets = ConvertToPackets(bytes);
+    PacketList packets = ConvertToPackets(bytes, len);
 
     // Loop through all the packets and send them
     for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
@@ -46,10 +51,10 @@ void Server::Send(ByteVec& bytes) {
         _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
         _socket.receive(boost::asio::buffer(dummyBuf, sizeof dummyBuf), 0, _errcode);
     }
-
+    
 }
 
-PacketList Server::ConvertToPackets(ByteVec& message)
+PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)
 {
     PacketList packets;  // List to hold all packets needed to create message
 
@@ -60,7 +65,7 @@ PacketList Server::ConvertToPackets(ByteVec& message)
     // Calculate the number of packets that will
     // need to be send in order to send entire message
     uint32 numberOfPackets = (uint32)std::ceil(
-        ((float)message.size() / MAX_PACKET_PAYLOAD_SIZE)) + 1;
+        ((float)len / MAX_PACKET_PAYLOAD_SIZE)) + 1;
 
     // Create the first packet, the first packet
     // has a sequence of 0 and its size is the
@@ -72,7 +77,7 @@ PacketList Server::ConvertToPackets(ByteVec& message)
     packets.push_back(Packet(header, PacketPayload()));  // Add header to list of packets to send
 
     // Break message down into packets
-    for (size_t bytesRemaining = message.size(), iteration = 0; bytesRemaining > 0; iteration++) {
+    for (size_t bytesRemaining = len, iteration = 0; bytesRemaining > 0; iteration++) {
 
         size_t offset = iteration * MAX_PACKET_PAYLOAD_SIZE; // Current offset in message for current packet
 
@@ -85,7 +90,7 @@ PacketList Server::ConvertToPackets(ByteVec& message)
 
         header.size     = totalSize;     // Packet length in bytes
         header.sequence = iteration + 1; // Packet sequence in group
-        std::copy((message.begin() + offset), (message.begin() + offset + payloadSize), payload.begin());
+        std::memcpy(&*payload.begin(), (&bytes[offset]), payloadSize);
 
         packets.push_back(Packet(header, payload));
 

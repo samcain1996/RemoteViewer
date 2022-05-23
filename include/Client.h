@@ -1,7 +1,7 @@
 #pragma once
 #include "NetAgent.h"
-
-using PacketGroupPriorityQueueMap = std::unordered_map<uint32, PacketPrioQueue>;
+#include "ClientWindow.h"
+#include "Capture.h"
 
 class Client : public NetAgent {
 private:
@@ -10,8 +10,15 @@ private:
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
 
+	ApplicationMessageWriter _msgWriter;
+
+	ClientWindow _window;
+
 	// Thread to assemble data from packets
 	std::thread _packetWatcherThr;
+
+	// Thread to display remote screen
+	std::thread _windowThr;
 
 	// Thread-safe flag to function as flow control for thread
 	std::atomic<bool> _checkPackets;
@@ -31,6 +38,8 @@ private:
 	 * 
 	 */
 	void PacketWatcher();
+
+	void ScreenDisp();
 public:
 
 	// Constructors
@@ -39,6 +48,8 @@ public:
 	Client(Client&&)		= delete;
 
 	Client(const ushort, const std::string&);
+
+	~Client();
 
 	/**
 	 * @brief Connects to a server via a udp socket
@@ -49,13 +60,13 @@ public:
 	 */
 	bool Connect(const std::string&);
 
-	/**
-	 * @brief Assembles complete message from individual packets
-	 * 
-	 * @param const PacketGroup& 	Packet group to assemble
-	 * @return ByteVec 				Vector of bytes representing the message
-	 */
-	size_t AssembleMessage(const PacketGroup&, ByteArray&);
+	///**
+	// * @brief Assembles complete message from individual packets
+	// * 
+	// * @param const PacketGroup& 	Packet group to assemble
+	// * @return ByteVec 				Vector of bytes representing the message
+	// */
+	//size_t AssembleMessage(const PacketGroup&, ByteArray&);
 
 	/**
 	 * @brief Receive data from server

@@ -9,8 +9,12 @@
 * 
 * 
 */
+
+#define SDL_MAIN_HANDLED
+
 #include <mutex>
 #include <unordered_map>
+#include <SDL.h>
 
 #define ONE_BYTE	8
 #define TWO_BYTES	(ONE_BYTE + ONE_BYTE)
@@ -29,6 +33,55 @@ using ushort			= std::uint16_t;
 using ThreadLock		= std::lock_guard<std::mutex>;
 
 enum class Endianess { Little, Big };
+
+struct Difference {
+public:
+    uint32 _pos;
+    uint32 _length;
+    ByteArray _sequence;
+    Difference(const uint32 begin, const uint32 end, ByteArray seq) {
+        _pos = begin;
+        _length = end - begin;
+
+        _sequence = new Byte[_length];
+        std::memcpy(_sequence, seq, _length);
+    }
+
+    Difference() : _pos(0), _length(0), _sequence(nullptr) {}
+
+    Difference(const Difference&) = delete;
+    Difference(Difference&&) = delete;
+
+    ~Difference() { if (_sequence) delete[] _sequence; }
+
+private:
+    void Copy(const uint32 begin, const uint32 end, ByteArray seq) {
+        _sequence = new Byte[_length];
+        std::memcpy(_sequence, seq, _length);
+    }
+public:
+    Difference& operator=(const Difference& diff) { Copy(diff._pos, diff._length, diff._sequence); return *this; };
+
+};
+
+struct DiffArray {
+private:
+    std::pair<Difference*, uint32> _differences;
+    uint32& _curIdx = _differences.second;
+    const uint32 _capacity;
+public:
+    DiffArray() = delete;
+    DiffArray(const uint32 capacity) : _capacity(capacity), _differences(new Difference[capacity], capacity) {}
+
+    DiffArray(const DiffArray&) = delete;
+    DiffArray(DiffArray&&) = delete;
+
+    const std::pair<Difference*, uint32>& Differences() const { return _differences; }
+    void AddDifference(const uint32 begin, const uint32 end, ByteArray seq) {
+        _differences.first[_curIdx++] = Difference(begin, end, seq);
+    }
+    void Clear() { _curIdx = 0; }
+};
 
 #if defined(__APPLE__)
 using DWORD = unsigned int;

@@ -19,7 +19,7 @@
 #define PACKET_SEQUENCE_OFFSET			(PACKET_HEADER_ELEMENT_SIZE * 2)
 #define PACKET_PAYLOAD_OFFSET			PACKET_HEADER_SIZE
 
-using PacketGroup   = uint32;
+using PacketGroup	= uint32;
 using PacketPayload = std::array<Byte, MAX_PACKET_PAYLOAD_SIZE>;
 using PacketBuffer  = std::array<Byte, MAX_PACKET_SIZE>;
 
@@ -58,6 +58,8 @@ public:
 
 using PacketList		= std::vector<Packet>;
 using PacketPrioQueue	= std::priority_queue<Packet, std::vector<Packet>, std::less<Packet> >;
+
+using PacketGroupPriorityQueueMap = std::unordered_map<uint32, PacketPrioQueue>;
 
 // Hash function for Packet priority queue.
 // Ideally, all packets with the same group will have

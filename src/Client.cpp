@@ -1,5 +1,26 @@
 #include "Client.h"
 
+Client::Client(const ushort port, const std::string& hostname) : NetAgent(port),
+    _window(hostname, &_incompletePackets, _msgWriter) {
+    _hostname = hostname;
+    Screen screen(1920, 1080, 1920, 1080);
+    screen.CaptureScreen();
+
+    ByteArray header = nullptr;
+    size_t headerSize = screen.GetHeader(header);
+
+    ByteArray data = nullptr;
+    size_t dataSize = screen.Bitmap(data);
+
+    //_window.ParseHeader(header, headerSize);
+    _packetWatcherThr = std::thread(&Client::PacketWatcher, this);
+    _windowThr = std::thread([&](){ 
+        _window.Run(); 
+        });
+
+
+}
+
 void Client::ProcessPacket(const Packet packet) {
     // Get packet group
     uint32 group = packet.Header().group;
@@ -14,7 +35,7 @@ void Client::ProcessPacket(const Packet packet) {
 }
 
 void Client::PacketWatcher() {
-
+    int count = 0;
     while (true) {
 
         // Sleep while not allowed to check packets
@@ -37,15 +58,11 @@ void Client::PacketWatcher() {
             if (packet.Header().sequence == 0) {
 
                 if (prioQ.size() == packet.Header().size) {
-                    ByteArray arr;
+                    Byte tmp[4];
+                    encode256(tmp, packet.Header().group);
 
-                    size_t size = AssembleMessage(packet.Header().group, arr);
-
-                    _incompletePackets.erase(packet.Header().group);
-
-                    std::ofstream out("received.jpg", std::ios_base::binary);
-                    out.write((char*)arr, size);
-                    out.close();
+                    prioQ.pop();
+                    _msgWriter.WriteMessage(std::make_pair(tmp, 4));
                 }
             }
 
@@ -54,13 +71,11 @@ void Client::PacketWatcher() {
     }
 }
 
-Client::Client(const ushort port, const std::string& hostname) : NetAgent(port) {
+void Client::ScreenDisp() {
+   
+   // _window.Run();
 
-	_hostname = hostname;
-
-	_packetWatcherThr = std::thread(&Client::PacketWatcher, this);
 }
-
 
 bool Client::Connect(const std::string& serverPort) {
 
@@ -82,37 +97,12 @@ bool Client::Connect(const std::string& serverPort) {
     return true;
 }
 
-size_t Client::AssembleMessage(const PacketGroup& group, ByteArray& arr) {
-
-    PacketPrioQueue& queue = _incompletePackets[group];
-
-    //ByteVec fullMessage;
-
-    queue.pop();  // Do not count the 'head' packet
-
-    size_t size = 0;
-    arr = new Byte[queue.size() * MAX_PACKET_PAYLOAD_SIZE];
-
-    for (size_t packetNo = 0; !queue.empty(); packetNo++) {
-
-        // Retrieve payload from top packet
-        const Packet& packet = queue.top();
-
-        // Append payload to vector
-        size += packet.Header().size - PACKET_HEADER_SIZE;
-        std::memcpy(&arr[(packet.Header().sequence - 1) * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), packet.Header().size - PACKET_HEADER_SIZE);
-
-        queue.pop();  // Remove packet from queue
-    }
-
-    return size;
-}
-
 void Client::Receive() {
     bool keepAlive = true;
-    while (keepAlive) {
+    
+    PacketBuffer packetData;
 
-        PacketBuffer packetData;
+    while (keepAlive) {
 
         // Receive packet
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
@@ -122,5 +112,11 @@ void Client::Receive() {
         ProcessPacket(Packet(packetData));
 
     }
+
+
+}
+
+Client::~Client() {
+    //_windowThr.join();
 }
 

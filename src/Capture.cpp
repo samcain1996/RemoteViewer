@@ -1,21 +1,11 @@
 #include "Capture.h"
 
-Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) {
+Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
+    _srcWidth(srcWidth), _srcHeight(srcHeight), _dstWidth(dstWidth), _dstHeight(dstHeight),
+    _bitmapSize(((dstWidth * 32 + 31) / 32) * 4 * dstHeight), _differenceArray(((dstWidth * 32 + 31) / 32) * 4 * dstHeight) {
 
-    // Set the X and Y resolution of the source machine and the destination
-    _srcWidth  = srcWidth;
-    _srcHeight = srcHeight;
-
-    _dstWidth  = dstWidth;
-    _dstHeight = dstHeight;
-
-    _bitmapSize = ( (_dstWidth * 32 + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
-
-    _currentCapture  = new Byte[TotalSize()];
-    _previousCapture = new Byte[TotalSize()];
-    _differenceMap   = new Byte[TotalSize()];
-    
-    _differences = 0;
+    _currentCapture  = new Byte[_bitmapSize];
+    _previousCapture = new Byte[_bitmapSize];
 
 #if defined(_WIN32)
 
@@ -112,7 +102,7 @@ Screen::~Screen() {
     
     delete[] _currentCapture;  
     delete[] _previousCapture; 
-    delete[] _differenceMap;
+    //delete[] _differenceMap;
 }
 
 void Screen::InitializeBMPHeader() {
@@ -147,11 +137,18 @@ void Screen::InitializeBMPHeader() {
 }
 
 void Screen::CalculateDifference() {
-    _differences = 0;
-    for (size_t index = 0; index < TotalSize(); index++) {
+
+    _differenceArray.Clear();
+    
+    for (size_t index = 0; index < _bitmapSize; index++) {
 
         if (_previousCapture[index] != _currentCapture[index]) {
-            _differenceMap[_differences++] = _currentCapture[index];
+            uint32 beginIdx = index;
+
+            for (++index; index < _bitmapSize && _previousCapture[index] != _currentCapture[index]; index++) {};
+
+            _differenceArray.AddDifference(beginIdx, index, &_currentCapture[beginIdx]);
+
         }
     }
 }
@@ -174,11 +171,11 @@ void Screen::RecalculateSize() {
     // Reallocate the necessary size to store data
     delete[] _currentCapture;
     delete[] _previousCapture;
-    delete[] _differenceMap;
+    // delete[] _differenceMap;
 
-    _currentCapture  = new Byte[TotalSize()];
-    _previousCapture = new Byte[TotalSize()];
-    _differenceMap   = new Byte[TotalSize()];
+    _currentCapture  = new Byte[_bitmapSize];
+    _previousCapture = new Byte[_bitmapSize];
+   // _differenceMap   = new Byte[_bitmapSize];
 
     // Free _hDIB and re-lock
     GlobalUnlock(_hDIB);
@@ -190,7 +187,7 @@ void Screen::RecalculateSize() {
 }
 
 const size_t Screen::TotalSize() const {
-    return _bitmapSize;
+    return _bitmapSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
 }
 
 void Screen::Resize(const ushort width, const ushort height) {
@@ -199,15 +196,28 @@ void Screen::Resize(const ushort width, const ushort height) {
     RecalculateSize();
 }
 
-const ByteArray Screen::Bitmap() const {
-    return _currentCapture;
+const size_t Screen::Bitmap(ByteArray& arr) const {
+    if (arr == nullptr) { arr = new Byte[_bitmapSize]; }
+
+    std::memcpy(arr, _currentCapture, _bitmapSize);
+
+    return _bitmapSize;
 }
 
-const size_t Screen::GetDifferences(ByteArray& differenceMap) {
-    if (differenceMap) { delete[] differenceMap; }
-    differenceMap = new Byte[_differences];
-    std::memmove(differenceMap, _differenceMap, _differences);
-    return _differences;
+const size_t Screen::WholeDeal(ByteArray& arr) const {
+
+    if (arr == nullptr) { arr = new Byte[TotalSize()]; }
+
+    std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));
+    std::memcpy(&arr[sizeof(BITMAPFILEHEADER)], (LPSTR)&_bmpInfo, sizeof(BITMAPINFOHEADER));
+
+    std::memcpy(&arr[sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)], _currentCapture, _bitmapSize);
+
+    return TotalSize();
+}
+
+const DiffArray& Screen::GetDifferences() const {
+    return _differenceArray;
 }
 
 void Screen::CaptureScreen() {
@@ -241,6 +251,8 @@ void Screen::CaptureScreen() {
 }
 
 const size_t Screen::GetHeader(ByteArray& arr) const {
+
+    if (arr == nullptr) { arr = new Byte[sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)]; }
 
     #if defined(_WIN32)
     std::memcpy(arr, (LPSTR)&_bmpHeader, sizeof(BITMAPFILEHEADER));

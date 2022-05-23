@@ -24,8 +24,7 @@ private:
     ByteArray _previousCapture;    // Buffer holding previous screen capture
 
     // Buffer holding the difference between current and previous captures
-    ByteArray _differenceMap;      
-    size_t _differences;  // Number of differences in differenceMap
+    DiffArray _differenceArray;      
 
     DWORD _bitmapSize;
 
@@ -72,8 +71,11 @@ public:
 
     const size_t TotalSize() const;  // Size of header and data
     const size_t GetHeader(ByteArray&) const;
-    const ByteArray Bitmap() const;  // Return the bitmap data
-    const size_t GetDifferences(ByteArray&);
+    const size_t Bitmap(ByteArray&) const;  // Return the bitmap data
+
+    const size_t WholeDeal(ByteArray& arr) const;
+
+    const DiffArray& GetDifferences() const;
 };
 
   

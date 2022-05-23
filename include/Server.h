@@ -12,7 +12,14 @@ private:
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	PacketList ConvertToPackets(ByteVec&);
+	PacketList ConvertToPackets(ByteArray&, size_t);
+
+	// Serve content to client
+	void Serve();
+
+	// Send a buffer of bytes to the client
+	void Send(ByteArray, size_t);
+
 public:
 
 	// Severs should only be instantiated with a port number
@@ -24,10 +31,4 @@ public:
 
 	// Listen for connections
 	void Listen();
-
-	// Serve content to client
-	void Serve();
-
-	// Send a buffer of bytes to the client
-	void Send(ByteVec&);
 };
