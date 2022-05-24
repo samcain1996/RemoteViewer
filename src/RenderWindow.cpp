@@ -6,6 +6,7 @@ RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragment
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
+	// Allocate memory for bitmap
 	_bitmapSize = 54 + CalculateTheoreticalBMPSize(_width, _height);
 	_bitmap = new Byte[_bitmapSize];
 
@@ -38,10 +39,7 @@ void RenderWindow::Draw() {
 	SDL_FreeSurface(_surface);
 }
 
-void RenderWindow::Run() { Update(); }
-
 void RenderWindow::AssembleImage(const PacketGroup group) {
-
 
 	PacketPriorityQueue& queue = _bmpPiecesPtr[group];
 

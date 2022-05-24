@@ -36,6 +36,4 @@ public:
 	RenderWindow(RenderWindow&&) = delete;
 
 	~RenderWindow();
-
-	void Run();  // Update window
 };

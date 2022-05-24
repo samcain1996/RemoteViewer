@@ -9,9 +9,6 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
 
 #if defined(_WIN32)
 
-    // TODO: Move this somewhere else
-    SetProcessDPIAware();  // Needed to get the correct resolution in Windows
-
     _srcHDC = GetDC(GetDesktopWindow());  // Get the device context of the monitor [1]
     _memHDC = CreateCompatibleDC(_srcHDC);    // Creates a new device context from previous context
 

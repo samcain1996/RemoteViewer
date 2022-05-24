@@ -29,6 +29,8 @@ protected:
 	int _width, _height;  // Width and height of window
 	int _posX, _posY;	  // X and Y position of window
 
+	int _mouseX, _mouseY;  // Mouse position
+
 	Uint32 _targetFPS;	  // FPS to target
 
 	bool* const _keepAlive;
