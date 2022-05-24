@@ -16,7 +16,7 @@ protected:
 	Window(const Window&) = delete;
 	Window(Window&&) = delete;
 
-	~Window();
+	virtual ~Window();
 
 	SDL_Window* _window;	// Window to render to
 	SDL_Surface* _surface;	// Pixel data to render to window

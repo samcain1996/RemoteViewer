@@ -16,6 +16,8 @@ protected:
 	NetAgent(NetAgent&&) 	  = delete;
 	NetAgent(const NetAgent&) = delete;
 
+	virtual ~NetAgent() {};
+
 	boost::asio::io_context _io_context;  // Used for I/O
 	unsigned short _port;				  // Port to reside on
 	udp::endpoint _localEndpoint, _remoteEndpoint;

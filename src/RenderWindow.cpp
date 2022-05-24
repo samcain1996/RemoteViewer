@@ -1,17 +1,17 @@
 #include "RenderWindow.h"
 
-RenderWindow::RenderWindow(const std::string& title, PacketGroupPriorityQueueMap* const messages,
-	MessageWriter<PacketGroup>& messageWriter, bool* killSignal, std::mutex* mutex) : Window(title, killSignal), _bmpPiecesPtr(*messages),
-	_msgReader(&messageWriter), _bitmap(nullptr), _bitmapSize(0) {
+RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
+	MessageWriter<PacketGroup>& messageWriter, bool* killSignal) : 
+	Window(title, killSignal), _bmpPiecesPtr(fragments), _msgReader(&messageWriter) {
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
 	_bitmapSize = 54 + CalculateTheoreticalBMPSize(_width, _height);
 	_bitmap = new Byte[_bitmapSize];
 
-	_bmpDataStream = nullptr;
+	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
 
-	_mutexPtr = mutex;
+	Update();
 }
 
 void RenderWindow::Draw() {
@@ -20,7 +20,6 @@ void RenderWindow::Draw() {
 
 	// Assemble image buffer
 	const PacketGroup group = _msgReader.ReadMessage();
-
 	AssembleImage(group);
 
 	// Create image to render
@@ -43,7 +42,6 @@ void RenderWindow::Run() { Update(); }
 
 void RenderWindow::AssembleImage(const PacketGroup group) {
 
-	ThreadLock lock(*_mutexPtr);
 
 	PacketPriorityQueue& queue = _bmpPiecesPtr[group];
 

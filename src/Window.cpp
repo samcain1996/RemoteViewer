@@ -2,7 +2,7 @@
 
 #pragma warning(suppress: 26495)
 Window::Window(const std::string& title, bool* killSignal) : _keepAlive(killSignal) {
-	// TODO: Make following line more safe
+
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
 	// Set width and height to be 75% monitor values

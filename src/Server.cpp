@@ -2,7 +2,7 @@
 
 Server::Server(const unsigned short listenPort) : NetAgent(listenPort),
 randomGenerator(rd()) {
-    //_keepAlive = false;
+    _keepAlive = true;
 }
 
 void Server::Listen() {

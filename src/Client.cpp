@@ -3,10 +3,9 @@
 Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
     _hostname = hostname;
     
-    _packetWatcherThr = std::thread(&Client::PacketWatcher, this);
+    //_packetWatcherThr = std::thread(&Client::PacketWatcher, this);
     _windowThr = std::thread([&](){ 
-        _window = new RenderWindow(_hostname, &_incompletePackets, _msgWriter, &_keepAlive, &_mutex);
-        _window->Run(); 
+        _window = new RenderWindow(_hostname, _incompletePackets, _msgWriter, &_keepAlive);
         });
 
 
@@ -16,47 +15,20 @@ void Client::ProcessPacket(const Packet packet) {
     // Get packet group
     Uint32 group = packet.Header().group;
 
+    if (packet.Header().sequence == 0) {
+        _packetGroups[group] = packet.Header().size - 1;
+        return;
+    }
+
     ThreadLock lock(_mutex);  // Prevent other threads from accessing variables used in scope
 
     // Add packet to list of packets in its group
     PacketPriorityQueue& packetGroupBucket = _incompletePackets[group];
     packetGroupBucket.push(packet);
 
-    _checkPackets = true;  // Allow PacketWatcher to check for complete messages
-}
-
-void Client::PacketWatcher() {
-
-    while (_keepAlive) {
-
-        // Sleep while not allowed to check packets
-        while (!_checkPackets) { if (!_keepAlive) return; std::this_thread::yield(); }
-
-        ThreadLock lock(_mutex);  // Lock variables in scope to current thread
-
-        _checkPackets = false;  // Reset flag
-
-        // Check each group for a full queue
-        for (auto& [group, prioQ] : _incompletePackets) {
-
-            // Get first packet in group that has arrived so far
-            const Packet& packet = prioQ.top();
-
-            // When the top packet is the first in the sequence,
-            // we can check that its payload is the same size as
-            // the queue. This implies that all the packets are here
-            // and the message can be assembled
-            if (packet.Header().sequence == 0) {
-
-                if (prioQ.size() == packet.Header().size) {
-                    prioQ.pop();  // Remove 'Header' packet
-
-                    _msgWriter.WriteMessage(packet.Header().group);
-                }
-            }
-
-        }
-
+    if (_packetGroups[group] == packetGroupBucket.size()) {
+        _msgWriter.WriteMessage(group);
+        _packetGroups.erase(group);
     }
 }
 
@@ -81,8 +53,7 @@ bool Client::Connect(const std::string& serverPort) {
 }
 
 void Client::Receive() {
-    int i = 0;
-    
+   
     PacketBuffer packetData;
 
     while (_keepAlive) {
@@ -105,7 +76,7 @@ void Client::Receive() {
 Client::~Client() {
 
     _windowThr.join();
-    _packetWatcherThr.join();
 
+    delete _window;
 }
 

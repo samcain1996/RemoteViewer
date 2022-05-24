@@ -2,7 +2,7 @@
 #include "Window.h"
 #include "Messages.h"
 
-class ClientWindow : Window {
+class RenderWindow : Window {
 	
 	using GroupReadyReader = MessageReader<PacketGroup>;
 	using ScreenFragmentsRef = PacketGroupPriorityQueueMap&;
@@ -21,21 +21,21 @@ private:
 
 	Uint32 _bitmapSize; // Buffer size
 
-	std::mutex* _mutexPtr;
+	//std::mutex* _mutexPtr;
 
 	void Draw() override;  // Draws _bitmap to the window
 	void AssembleImage(const PacketGroup group);  // Assembles _bitmap from image fragments
 
 public:
-	ClientWindow() = delete;
+	RenderWindow() = delete;
 
-	ClientWindow(const std::string& title, PacketGroupPriorityQueueMap* const messages,
-		MessageWriter<PacketGroup>& messageWriter, bool* killSignal, std::mutex* mutex);
+	RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
+		MessageWriter<PacketGroup>& messageWriter, bool* killSignal);
 
-	ClientWindow(const ClientWindow&) = delete;
-	ClientWindow(ClientWindow&&) = delete;
+	RenderWindow(const RenderWindow&) = delete;
+	RenderWindow(RenderWindow&&) = delete;
 
-	~ClientWindow();
+	~RenderWindow();
 
 	void Run();  // Update window
 };

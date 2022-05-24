@@ -1,6 +1,6 @@
 #pragma once
 #include "NetAgent.h"
-#include "ClientWindow.h"
+#include "RenderWindow.h"
 
 class Client : public NetAgent {
 
@@ -12,19 +12,14 @@ private:
 
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
+	std::unordered_map<Uint32, Uint32> _packetGroups;
 
 	GroupReadyWriter _msgWriter;  // Used to send messages to _window
 
-	ClientWindow* _window;  // Object to handle window rendering
-
-	// Thread to assemble data from packets
-	std::thread _packetWatcherThr;
+	RenderWindow* _window;  // Object to handle window rendering
 
 	// Thread to display remote screen
 	std::thread _windowThr;
-
-	// Thread-safe flag to function as flow control for thread
-	std::atomic<bool> _checkPackets;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -34,13 +29,6 @@ private:
 	 * 
 	 */
 	void ProcessPacket(const Packet);
-
-	/**
-	 * @brief Keep track of incoming packets and determine if 
-	 *        all packets for a given message have arrived
-	 * 
-	 */
-	void PacketWatcher();
 
 public:
 
