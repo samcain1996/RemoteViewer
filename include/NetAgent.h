@@ -8,7 +8,7 @@ using boost::asio::ip::udp;
 class NetAgent {
 protected:
 	NetAgent(const unsigned short port) : _port(port), _localEndpoint(udp::v4(), port),
-		_socket(_io_context, _localEndpoint) {};
+		_socket(_io_context, _localEndpoint), _keepAlive(true) {};
 	
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent
@@ -24,8 +24,11 @@ protected:
 	udp::socket _socket;
 	boost::system::error_code _errcode;
 
-	const static Ushort HANDSHAKE_SIZE = 4;
-	const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE];
-};
+	bool _keepAlive;
 
-inline const Byte NetAgent::HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = {'H', 'I', ':', ')'};
+	constexpr const static Ushort HANDSHAKE_SIZE = 4;
+	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
+
+	constexpr const static Ushort DISCONNECT_SIZE = 4;
+	constexpr const static Byte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = {'B', 'Y', 'E', '!' };
+};

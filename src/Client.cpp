@@ -1,12 +1,12 @@
 #include "Client.h"
 
-Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port),
-    _window(hostname, &_incompletePackets, _msgWriter) {
+Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
     _hostname = hostname;
     
-    _packetWatcherThr = std::jthread(&Client::PacketWatcher, this, _packetWatcherThr.get_stop_token());
+    _packetWatcherThr = std::thread(&Client::PacketWatcher, this);
     _windowThr = std::thread([&](){ 
-        _window.Run(); 
+        _window = new RenderWindow(_hostname, &_incompletePackets, _msgWriter, &_keepAlive, &_mutex);
+        _window->Run(); 
         });
 
 
@@ -25,12 +25,12 @@ void Client::ProcessPacket(const Packet packet) {
     _checkPackets = true;  // Allow PacketWatcher to check for complete messages
 }
 
-void Client::PacketWatcher(std::stop_token st) {
+void Client::PacketWatcher() {
 
-    while (!st.stop_requested()) {
+    while (_keepAlive) {
 
         // Sleep while not allowed to check packets
-        while (!_checkPackets) { std::this_thread::yield(); }
+        while (!_checkPackets) { if (!_keepAlive) return; std::this_thread::yield(); }
 
         ThreadLock lock(_mutex);  // Lock variables in scope to current thread
 
@@ -82,26 +82,30 @@ bool Client::Connect(const std::string& serverPort) {
 
 void Client::Receive() {
     int i = 0;
-    bool keepAlive = true;
     
     PacketBuffer packetData;
 
-    while (keepAlive) {
+    while (_keepAlive) {
 
         // Receive packet
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
         _socket.send(boost::asio::buffer(packetData, 1), 0, _errcode);
 
+        if (memcmp(packetData.data(), DISCONNECT_MESSAGE, DISCONNECT_SIZE) == 0) { 
+            _keepAlive = false;
+
+        }
+
         // Copy buffer to dummy packet
         ProcessPacket(Packet(packetData));
     }
 
-
 }
 
 Client::~Client() {
-    _packetWatcherThr.request_stop();
 
-    _packetWatcherThr.join();  // Unnecessary?
+    _windowThr.join();
+    _packetWatcherThr.join();
+
 }
 

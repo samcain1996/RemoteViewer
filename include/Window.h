@@ -11,6 +11,7 @@ protected:
 	Window() = delete;
 
 	Window(const std::string& title);
+	Window(const std::string& title, bool* killSignal);
 
 	Window(const Window&) = delete;
 	Window(Window&&) = delete;
@@ -30,8 +31,10 @@ protected:
 
 	Uint32 _targetFPS;	  // FPS to target
 
-	virtual bool Draw();  // Draw to window
-	virtual void Update();  // Update window
+	bool* const _keepAlive;
+
+	virtual void Draw() = 0;  // Draw to window
+	virtual void Update();    // Update window
 
 	void CapFPS(const Uint32 prevTicks);  // Limit FPS
 };

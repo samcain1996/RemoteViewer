@@ -1,13 +1,12 @@
 #include "Window.h"
 
 #pragma warning(suppress: 26495)
-Window::Window(const std::string& title) {
-
+Window::Window(const std::string& title, bool* killSignal) : _keepAlive(killSignal) {
 	// TODO: Make following line more safe
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
 	// Set width and height to be 75% monitor values
-	_width  = _displayData.w * 0.75f;
+	_width = _displayData.w * 0.75f;
 	_height = _displayData.h * 0.75f;
 
 	// Center window
@@ -23,25 +22,24 @@ Window::Window(const std::string& title) {
 	_targetFPS = 60;
 }
 
+Window::Window(const std::string& title) : Window(title, new bool(true)) {}
+
 Window::~Window() {
 	SDL_FreeSurface(_surface);
 	SDL_DestroyWindow(_window);
 }
 
-bool Window::Draw() { return true; }
-
 void Window::Update() {
 
 	Uint32 ticks;  
-	bool exit = false;
 
-	while (!exit) {
+	while (*_keepAlive) {
 		
 		// Get events
 		while (SDL_PollEvent(&_event)) {
 
 			if (_event.type == SDL_QUIT) {
-				exit = true;
+				*_keepAlive = false;
 				break;
 			}
 
@@ -51,7 +49,7 @@ void Window::Update() {
 
 		Draw();  // Draw content to window
 
-		CapFPS(ticks);
+		//CapFPS(ticks);
 
 	}
 

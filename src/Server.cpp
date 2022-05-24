@@ -1,7 +1,9 @@
 #include "Server.h"
 
 Server::Server(const unsigned short listenPort) : NetAgent(listenPort),
-    randomGenerator(rd())  {}
+randomGenerator(rd()) {
+    //_keepAlive = false;
+}
 
 void Server::Listen() {
     Byte connectionBuffer[PACKET_HEADER_ELEMENT_SIZE];  // Buffer to hold handshake message
@@ -18,7 +20,6 @@ void Server::Listen() {
 }
 
 void Server::Serve() {
-    bool keepAlive = false;
     Screen screen(1920, 1080, 1920, 1080);
 
     ByteArray capture = nullptr;
@@ -32,7 +33,9 @@ void Server::Serve() {
 
         Send(capture, captureSize);
 
-    } while(keepAlive);
+    } while(_keepAlive);
+
+     _socket.send_to(boost::asio::buffer(DISCONNECT_MESSAGE, DISCONNECT_SIZE), _remoteEndpoint, 0, _errcode);
 }
 
 void Server::Send(ByteArray bytes, size_t len) {

@@ -254,6 +254,7 @@ const size_t Screen::GetHeader(ByteArray& arr) const {
     if (arr == nullptr) { arr = new Byte[BMP_HEADER_SIZE]; }
 
     #if defined(_WIN32)
+
     std::memcpy(arr, (LPSTR)&_bmpHeader, BMP_FILE_HEADER_SIZE);
     std::memcpy(&arr[BMP_FILE_HEADER_SIZE], (LPSTR)&_bmpInfo, BMP_INFO_HEADER_SIZE);
 

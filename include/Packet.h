@@ -49,8 +49,8 @@ public:
 	Packet(const Packet&);
 	Packet(Packet&&) noexcept;
 	
-	Packet(PacketBuffer);
-	Packet(const PacketHeader&, const PacketPayload&);
+	Packet(PacketBuffer& packetData);
+	Packet(const PacketHeader& header, const PacketPayload& payload);
 
 
 	Packet& operator=(const Packet&);
@@ -61,8 +61,8 @@ public:
 
 };
 
-using PacketList			= std::vector<Packet>;
-using PacketPriorityQueue	= std::priority_queue<Packet, PacketList, std::less<Packet> >;
+using PacketList			      = std::vector<Packet>;
+using PacketPriorityQueue		  = std::priority_queue<Packet, PacketList, std::less<Packet> >;
 
 using PacketGroupPriorityQueueMap = std::unordered_map<Uint32, PacketPriorityQueue>;
 

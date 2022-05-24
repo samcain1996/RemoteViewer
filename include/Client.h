@@ -15,10 +15,10 @@ private:
 
 	GroupReadyWriter _msgWriter;  // Used to send messages to _window
 
-	ClientWindow _window;  // Object to handle window rendering
+	ClientWindow* _window;  // Object to handle window rendering
 
 	// Thread to assemble data from packets
-	std::jthread _packetWatcherThr;
+	std::thread _packetWatcherThr;
 
 	// Thread to display remote screen
 	std::thread _windowThr;
@@ -40,7 +40,7 @@ private:
 	 *        all packets for a given message have arrived
 	 * 
 	 */
-	void PacketWatcher(std::stop_token);
+	void PacketWatcher();
 
 public:
 
