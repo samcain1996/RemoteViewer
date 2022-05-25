@@ -26,7 +26,13 @@ protected:
 	udp::socket _socket;
 	boost::system::error_code _errcode;
 
+	// A map that maps packet groups to a priority queue
+	PacketGroupPriorityQueueMap _incompletePackets;
+	PacketGroupMap _packetGroups;
+
 	bool _keepAlive;
+
+	virtual void Receive() = 0;
 
 	constexpr const static Ushort HANDSHAKE_SIZE = 4;
 	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };

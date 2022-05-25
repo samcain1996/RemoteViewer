@@ -36,5 +36,5 @@ public:
 
 	~RenderWindow();
 
-	void Update() { Window::Update(); };
+	void Run() { Update(); };
 };

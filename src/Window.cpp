@@ -22,8 +22,6 @@ Window::Window(const std::string& title, bool* killSignal) : _keepAlive(killSign
 	_targetFPS = 60;
 }
 
-Window::Window(const std::string& title) : Window(title, new bool(true)) {}
-
 Window::~Window() {
 	SDL_FreeSurface(_surface);
 	SDL_DestroyWindow(_window);

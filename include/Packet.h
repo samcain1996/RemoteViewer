@@ -22,6 +22,8 @@ using PacketGroup   = Uint32;
 using PacketPayload = std::array<Byte, MAX_PACKET_PAYLOAD_SIZE>;
 using PacketBuffer  = std::array<Byte, MAX_PACKET_SIZE>;
 
+enum class PacketType { IMG, INP, RES };
+
 // Holds metadata about a packet
 struct PacketHeader {
 	Uint32 size;	  // Packet payload + packet header size
@@ -65,6 +67,7 @@ using PacketList			      = std::vector<Packet>;
 using PacketPriorityQueue		  = std::priority_queue<Packet, PacketList, std::less<Packet> >;
 
 using PacketGroupPriorityQueueMap = std::unordered_map<Uint32, PacketPriorityQueue>;
+using PacketGroupMap			  = std::unordered_map<Uint32, Uint32>;
 
 // Hash function for Packet priority queue.
 // Ideally, all packets with the same group will have

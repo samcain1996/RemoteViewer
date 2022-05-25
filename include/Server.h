@@ -20,6 +20,8 @@ private:
 	// Send a buffer of bytes to the client
 	void Send(ByteArray bytes, size_t len);
 
+	void Receive() override {};
+
 public:
 
 	// Severs should only be instantiated with a port number

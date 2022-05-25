@@ -10,7 +10,7 @@ protected:
 
 	Window() = delete;
 
-	Window(const std::string& title);
+	//Window(const std::string& title);
 	Window(const std::string& title, bool* killSignal);
 
 	Window(const Window&) = delete;

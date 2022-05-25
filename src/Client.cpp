@@ -45,7 +45,7 @@ bool Client::Connect(const std::string& serverPort) {
     if (std::memcmp(handshakeBuf, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE)) { return false; }
 
     _packetThr = std::thread(&Client::Receive, this);
-    _window->Update();
+    _window->Run();
 
     return true;
 }

@@ -10,10 +10,6 @@ class Client : public NetAgent {
 private:
 	std::string _hostname;  // Hostname of computer to connect to
 
-	// A map that maps packet groups to a priority queue
-	PacketGroupPriorityQueueMap _incompletePackets;
-	std::unordered_map<Uint32, Uint32> _packetGroups;
-
 	GroupReadyWriter _msgWriter;  // Used to send messages to _window
 
 	RenderWindow* _window;  // Object to handle window rendering
@@ -62,5 +58,5 @@ public:
 	 * @brief Receive data from server
 	 * 
 	 */
-	void Receive();
+	void Receive() override;
 };
