@@ -38,7 +38,7 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
     Byte temp[4];
     encode256(temp, 
         _srcWidth * _srcHeight * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
-        Endianess::Little);
+        Endianess::Big);
 
     std::memmove(&_bitmapHeader[2], temp, 4);
 
@@ -48,15 +48,15 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
 
     _bitmapInfo[0] = 0x28;
 
-    encode256(temp, _srcWidth, Endianess::Little);
+    encode256(temp, _srcWidth, Endianess::Big);
     std::memmove(&_bitmapInfo[4], temp, 4);
 
-    encode256(temp, _srcHeight, Endianess::Little);
+    encode256(temp, _srcHeight, Endianess::Big);
     std::memmove(&_bitmapInfo[8], temp, 4);
 
-    _bitmapInfo[9] = 1;
+    _bitmapInfo[12] = 1;
 
-    _bitmapInfo[11] = 4;
+    _bitmapInfo[14] = 32;
 
     _context = CGBitmapContextCreate(_currentCapture, _srcWidth, _srcHeight, 
         8, _srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
@@ -204,8 +204,17 @@ const size_t Screen::WholeDeal(ByteArray& arr) const {
 
     if (arr == nullptr) { arr = new Byte[TotalSize()]; }
 
+#if defined(_WIN32)
+
     std::memcpy(arr, (LPSTR)&_bmpHeader, BMP_FILE_HEADER_SIZE);
     std::memcpy(&arr[BMP_FILE_HEADER_SIZE], (LPSTR)&_bmpInfo, BMP_INFO_HEADER_SIZE);
+
+#elif defined(__APPLE__)
+
+    std::memcpy(arr, _bitmapHeader, BMP_FILE_HEADER_SIZE);
+    std::memcpy(&arr[BMP_FILE_HEADER_SIZE], _bitmapInfo, BMP_INFO_HEADER_SIZE);
+
+#endif
 
     std::memcpy(&arr[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
 
