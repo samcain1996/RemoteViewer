@@ -21,7 +21,6 @@ private:
 
 	Uint32 _bitmapSize; // Buffer size
 
-	//std::mutex* _mutexPtr;
 
 	void Draw() override;  // Draws _bitmap to the window
 	void AssembleImage(const PacketGroup group);  // Assembles _bitmap from image fragments
@@ -36,4 +35,6 @@ public:
 	RenderWindow(RenderWindow&&) = delete;
 
 	~RenderWindow();
+
+	void Update() { Window::Update(); };
 };

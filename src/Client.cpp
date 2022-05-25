@@ -3,11 +3,8 @@
 Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
     _hostname = hostname;
     
-    //_packetWatcherThr = std::thread(&Client::PacketWatcher, this);
-    _windowThr = std::thread([&](){ 
-        _window = new RenderWindow(_hostname, _incompletePackets, _msgWriter, &_keepAlive);
-        });
-
+    _window = new RenderWindow(_hostname, _incompletePackets, _msgWriter, &_keepAlive);
+        
 
 }
 
@@ -47,7 +44,8 @@ bool Client::Connect(const std::string& serverPort) {
 
     if (std::memcmp(handshakeBuf, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE)) { return false; }
 
-    Receive();
+    _packetThr = std::thread(&Client::Receive, this);
+    _window->Update();
 
     return true;
 }
@@ -75,7 +73,7 @@ void Client::Receive() {
 
 Client::~Client() {
 
-    _windowThr.join();
+    _packetThr.join();
 
     delete _window;
 }

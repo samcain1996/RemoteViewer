@@ -1,20 +1,20 @@
-#include "RenderWindow.h"
+#include "Application.h"
 
-RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
-	MessageWriter<PacketGroup>& messageWriter, bool* killSignal) : 
-	Window(title, killSignal), _bmpPiecesPtr(fragments), _msgReader(&messageWriter) {
+Application::Application(const Ushort port) {
 
-	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+	_networker = new Client(port, "192.168.50.160", &_msgReader);
 
-	// Allocate memory for bitmap
-	_bitmapSize = 54 + CalculateTheoreticalBMPSize(_width, _height);
-	_bitmap = new Byte[_bitmapSize];
+	_networkThr = std::thread([&]() {
+		// Assume client for now
+		dynamic_cast<Client*>(_networker)->Connect("10008");
+		});
 
-	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
+
+	_window = new Window;
 
 }
 
-void RenderWindow::Draw() {
+void Application::Draw() {
 
 	if (_msgReader.Empty()) { return; } // No image is ready, skip frame
 
@@ -23,7 +23,7 @@ void RenderWindow::Draw() {
 	AssembleImage(group);
 
 	// Create image to render
-	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
+	_bmpDataStream = SDL_RWFromConstMem(_bitmap, _bitmapSize);
 	_surface = SDL_LoadBMP_RW(_bmpDataStream, SDL_TRUE);
 	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
 
@@ -31,14 +31,12 @@ void RenderWindow::Draw() {
 	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
 	SDL_RenderPresent(_renderer);
 
-	SDL_UpdateWindowSurface(_window);
-
 	// Free resources
 	SDL_DestroyTexture(_texture);
 	SDL_FreeSurface(_surface);
 }
 
-void RenderWindow::AssembleImage(const PacketGroup group) {
+void Application::AssembleImage(const PacketGroup group) {
 
 	PacketPriorityQueue& queue = _bmpPiecesPtr[group];
 
@@ -60,7 +58,11 @@ void RenderWindow::AssembleImage(const PacketGroup group) {
 	_bmpPiecesPtr.erase(group); // Erase queue
 }
 
-RenderWindow::~RenderWindow() {
+Application::~Application() {
+
+	_networkThr.join();
+	delete dynamic_cast<Client*>(_networker);
+
 	SDL_RWclose(_bmpDataStream);
 	SDL_DestroyRenderer(_renderer);
 

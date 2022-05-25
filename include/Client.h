@@ -19,7 +19,7 @@ private:
 	RenderWindow* _window;  // Object to handle window rendering
 
 	// Thread to display remote screen
-	std::thread _windowThr;
+	std::thread _packetThr;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
