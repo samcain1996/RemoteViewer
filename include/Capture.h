@@ -10,24 +10,33 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
+#elif defined(__linux__)
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
 #endif
 
 constexpr const Ushort BMP_FILE_HEADER_SIZE = 14;
 constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
 constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE;
 
+using PixelData = void*;
+
 class Screen {
 private:
     size_t _srcWidth, _srcHeight;  // Resolution of source screen
     size_t _dstWidth, _dstHeight;  // Resolution of destination screen
 
-    ByteArray _currentCapture;     // Buffer holding screen capture
-    ByteArray _previousCapture;    // Buffer holding previous screen capture
+    Byte _header[BMP_HEADER_SIZE];
+    PixelData _currentCapture = nullptr;     // Buffer holding screen capture
+    PixelData _previousCapture = nullptr;    // Buffer holding previous screen capture
 
     // Buffer holding the difference between current and previous captures
     // DiffArray _differenceArray;      
 
-    DWORD _bitmapSize;
+    DWORD _bitmapSize = 0;
+    DWORD _bitsPerPixel = 32;
 
 #if defined(_WIN32)
 
@@ -37,23 +46,26 @@ private:
     // Bitmap data
     HBITMAP _hScreen;
     BITMAP _screenBMP;
-    BITMAPFILEHEADER _bmpHeader;
-    BITMAPINFOHEADER _bmpInfo;
     HANDLE _hDIB;
     char* _lpbitmap;
 
-#elif defined(__APPLE__)
+#endif
 
-    Byte _bitmapHeader[BMP_FILE_HEADER_SIZE];
-    Byte _bitmapInfo[BMP_INFO_HEADER_SIZE];
+#if defined(__APPLE__)
 
     CGColorSpace* _colorspace = nullptr;
     CGContext*    _context    = nullptr;
     CGImage*      _image      = nullptr;
 
+#elif defined (__linux__) 
+
+    Display* _display = nullptr;
+    Window root;
+    XWindowAttributes attributes = { 0 };
+    XImage* img = nullptr;
+
 #endif
 
-    void CalculateDifference();  // Calculates the differenceMap
     void InitializeBMPHeader();  // Initializes values for bitmap header
     void RecalculateSize();      // Re-initialize variables after screen resize
 
@@ -71,12 +83,8 @@ public:
     void Resize(const Ushort width, const Ushort height);  // Resize the destination screen
 
     const size_t TotalSize() const;  // Size of header and data
-    const size_t GetHeader(ByteArray& arr) const;
-    const size_t Bitmap(ByteArray& arr) const;  // Return the bitmap data
 
     const size_t WholeDeal(ByteArray& arr) const;
-
-    // const DiffArray& GetDifferences() const;
 };
 
   

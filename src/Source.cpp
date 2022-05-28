@@ -1,6 +1,8 @@
 #include <iostream>
 #include "Server.h"
 #include "Client.h"
+#include <fstream>
+#include <vector>
 //#include "Capture.h"
 
 void x(int port, const std::string hostname) {

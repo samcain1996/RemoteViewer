@@ -92,6 +92,8 @@ public:
 		if (msgPtr != nullptr) {
 			return *msgPtr;
 		}
+
+		return Message();
 	}
 };
 
