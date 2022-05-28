@@ -36,57 +36,8 @@ using ThreadLock		= std::lock_guard<std::mutex>;
 enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 
-//struct Difference {
-//public:
-//    Uint32 _pos;
-//    Uint32 _length;
-//    ByteArray _sequence;
-//    Difference(const Uint32 begin, const Uint32 end, ByteArray seq) {
-//        _pos = begin;
-//        _length = end - begin;
-//
-//        _sequence = new Byte[_length];
-//        std::memcpy(_sequence, seq, _length);
-//    }
-//
-//    Difference() : _pos(0), _length(0), _sequence(nullptr) {}
-//
-//    Difference(const Difference&) = delete;
-//    Difference(Difference&&) = delete;
-//
-//    ~Difference() { if (_sequence) delete[] _sequence; }
-//
-//private:
-//    void Copy(const Uint32 begin, const Uint32 end, ByteArray seq) {
-//        _sequence = new Byte[_length];
-//        std::memcpy(_sequence, seq, _length);
-//    }
-//public:
-//    Difference& operator=(const Difference& diff) { Copy(diff._pos, diff._length, diff._sequence); return *this; };
-//
-//};
-//
-//struct DiffArray {
-//private:
-//    std::pair<Difference*, Uint32> _differences;
-//    Uint32& _curIdx = _differences.second;
-//    const Uint32 _capacity;
-//public:
-//    DiffArray() = delete;
-//    DiffArray(const Uint32 capacity) : _capacity(capacity), _differences(new Difference[capacity], capacity) {}
-//
-//    DiffArray(const DiffArray&) = delete;
-//    DiffArray(DiffArray&&) = delete;
-//
-//    const std::pair<Difference*, Uint32>& Differences() const { return _differences; }
-//    void AddDifference(const Uint32 begin, const Uint32 end, ByteArray seq) {
-//        _differences.first[_curIdx++] = Difference(begin, end, seq);
-//    }
-//    void Clear() { _curIdx = 0; }
-//};
-
-#if defined(__APPLE__)
-using DWORD = unsigned int;
+#if defined(__APPLE__) || defined(__linux__)
+using DWORD = std::uint32_t;
 #endif
 /*----------------FUNCTIONS--------------------*/
 

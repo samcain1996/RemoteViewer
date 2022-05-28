@@ -1,6 +1,8 @@
 #include "Window.h"
 
-#pragma warning(suppress: 26495)
+#if defined(_WIN32)
+#pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
+#endif
 Window::Window(const std::string& title, bool* killSignal) : _keepAlive(killSignal) {
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);

@@ -56,6 +56,7 @@ public:
 
 
 	Packet& operator=(const Packet&);
+	Packet& operator=(Packet&&) = delete;
 
 	const PacketBuffer	    RawData() const;  // Metadata and payload in a contiguous array
 	const PacketHeader	    Header()  const;  // Metadata

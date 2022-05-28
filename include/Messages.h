@@ -1,6 +1,7 @@
 #pragma once
 #include "Types.h"
 
+
 // Aliases for classes
 template <typename Message>
 class MessageHandler;
@@ -30,12 +31,9 @@ private:
 	const bool _ownsQueue;				// Flag to check whether the MessageHandler "owns" the queue
 
 protected:
-	Message _msg;						// Last message read from queue
+	Message _msg{};						// Last message read from queue
 	std::mutex	_mutex;					// Mutex to ensure only 1 thread access queue at one time
 	std::queue<Message>* _queuePtr;	    // Pointer to queue holding messages
-
-	MessageHandler(const MessageHandler&) = delete;
-	MessageHandler(MessageHandler&&) = delete;
 
 	// If constructed by itself, create a new queue
 	MessageHandler() : _queuePtr(new std::queue<Message>), _ownsQueue(true) {};
@@ -43,7 +41,13 @@ protected:
 	// If constructed from another MessageHandler, share its queue
 	MessageHandler(MsgHandlerPtr<Message> msgHandler) : _queuePtr(msgHandler->_queuePtr), _ownsQueue(false) {};
 
+	MessageHandler(const MessageHandler&) = delete;
+	MessageHandler(MessageHandler&&) = delete;
+
 	~MessageHandler() { if (_ownsQueue) { delete _queuePtr; } };
+
+	MessageHandler& operator=(const MessageHandler&) = delete;
+	MessageHandler& operator=(MessageHandler&&) = delete;
 
 	// Put message in back of queue
 	bool Push(const Message message) {
@@ -55,7 +59,7 @@ protected:
 	}
 
 	// Remove message from the front of the queue
-	Message* Pop() {
+	const Message* const Pop() {
 		ThreadLock lock(_mutex);
 
 		if (_queuePtr->empty()) { return nullptr; }
@@ -85,9 +89,12 @@ public:
 	MessageReader(const MessageReader&) = delete;
 	MessageReader(MessageReader&&) = delete;
 
+	MessageReader& operator=(const MessageReader&) = delete;
+	MessageReader& operator=(MessageReader&&) = delete;
+
 	// Read message from queue
 	const Message ReadMessage() {
-		Message* msgPtr = this->Pop();
+		const Message* msgPtr = this->Pop();
 
 		if (msgPtr != nullptr) {
 			return *msgPtr;
@@ -110,6 +117,9 @@ public:
 	// Do not allow copying
 	MessageWriter(const MessageWriter&) = delete;
 	MessageWriter(MessageWriter&&) = delete;
+
+	MessageWriter& operator=(const MessageWriter&) = delete;
+	MessageWriter& operator=(MessageWriter&&) = delete;
 
 	// Write message to queue
 	bool WriteMessage(const Message& message) {

@@ -5,13 +5,13 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
 
 #if defined(__linux__)
 
-    display = XOpenDisplay(nullptr);
-    root = DefaultRootWindow(display);
+    _display = XOpenDisplay(nullptr);
+    _root = DefaultRootWindow(_display);
 
-    XGetWindowAttributes(display, root, &attributes);
+    XGetWindowAttributes(_display, _root, &_attributes);
 
-    _srcWidth = attributes.width;
-    _srcHeight = attributes.height;
+    _srcWidth = _attributes.width;
+    _srcHeight = _attributes.height;
 #endif
 
 #if defined(_WIN32)
@@ -58,20 +58,7 @@ Screen::Screen() : Screen(CGDisplayPixelsWide(CGMainDisplayID()), CGDisplayPixel
 
 #elif defined(__linux__) 
 
-// Is this stupid? Is it even legal??
-
-Screen::Screen() : Screen() {
-
-    display = XOpenDisplay(nullptr);
-    root = DefaultRootWindow(display);
-
-    XGetWindowAttributes(display, root, &attributes);
-
-    _srcWidth = attributes.width;
-    _srcHeight = attributes.height;
-
-    *this = Screen(_srcWidth, _srcHeight, _srcWidth, _srcHeight);
-}
+Screen::Screen() : Screen(1366, 768, 1366, 768) {}
 
 #endif
 
@@ -95,8 +82,8 @@ Screen::~Screen() {
 
 #elif defined(__linux__)
 
-    XDestroyImage(img);
-    XCloseDisplay(display);
+    XDestroyImage(_img);
+    XCloseDisplay(_display);
 
 #endif
     
@@ -185,7 +172,7 @@ const size_t Screen::WholeDeal(ByteArray& arr) const {
 
     if (arr == nullptr) { arr = new Byte[_bitmapSize + BMP_HEADER_SIZE]; }
 
-    std::memcpy(arr, (LPSTR)&_header, BMP_HEADER_SIZE);
+    std::memcpy(arr, &_header, BMP_HEADER_SIZE);
 
     std::memcpy(&arr[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
 
@@ -194,6 +181,7 @@ const size_t Screen::WholeDeal(ByteArray& arr) const {
 
 void Screen::CaptureScreen() {
 
+    if (_currentCapture)
     std::memcpy(_previousCapture, _currentCapture, _bitmapSize);
 
 #if defined(_WIN32)

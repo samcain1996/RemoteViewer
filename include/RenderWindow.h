@@ -36,5 +36,8 @@ public:
 
 	~RenderWindow();
 
+	RenderWindow& operator=(const RenderWindow&) = delete;
+	RenderWindow& operator=(RenderWindow&&) = delete;
+
 	void Run() { Update(); };
 };

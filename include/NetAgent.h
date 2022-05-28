@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/asio.hpp>
+#include <thread>
 #include "Packet.h"
 
 using boost::asio::ip::udp;
@@ -17,6 +18,9 @@ protected:
 	NetAgent(const NetAgent&) = delete;
 
 	virtual ~NetAgent() {};
+
+	NetAgent& operator=(const NetAgent&) = delete;
+	NetAgent& operator=(NetAgent&&) = delete;
 
 	boost::asio::io_context _io_context;  // Used for I/O
 	unsigned short _port;				  // Port to reside on

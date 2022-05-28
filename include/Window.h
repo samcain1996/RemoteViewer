@@ -18,6 +18,9 @@ protected:
 
 	virtual ~Window();
 
+	Window& operator=(const Window&) = delete;
+	Window& operator=(Window&&) = delete;
+
 	SDL_Window* _window;	// Window to render to
 	SDL_Surface* _surface;	// Pixel data to render to window
 	SDL_Texture* _texture;	// Driver-specific, pixel data used to render

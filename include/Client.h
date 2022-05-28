@@ -37,6 +37,9 @@ public:
 
 	~Client();
 
+	Client& operator=(const Client&) = delete;
+	Client& operator=(Client&&) = delete;
+
 	/**
 	 * @brief Connects to a server via a udp socket
 	 * 

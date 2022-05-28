@@ -31,6 +31,9 @@ public:
 	
 	Server(const unsigned short listenPort);
 
+	Server& operator=(const Server&) = delete;
+	Server& operator=(Server&&) = delete;
+
 	// Listen for connections
 	void Listen();
 };

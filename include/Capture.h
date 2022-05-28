@@ -30,10 +30,7 @@ private:
 
     Byte _header[BMP_HEADER_SIZE];
     PixelData _currentCapture = nullptr;     // Buffer holding screen capture
-    PixelData _previousCapture = nullptr;    // Buffer holding previous screen capture
-
-    // Buffer holding the difference between current and previous captures
-    // DiffArray _differenceArray;      
+    PixelData _previousCapture = nullptr;    // Buffer holding previous screen capture  
 
     DWORD _bitmapSize = 0;
     DWORD _bitsPerPixel = 32;
@@ -47,7 +44,6 @@ private:
     HBITMAP _hScreen;
     BITMAP _screenBMP;
     HANDLE _hDIB;
-    char* _lpbitmap;
 
 #endif
 
@@ -60,9 +56,9 @@ private:
 #elif defined (__linux__) 
 
     Display* _display = nullptr;
-    Window root;
-    XWindowAttributes attributes = { 0 };
-    XImage* img = nullptr;
+    Window _root;
+    XWindowAttributes _attributes = { 0 };
+    XImage* _img = nullptr;
 
 #endif
 
