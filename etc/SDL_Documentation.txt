@@ -1,0 +1,14 @@
+Data Structures:
+SDL_Window: GenericWindow to render things onto
+SDL_Texture: Contains driver-specific representation of pizel data
+SDL_Surface: Collection of pixels
+SDL_RWops: Abstract interface to stream I/O
+SDL_Renderer: Contains a renderering state
+
+Functions:
+SDL_FreeSurface: Frees memory. NULL-safe.
+SDL_DestroyTexture / SDL_DestroyRenderer: Frees memory. NOT NULL-safe.
+
+SDL_LoadBMP_RW: Load BMP image from SDL data stream. Setting the second parameter to SDL_TRUE frees SDL_RWops after use. (Must call SDL_FreeSurface after).
+SDL_RenderCopy: Copy texture to renderer. NULL srcrect -> Use entire texture, NULL dstrect -> Stretch to entire render target
+SDL_RenderPresent: Render image

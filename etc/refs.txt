@@ -1,0 +1,3 @@
+[1] A device context is a Windows data structure containing information about the drawing attributes of a device such as a display or a printer
+
+[2] The SelectObject function selects an object into the specified device context (DC)

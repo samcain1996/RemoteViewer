@@ -1,0 +1,19 @@
+Networking:
+	1. Deal with the possibility of losing packets
+	2. Allow the client to send a disconnect message
+	3. Create different packet types
+
+Multithreading:
+	1. Create a structure housing thread and communication channel to parent (Maybe?)
+
+GenericWindow:
+	1. Make monitor choice selectable
+
+RenderWindow:
+	1. Free memory in _keepAlive
+
+Server:
+	1. Receive packets from client on separate thread
+
+General:
+	1. Fix endianess
