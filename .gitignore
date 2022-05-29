@@ -9,3 +9,6 @@
 
 # Do not ignore C files
 !*.c
+
+# Do not ignore .txt files in etc
+!etc/*.txt
