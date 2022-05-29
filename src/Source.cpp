@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Server.h"
 #include "Client.h"
+#include <fstream>
 
 void x(int port, const std::string hostname) {
 	Client client(port, hostname);
@@ -30,6 +31,16 @@ int main(int argc, char* argv[]) {
 //
 //	SDL_Quit();
 
+	ScreenCapture screen;
+	screen.CaptureScreen();
+
+	ByteArray img = nullptr;
+	size_t imgSize = screen.WholeDeal(img);
+
+	std::ofstream linOut("linuxOut.bmp", std::ios_base::binary);
+	linOut.write((char*)img, imgSize);
+
+	linOut.close();
 
 
 	return 0;

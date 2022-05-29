@@ -56,7 +56,7 @@ private:
 #elif defined (__linux__) 
 
     Display* _display = nullptr;
-    GenericWindow _root;
+    Window _root;
     XWindowAttributes _attributes = { 0 };
     XImage* _img = nullptr;
 

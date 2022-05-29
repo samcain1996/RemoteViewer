@@ -133,7 +133,7 @@ void ScreenCapture::RecalculateSize() {
 
     _bitmapSize = ((_dstWidth * _bitsPerPixel + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
 
-    delete[] _previousCapture;
+    delete[] (ByteArray)_previousCapture;
     _previousCapture = new Byte[_bitmapSize];
 
 #if defined(_WIN32)
@@ -204,8 +204,8 @@ void ScreenCapture::CaptureScreen() {
 
 #elif defined(__linux__)
 
-    img = XGetImage(display, root, 0, 0, _srcWidth, _srcHeight, AllPlanes, ZPixmap);
-    _currentCapture = img->data;
+    _img = XGetImage(_display, _root, 0, 0, _srcWidth, _srcHeight, AllPlanes, ZPixmap);
+    _currentCapture = _img->data;
 
 #endif
 
