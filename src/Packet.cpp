@@ -54,6 +54,14 @@ Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
 Packet& Packet::operator=(const Packet& other) {
 	_header  = other._header;
 	_payload = other._payload;
+
+	return *this;
+}
+
+Packet& Packet::operator=(Packet&& other) noexcept {
+	_header = std::move(other._header);
+	_payload = std::move(other._payload);
+
 	return *this;
 }
 

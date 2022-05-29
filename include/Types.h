@@ -12,7 +12,7 @@
 
 #define SDL_MAIN_HANDLED
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <vector>
 #include <mutex>
 #include <queue>
@@ -25,7 +25,7 @@ constexpr const Uint32 FOUR_BYTES  = (TWO_BYTES + TWO_BYTES);
 /*------------------TYPES--------------------*/
 using Byte				= unsigned char;
 using ByteArray         = Byte*;
-using ByteVec			= std::vector<Byte>;
+using BytePtr           = Byte*;
 
 using ByteEncodedUint32 = Byte[FOUR_BYTES];
 
@@ -39,6 +39,7 @@ constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;
 #endif
+
 /*----------------FUNCTIONS--------------------*/
 
 constexpr void encode256(ByteEncodedUint32 encodedNumber, const Uint32 numberToEncode,

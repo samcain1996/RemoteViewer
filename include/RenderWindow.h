@@ -1,8 +1,8 @@
 #pragma once
-#include "Window.h"
+#include "GenericWindow.h"
 #include "Messages.h"
 
-class RenderWindow : Window {
+class RenderWindow : GenericWindow {
 	
 	using GroupReadyReader = MessageReader<PacketGroup>;
 	using ScreenFragmentsRef = PacketGroupPriorityQueueMap&;
@@ -29,7 +29,7 @@ public:
 	RenderWindow() = delete;
 
 	RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
-		MessageWriter<PacketGroup>& messageWriter, bool* killSignal);
+		MessageWriter<PacketGroup>& messageWriter, std::atomic<bool>* killSignal);
 
 	RenderWindow(const RenderWindow&) = delete;
 	RenderWindow(RenderWindow&&) = delete;

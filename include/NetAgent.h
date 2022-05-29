@@ -34,7 +34,7 @@ protected:
 	PacketGroupPriorityQueueMap _incompletePackets;
 	PacketGroupMap _packetGroups;
 
-	bool _keepAlive;
+	std::atomic<bool> _keepAlive;
 
 	virtual void Receive() = 0;
 

@@ -1,6 +1,6 @@
 #include "Capture.h"
 
-Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
+ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
     _srcWidth(srcWidth), _srcHeight(srcHeight), _dstWidth(dstWidth), _dstHeight(dstHeight) {
 
 #if defined(__linux__)
@@ -29,7 +29,6 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
     SetStretchBltMode(_memHDC, HALFTONE);
 
     _hDIB = NULL;
-    _lpbitmap = NULL;
 
 #endif
 
@@ -49,20 +48,20 @@ Screen::Screen(const size_t srcWidth, const size_t srcHeight, const size_t dstWi
 
 #if defined(_WIN32)
 
-Screen::Screen() : Screen(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(GetDC(NULL), VERTRES), 1920, 1080) {}
+ScreenCapture::ScreenCapture() : ScreenCapture(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(GetDC(NULL), VERTRES), 1920, 1080) {}
 
 #elif defined(__APPLE__)
 
-Screen::Screen() : Screen(CGDisplayPixelsWide(CGMainDisplayID()), CGDisplayPixelsHigh(CGMainDisplayID()),
+ScreenCapture::ScreenCapture() : ScreenCapture(CGDisplayPixelsWide(CGMainDisplayID()), CGDisplayPixelsHigh(CGMainDisplayID()),
 1440, 900) {}
 
 #elif defined(__linux__) 
 
-Screen::Screen() : Screen(1366, 768, 1366, 768) {}
+ScreenCapture::ScreenCapture() : ScreenCapture(1366, 768, 1366, 768) {}
 
 #endif
 
-Screen::~Screen() {
+ScreenCapture::~ScreenCapture() {
 
 #if defined(_WIN32)
 
@@ -89,7 +88,7 @@ Screen::~Screen() {
     
 }
 
-void Screen::InitializeBMPHeader() {
+void ScreenCapture::InitializeBMPHeader() {
 
     _bitmapSize = ((_dstWidth * _bitsPerPixel + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
 
@@ -130,7 +129,7 @@ void Screen::InitializeBMPHeader() {
 #endif
 }
 
-void Screen::RecalculateSize() {
+void ScreenCapture::RecalculateSize() {
 
     _bitmapSize = ((_dstWidth * _bitsPerPixel + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
 
@@ -158,17 +157,17 @@ void Screen::RecalculateSize() {
     InitializeBMPHeader();
 }
 
-const size_t Screen::TotalSize() const {
+const size_t ScreenCapture::TotalSize() const {
     return _bitmapSize + BMP_HEADER_SIZE;
 }
 
-void Screen::Resize(const Ushort width, const Ushort height) {
+void ScreenCapture::Resize(const Ushort width, const Ushort height) {
     _dstWidth  = width;
     _dstHeight = height;
     RecalculateSize();
 }
 
-const size_t Screen::WholeDeal(ByteArray& arr) const {
+const size_t ScreenCapture::WholeDeal(ByteArray& arr) const {
 
     if (arr == nullptr) { arr = new Byte[_bitmapSize + BMP_HEADER_SIZE]; }
 
@@ -179,7 +178,7 @@ const size_t Screen::WholeDeal(ByteArray& arr) const {
     return _bitmapSize + BMP_HEADER_SIZE;
 }
 
-void Screen::CaptureScreen() {
+void ScreenCapture::CaptureScreen() {
 
     if (_currentCapture)
     std::memcpy(_previousCapture, _currentCapture, _bitmapSize);

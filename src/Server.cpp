@@ -20,7 +20,7 @@ void Server::Listen() {
 }
 
 void Server::Serve() {
-    Screen screen(1920, 1080, 1920, 1080);
+    ScreenCapture screen(1920, 1080, 1920, 1080);
 
     ByteArray capture = nullptr;
 

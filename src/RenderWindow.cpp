@@ -1,8 +1,8 @@
 #include "RenderWindow.h"
 
 RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
-	MessageWriter<PacketGroup>& messageWriter, bool* killSignal) : 
-	Window(title, killSignal), _bmpPiecesPtr(fragments), _msgReader(&messageWriter) {
+	MessageWriter<PacketGroup>& messageWriter, std::atomic<bool>* killSignal) : 
+	GenericWindow(title, killSignal), _bmpPiecesPtr(fragments), _msgReader(&messageWriter) {
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 

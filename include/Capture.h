@@ -23,7 +23,7 @@ constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HE
 
 using PixelData = void*;
 
-class Screen {
+class ScreenCapture {
 private:
     size_t _srcWidth, _srcHeight;  // Resolution of source screen
     size_t _dstWidth, _dstHeight;  // Resolution of destination screen
@@ -56,7 +56,7 @@ private:
 #elif defined (__linux__) 
 
     Display* _display = nullptr;
-    Window _root;
+    GenericWindow _root;
     XWindowAttributes _attributes = { 0 };
     XImage* _img = nullptr;
 
@@ -67,12 +67,12 @@ private:
 
 public:
 
-    Screen();
-    Screen(const size_t, const size_t, const size_t, const size_t);
+    ScreenCapture();
+    ScreenCapture(const size_t, const size_t, const size_t, const size_t);
 
-    Screen(const Screen&) = delete;
-    Screen(Screen&&) = delete;
-    ~Screen();
+    ScreenCapture(const ScreenCapture&) = delete;
+    ScreenCapture(ScreenCapture&&) = delete;
+    ~ScreenCapture();
 
     void CaptureScreen();  // Capture the screen and store in _currentCapture
 
