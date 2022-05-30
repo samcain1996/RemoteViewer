@@ -16,8 +16,6 @@ protected:
 	GenericWindow(const GenericWindow&) = delete;
 	GenericWindow(GenericWindow&&) = delete;
 
-	virtual ~GenericWindow();
-
 	GenericWindow& operator=(const GenericWindow&) = delete;
 	GenericWindow& operator=(GenericWindow&&) = delete;
 
@@ -39,7 +37,10 @@ protected:
 	std::atomic<bool>* _keepAlive;
 
 	virtual bool Draw() = 0;  // Draw to window
-	virtual void Update();    // Update window
 
 	void CapFPS(const Uint32 prevTicks);  // Limit FPS
+
+public:
+	virtual ~GenericWindow();
+	virtual void Update();    // Update window
 };

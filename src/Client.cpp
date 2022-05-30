@@ -2,10 +2,6 @@
 
 Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
     _hostname = hostname;
-    
-    _window = new RenderWindow(_hostname, _incompletePackets, _msgWriter, &_keepAlive);
-        
-
 }
 
 void Client::ProcessPacket(const Packet& packet) {
@@ -24,7 +20,7 @@ void Client::ProcessPacket(const Packet& packet) {
     packetGroupBucket.push(packet);
 
     if (_packetGroups[group] == packetGroupBucket.size()) {
-        _msgWriter.WriteMessage(group);
+        writer->WriteMessage(group);
         _packetGroups.erase(group);
     }
 }
@@ -44,9 +40,6 @@ bool Client::Connect(const std::string& serverPort) {
 
     if (std::memcmp(handshakeBuf, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE)) { return false; }
 
-    _packetThr = std::thread(&Client::Receive, this);
-    _window->Run();
-
     return true;
 }
 
@@ -60,11 +53,6 @@ void Client::Receive() {
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
         _socket.send(boost::asio::buffer(packetData, 1), 0, _errcode);
 
-        if (memcmp(packetData.data(), DISCONNECT_MESSAGE, DISCONNECT_SIZE) == 0) { 
-            _keepAlive = false;
-
-        }
-
         // Copy buffer to dummy packet
         ProcessPacket(Packet(packetData));
     }
@@ -73,8 +61,5 @@ void Client::Receive() {
 
 Client::~Client() {
 
-    _packetThr.join();
-
-    delete _window;
 }
 

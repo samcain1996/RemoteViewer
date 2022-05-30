@@ -13,7 +13,6 @@ void Server::Listen() {
     // Send handshake back
     _socket.send_to(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), _remoteEndpoint, 0, _errcode);
 
-    Serve();
 }
 
 void Server::Serve() {
@@ -22,7 +21,6 @@ void Server::Serve() {
     ByteArray capture = nullptr;
 
     // Loop indefinitely
-    do {
 
         screen.CaptureScreen();
 
@@ -30,9 +28,7 @@ void Server::Serve() {
 
         Send(capture, captureSize);
 
-    } while(_keepAlive);
 
-     _socket.send_to(boost::asio::buffer(DISCONNECT_MESSAGE, DISCONNECT_SIZE), _remoteEndpoint, 0, _errcode);
 }
 
 void Server::Send(ByteArray bytes, size_t len) {

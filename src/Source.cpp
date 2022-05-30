@@ -1,19 +1,6 @@
 #include <iostream>
-#include "Server.h"
-#include "Client.h"
 #include <fstream>
-
-void x(int port, const std::string hostname) {
-	Client client(port, hostname);
-
-	client.Connect("10008");
-}
-
-void y(int port) {
-	Server server(port);
-
-	server.Listen();
-}
+#include "Application.h"
 
 int main(int argc, char* argv[]) {
 
@@ -23,11 +10,9 @@ int main(int argc, char* argv[]) {
 
 	SDL_SetMainReady();
 	SDL_Init(SDL_INIT_EVERYTHING);
-	std::thread clientThr(x, 10009, "192.168.50.160");
-	std::thread serverThr(y, 10008);
 
-	serverThr.join();
-	clientThr.join();
+	Application::Init(false);
+	Application::Run();
 
 	SDL_Quit();
 

@@ -9,9 +9,6 @@ private:
 	// into a group of packets
 	PacketList ConvertToPackets(ByteArray& bytes, size_t len);
 
-	// Serve content to client
-	void Serve();
-
 	// Send a buffer of bytes to the client
 	void Send(ByteArray bytes, size_t len) override;
 
@@ -32,4 +29,6 @@ public:
 
 	// Listen for connections
 	void Listen();
+	// Serve content to client
+	void Serve();
 };

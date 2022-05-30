@@ -1,8 +1,8 @@
 #include "RenderWindow.h"
 
-RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
-	MessageWriter<PacketGroup>& messageWriter, std::atomic<bool>* killSignal) : 
-	GenericWindow(title, killSignal), _bmpPiecesPtr(fragments), _msgReader(&messageWriter) {
+RenderWindow::RenderWindow(const std::string& title, std::atomic<bool>* killSignal, 
+	ScreenFragmentsRef sfr) : 
+	GenericWindow(title, killSignal), _bmpPiecesPtr(sfr) {
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -16,10 +16,10 @@ RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragment
 
 bool RenderWindow::Draw() {
 
-	if (_msgReader.Empty()) { return false; } // No image is ready, skip frame
+	if (completeGroups->Empty()) { return false; } // No image is ready, skip frame
 
 	// Assemble image buffer
-	const PacketGroup group = _msgReader.ReadMessage();
+	const PacketGroup group = completeGroups->ReadMessage();
 	AssembleImage(group);
 
 	// Create image to render

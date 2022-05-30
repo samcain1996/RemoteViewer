@@ -3,19 +3,9 @@
 #include "RenderWindow.h"
 
 class Client : public NetAgent {
-
-	using GroupReadyReader = MessageReader<PacketGroup>;
-	using GroupReadyWriter = MessageWriter<PacketGroup>;
-
 private:
 	std::string _hostname;  // Hostname of computer to connect to
 
-	GroupReadyWriter _msgWriter;  // Used to send messages to _window
-
-	RenderWindow* _window;  // Object to handle window rendering
-
-	// Thread to display remote screen
-	std::thread _packetThr;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -64,4 +54,7 @@ public:
 	 * 
 	 */
 	void Receive() override;
+
+
+	MessageWriter<PacketGroup>* writer = nullptr;
 };

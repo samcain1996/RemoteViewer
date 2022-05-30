@@ -2,9 +2,8 @@
 #include "GenericWindow.h"
 #include "Messages.h"
 
-class RenderWindow : GenericWindow {
+class RenderWindow : public GenericWindow {
 	
-	using GroupReadyReader = MessageReader<PacketGroup>;
 	using ScreenFragmentsRef = PacketGroupPriorityQueueMap&;
 
 private:
@@ -13,9 +12,6 @@ private:
 	SDL_RWops* _bmpDataStream;  // Current image to render
 
 	ScreenFragmentsRef _bmpPiecesPtr;  // Fragments of images to render
-
-	// Message reader receives messages when image is ready to render
-	GroupReadyReader _msgReader;	   
 
 	ByteArray _bitmap;  // Buffer to hold image to render
 
@@ -28,8 +24,7 @@ private:
 public:
 	RenderWindow() = delete;
 
-	RenderWindow(const std::string& title, ScreenFragmentsRef fragments,
-		MessageWriter<PacketGroup>& messageWriter, std::atomic<bool>* killSignal);
+	RenderWindow(const std::string& title, std::atomic<bool>* killSignal, ScreenFragmentsRef sfr);
 
 	RenderWindow(const RenderWindow&) = delete;
 	RenderWindow(RenderWindow&&) = delete;
@@ -39,5 +34,5 @@ public:
 	RenderWindow& operator=(const RenderWindow&) = delete;
 	RenderWindow& operator=(RenderWindow&&) = delete;
 
-	void Run() { Update(); };
+	MessageReader<PacketGroup>* completeGroups = nullptr;
 };

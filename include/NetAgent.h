@@ -6,11 +6,10 @@
 
 using boost::asio::ip::udp;
 
-// Base class to Server and Client
 class NetAgent {
+
 protected:
-	NetAgent(const unsigned short port) : _port(port), _localEndpoint(udp::v4(), port),
-		_socket(_io_context, _localEndpoint), _keepAlive(true) {};
+	NetAgent(const Ushort localPort);
 	
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent
@@ -18,10 +17,14 @@ protected:
 	NetAgent(NetAgent&&) 	  = delete;
 	NetAgent(const NetAgent&) = delete;
 
-	virtual ~NetAgent() {};
-
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
+
+	constexpr const static Ushort HANDSHAKE_SIZE = 4;
+	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
+
+	constexpr const static Ushort DISCONNECT_SIZE = 4;
+	constexpr const static Byte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = { 'B', 'Y', 'E', '!' };
 	
 	static 	std::random_device rd;  // Used to seed random number generator
 
@@ -29,15 +32,14 @@ protected:
 	static std::mt19937 randomGenerator;
 
 	boost::asio::io_context _io_context;  // Used for I/O
-	unsigned short _port;				  // Port to reside on
+	Ushort _localPort;				  // Port to reside on
 	udp::endpoint _localEndpoint, _remoteEndpoint;
 
 	std::mutex _mutex;
 	udp::socket _socket;
 	boost::system::error_code _errcode;
 
-	// A map that maps packet groups to a priority queue
-	PacketGroupPriorityQueueMap _incompletePackets;
+
 	PacketGroupMap _packetGroups;
 
 	std::atomic<bool> _keepAlive;
@@ -46,9 +48,8 @@ protected:
 	virtual void Send(ByteArray bytes, size_t len) = 0;
 	virtual void ProcessPacket(const Packet&) = 0;
 
-	constexpr const static Ushort HANDSHAKE_SIZE = 4;
-	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
-
-	constexpr const static Ushort DISCONNECT_SIZE = 4;
-	constexpr const static Byte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = {'B', 'Y', 'E', '!' };
+public:
+	virtual ~NetAgent();
+	// A map that maps packet groups to a priority queue
+	PacketGroupPriorityQueueMap _incompletePackets;
 };
