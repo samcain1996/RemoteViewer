@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/asio.hpp>
 #include <thread>
+#include <random>
 #include "Packet.h"
 
 using boost::asio::ip::udp;
@@ -21,6 +22,11 @@ protected:
 
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
+	
+	static 	std::random_device rd;  // Used to seed random number generator
+
+	// Random number generator, C-style rand does not have enough precision
+	static std::mt19937 randomGenerator;
 
 	boost::asio::io_context _io_context;  // Used for I/O
 	unsigned short _port;				  // Port to reside on
@@ -37,6 +43,8 @@ protected:
 	std::atomic<bool> _keepAlive;
 
 	virtual void Receive() = 0;
+	virtual void Send(ByteArray bytes, size_t len) = 0;
+	virtual void ProcessPacket(const Packet&) = 0;
 
 	constexpr const static Ushort HANDSHAKE_SIZE = 4;
 	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };

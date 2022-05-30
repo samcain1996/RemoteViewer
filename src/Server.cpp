@@ -1,9 +1,6 @@
 #include "Server.h"
 
-Server::Server(const unsigned short listenPort) : NetAgent(listenPort),
-randomGenerator(rd()) {
-    _keepAlive = true;
-}
+Server::Server(const unsigned short listenPort) : NetAgent(listenPort) {}
 
 void Server::Listen() {
     Byte connectionBuffer[PACKET_HEADER_ELEMENT_SIZE];  // Buffer to hold handshake message
@@ -61,7 +58,7 @@ PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)
     PacketList packets;  // List to hold all packets needed to create message
 
     // Assign all packets that are part of this message to a group
-    PacketHeader header;
+    PacketHeader header{};
     header.group = randomGenerator();
 
     // Calculate the number of packets that will

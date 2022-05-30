@@ -1,14 +1,9 @@
 #pragma once
-#include <random>
 #include "NetAgent.h"
 #include "Capture.h"
 
 class Server : public NetAgent {
 private:
-	std::random_device rd;  // Used to seed random number generator
-
-	// Random number generator, C-style rand does not have enough precision
-	std::mt19937 randomGenerator;
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
@@ -18,9 +13,10 @@ private:
 	void Serve();
 
 	// Send a buffer of bytes to the client
-	void Send(ByteArray bytes, size_t len);
+	void Send(ByteArray bytes, size_t len) override;
 
 	void Receive() override {};
+	void ProcessPacket(const Packet&) override {};
 
 public:
 

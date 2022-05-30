@@ -8,7 +8,7 @@ Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) 
 
 }
 
-void Client::ProcessPacket(const Packet packet) {
+void Client::ProcessPacket(const Packet& packet) {
     // Get packet group
     Uint32 group = packet.Header().group;
 
