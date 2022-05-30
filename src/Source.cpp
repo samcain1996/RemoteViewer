@@ -17,30 +17,30 @@ void y(int port) {
 
 int main(int argc, char* argv[]) {
 
-//#if defined(_WIN32)
-//	SetProcessDPIAware();
-//#endif
-//
-//	SDL_SetMainReady();
-//	SDL_Init(SDL_INIT_EVERYTHING);
-//	std::thread clientThr(x, 10009, "192.168.50.160");
-//	std::thread serverThr(y, 10008);
-//
-//	serverThr.join();
-//	clientThr.join();
-//
-//	SDL_Quit();
+#if defined(_WIN32)
+	SetProcessDPIAware();
+#endif
 
-	ScreenCapture screen;
-	screen.CaptureScreen();
+	SDL_SetMainReady();
+	SDL_Init(SDL_INIT_EVERYTHING);
+	std::thread clientThr(x, 10009, "192.168.50.160");
+	std::thread serverThr(y, 10008);
 
-	ByteArray img = nullptr;
-	size_t imgSize = screen.WholeDeal(img);
+	serverThr.join();
+	clientThr.join();
 
-	std::ofstream linOut("linuxOut.bmp", std::ios_base::binary);
-	linOut.write((char*)img, imgSize);
+	SDL_Quit();
 
-	linOut.close();
+	//ScreenCapture screen;
+	//screen.CaptureScreen();
+
+	//ByteArray img = nullptr;
+	//size_t imgSize = screen.WholeDeal(img);
+
+	//std::ofstream linOut("linuxOut.bmp", std::ios_base::binary);
+	//linOut.write((char*)img, imgSize);
+
+	//linOut.close();
 
 
 	return 0;

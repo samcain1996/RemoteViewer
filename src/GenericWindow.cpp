@@ -25,7 +25,7 @@ GenericWindow::GenericWindow(const std::string& title, std::atomic<bool>* killSi
 }
 
 GenericWindow::~GenericWindow() {
-	SDL_FreeSurface(_surface);
+	
 	SDL_DestroyWindow(_window);
 }
 
@@ -47,9 +47,11 @@ void GenericWindow::Update() {
 
 		ticks = SDL_GetTicks();
 
-		Draw();  // Draw content to window
+		if (Draw()) {
+			SDL_FreeSurface(_surface);
+		}  // Draw content to window
 
-		//CapFPS(ticks);
+		CapFPS(ticks);
 
 	}
 

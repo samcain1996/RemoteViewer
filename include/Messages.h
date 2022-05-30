@@ -1,6 +1,10 @@
 #pragma once
 #include "Types.h"
 
+/*---------------------------------------*/
+/*		Allows for threads to send		 */
+/*	    messages between eachother       */
+/*---------------------------------------*/
 
 // Aliases for classes
 template <typename Message>
@@ -32,26 +36,31 @@ private:
 
 protected:
 	Message _msg{};						// Last message read from queue
-	std::mutex	_mutex;					// Mutex to ensure only 1 thread access queue at one time
+	std::mutex*	_mutex;					// Mutex to ensure only 1 thread access queue at one time
 	std::queue<Message>* _queuePtr;	    // Pointer to queue holding messages
 
 	// If constructed by itself, create a new queue
-	MessageHandler() : _queuePtr(new std::queue<Message>), _ownsQueue(true) {};
+	MessageHandler() : _queuePtr(new std::queue<Message>), _mutex(new std::mutex), _ownsQueue(true) {};
 
 	// If constructed from another MessageHandler, share its queue
-	MessageHandler(MsgHandlerPtr<Message> msgHandler) : _queuePtr(msgHandler->_queuePtr), _ownsQueue(false) {};
+	MessageHandler(MsgHandlerPtr<Message> msgHandler) : _queuePtr(msgHandler->_queuePtr), _mutex(msgHandler->_mutex), _ownsQueue(false) {};
 
 	MessageHandler(const MessageHandler&) = delete;
 	MessageHandler(MessageHandler&&) = delete;
 
-	~MessageHandler() { if (_ownsQueue) { delete _queuePtr; } };
+	~MessageHandler() { 
+		if (_ownsQueue) { 
+			delete _mutex;
+			delete _queuePtr;
+		} 
+	};
 
 	MessageHandler& operator=(const MessageHandler&) = delete;
 	MessageHandler& operator=(MessageHandler&&) = delete;
 
 	// Put message in back of queue
 	bool Push(const Message message) {
-		ThreadLock lock(_mutex);
+		ThreadLock lock(*_mutex);
 
 		_queuePtr->push(message);
 
@@ -60,7 +69,7 @@ protected:
 
 	// Remove message from the front of the queue
 	const Message* const Pop() {
-		ThreadLock lock(_mutex);
+		ThreadLock lock(*_mutex);
 
 		if (_queuePtr->empty()) { return nullptr; }
 
@@ -77,7 +86,7 @@ public:
 
 // Read-only end of MessageHandler
 template <typename Message>
-class MessageReader : public MessageHandler<Message>{
+class MessageReader : public MessageHandler<Message> {
 public:
 	// Create new queue
 	MessageReader() : MessageHandler<Message>() {};
@@ -106,7 +115,7 @@ public:
 
 // Write-only end of MessageHandler
 template <typename Message>
-class MessageWriter : public MessageHandler<Message>{
+class MessageWriter : public MessageHandler<Message> {
 public:
 	// Create new queue
 	MessageWriter() : MessageHandler<Message>() {};

@@ -14,9 +14,9 @@ RenderWindow::RenderWindow(const std::string& title, ScreenFragmentsRef fragment
 
 }
 
-void RenderWindow::Draw() {
+bool RenderWindow::Draw() {
 
-	if (_msgReader.Empty()) { return; } // No image is ready, skip frame
+	if (_msgReader.Empty()) { return false; } // No image is ready, skip frame
 
 	// Assemble image buffer
 	const PacketGroup group = _msgReader.ReadMessage();
@@ -35,7 +35,8 @@ void RenderWindow::Draw() {
 
 	// Free resources
 	SDL_DestroyTexture(_texture);
-	SDL_FreeSurface(_surface);
+
+	return true;
 }
 
 void RenderWindow::AssembleImage(const PacketGroup group) {

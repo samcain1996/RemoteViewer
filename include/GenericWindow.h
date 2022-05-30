@@ -38,7 +38,7 @@ protected:
 
 	std::atomic<bool>* _keepAlive;
 
-	virtual void Draw() = 0;  // Draw to window
+	virtual bool Draw() = 0;  // Draw to window
 	virtual void Update();    // Update window
 
 	void CapFPS(const Uint32 prevTicks);  // Limit FPS
