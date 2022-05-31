@@ -11,22 +11,22 @@ template <typename Message>
 class MessageHandler;
 template <typename Message>
 using MsgHandlerPtr = MessageHandler<Message>*;
-template <typename Message>
-using MsgHandlerRef = MessageHandler<Message>&;
 
 template <typename Message>
 class MessageReader;
 template <typename Message>
 using MsgReaderPtr = MessageReader<Message>*;
-template <typename Message>
-using MsgReaderRef = MessageReader<Message>&;
 
 template <typename Message>
 class MessageWriter;
 template <typename Message>
 using MsgWriterPtr = MessageWriter<Message>*;
+
 template <typename Message>
-using MsgWriterRef = MessageWriter<Message>&;
+using MessageWriterList = std::vector<MessageWriter<Message> >;
+
+template <typename Message>
+using MessageReaderList = std::vector<MessageReader<Message> >;
 
 template <typename Message>
 class MessageHandler {
@@ -43,7 +43,7 @@ protected:
 	MessageHandler() : _queuePtr(new std::queue<Message>), _mutex(new std::mutex), _ownsQueue(true) {};
 
 	// If constructed from another MessageHandler, share its queue
-	MessageHandler(MsgHandlerPtr<Message> msgHandler) : _queuePtr(msgHandler->_queuePtr), _mutex(msgHandler->_mutex), _ownsQueue(false) {};
+	MessageHandler(MsgHandlerPtr<Message> const msgHandler) : _queuePtr(msgHandler->_queuePtr), _mutex(msgHandler->_mutex), _ownsQueue(false) {};
 
 	MessageHandler(const MessageHandler&) = delete;
 	MessageHandler(MessageHandler&&) = delete;
@@ -59,7 +59,7 @@ protected:
 	MessageHandler& operator=(MessageHandler&&) = delete;
 
 	// Put message in back of queue
-	bool Push(const Message message) {
+	const bool Push(const Message message) {
 		ThreadLock lock(*_mutex);
 
 		_queuePtr->push(message);
@@ -92,7 +92,7 @@ public:
 	MessageReader() : MessageHandler<Message>() {};
 
 	// Create from existing queue
-	MessageReader(MsgWriterPtr<Message> writer) : MessageHandler<Message>(writer) {}
+	MessageReader(MsgWriterPtr<Message> const writer) : MessageHandler<Message>(writer) {}
 
 	// Do not allow copying
 	MessageReader(const MessageReader&) = delete;
@@ -103,7 +103,7 @@ public:
 
 	// Read message from queue
 	const Message ReadMessage() {
-		const Message* msgPtr = this->Pop();
+		const Message* const msgPtr = this->Pop();
 
 		if (msgPtr != nullptr) {
 			return *msgPtr;
@@ -121,7 +121,7 @@ public:
 	MessageWriter() : MessageHandler<Message>() {};
 
 	// Create from existing queue
-	MessageWriter(MsgReaderPtr<Message> reader) : MessageHandler<Message>(reader) {}
+	MessageWriter(MsgReaderPtr<Message> const reader) : MessageHandler<Message>(reader) {}
 
 	// Do not allow copying
 	MessageWriter(const MessageWriter&) = delete;
@@ -131,7 +131,7 @@ public:
 	MessageWriter& operator=(MessageWriter&&) = delete;
 
 	// Write message to queue
-	bool WriteMessage(const Message& message) {
+	const bool WriteMessage(const Message& message) {
 		return this->Push(message);
 	}
 };

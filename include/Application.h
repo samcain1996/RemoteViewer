@@ -2,6 +2,8 @@
 #include "Server.h"
 #include "Client.h"
 
+#define DEBUG 1
+
 class Application {
 private:
 
@@ -13,21 +15,22 @@ private:
 
 	static GenericWindow* _window;
 	static NetAgent* _netAgent;
-	
-	static std::thread* _networkThr;
+
+	static MessageReader<ByteArray>* eventReader;
+	static MessageReader<SDL_Event>* sigh;
 
 	static void Cleanup();
 
-	static void RunClient();
-	static void RunServer();
+	static void RunClient(Client&);
+	static void RunServer(Server&);
 
 	template <typename T>
-	static void ConnectMsgHandlers(MessageWriter<T>*& writer, MessageReader<T>*& reader) {
+	static void ConnectMsgHandlers(MsgWriterPtr<T>& writer, MsgReaderPtr<T>& reader) {
 		writer = new MessageWriter<T>;
 		reader = new MessageReader<T>(writer);
 	}
 
 public:
-	static void Init(const bool isClient);
+	static bool Init(const bool isClient);
 	static void Run();
 };

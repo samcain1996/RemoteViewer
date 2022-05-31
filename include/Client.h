@@ -16,7 +16,7 @@ private:
 	 */
 	void ProcessPacket(const Packet&) override;
 
-	void Send(ByteArray bytes, size_t len) override {};
+	void Send(ByteArray const bytes, const size_t len) override;
 
 public:
 
@@ -39,7 +39,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	bool Connect(const std::string&);
+	bool Connect(const std::string& hostname);
 
 	///**
 	// * @brief Assembles complete message from individual packets
@@ -56,5 +56,6 @@ public:
 	void Receive() override;
 
 
-	MessageWriter<PacketGroup>* writer = nullptr;
+	MessageWriter<PacketPriorityQueue*>* writer = nullptr;
+	MessageReader<SDL_Event>* eventReader = nullptr;
 };

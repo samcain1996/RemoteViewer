@@ -20,9 +20,17 @@ void Client::ProcessPacket(const Packet& packet) {
     packetGroupBucket.push(packet);
 
     if (_packetGroups[group] == packetGroupBucket.size()) {
-        writer->WriteMessage(group);
+        
+        PacketPriorityQueue* completeGroup = new PacketPriorityQueue(std::move(_incompletePackets[group]));
+        _incompletePackets.erase(group);
+
+        writer->WriteMessage(completeGroup);
         _packetGroups.erase(group);
     }
+}
+
+void Client::Send(ByteArray const bytes, const size_t len) {
+
 }
 
 bool Client::Connect(const std::string& serverPort) {
@@ -47,19 +55,31 @@ void Client::Receive() {
    
     PacketBuffer packetData;
 
-    while (_keepAlive) {
+    while (true) {
 
+        
         // Receive packet
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
-        _socket.send(boost::asio::buffer(packetData, 1), 0, _errcode);
+
+        if (!eventReader->Empty()) {
+            if (eventReader->ReadMessage().type == SDL_MOUSEBUTTONDOWN) {
+                packetData[0] = '0';
+                packetData[1] = '0';
+                packetData[2] = '0';
+                packetData[3] = '0';
+            }
+        }
+
+        _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
 
         // Copy buffer to dummy packet
         ProcessPacket(Packet(packetData));
+
     }
 
 }
 
 Client::~Client() {
-
+    delete writer;
 }
 

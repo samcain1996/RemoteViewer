@@ -40,11 +40,11 @@ private:
 public:
 
 	/*-----------------PACKET--------------------*/
-
-	//  Packets should only be constructed from:
-	//		1. Another packet
-	//		2. A header and payload
-
+	/*											 */	
+	/*  Packets should only be constructed from  */
+	/*		1. Another packet					 */
+	/*		2. A header and payload				 */
+	/*											 */
 	/*-------------------------------------------*/
 	Packet() = delete;
 

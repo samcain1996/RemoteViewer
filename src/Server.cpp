@@ -16,17 +16,12 @@ void Server::Listen() {
 }
 
 void Server::Serve() {
-    ScreenCapture screen(1920, 1080, 1920, 1080);
 
-    ByteArray capture = nullptr;
+    _screen.CaptureScreen();
 
-    // Loop indefinitely
+    size_t captureSize = _screen.WholeDeal(_capture);
 
-        screen.CaptureScreen();
-
-        size_t captureSize = screen.WholeDeal(capture);
-
-        Send(capture, captureSize);
+    Send(_capture, captureSize);
 
 
 }
@@ -35,18 +30,32 @@ void Server::Send(ByteArray bytes, size_t len) {
 
     // Convert the message into a list of packets
     PacketList packets = ConvertToPackets(bytes, len);
+    Byte empty[4] = { '0','0','0','0' };
 
     // Loop through all the packets and send them
     for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
         Packet& packet = packets[packetNo];
 
-        Byte dummyBuf[1];
+        Byte dummyBuf[4];
 
         // Send packet and then wait for acknowledgment
         _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
         _socket.receive(boost::asio::buffer(dummyBuf, sizeof dummyBuf), 0, _errcode);
+
+        if (std::memcmp(dummyBuf, empty, 4) == 0) {
+            eventWriter->WriteMessage(empty);
+        }
     }
     
+}
+
+void Server::Disconnect() {
+    ByteArray empty = new Byte[4]{ '0','0','0','0' };
+    _socket.send_to(boost::asio::buffer(empty, 4), _remoteEndpoint, 0, _errcode);
+}
+
+Server::~Server() {
+    delete _capture;
 }
 
 PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)

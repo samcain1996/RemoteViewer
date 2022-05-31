@@ -3,7 +3,7 @@
 #if defined(_WIN32)
 #pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
 #endif
-GenericWindow::GenericWindow(const std::string& title, std::atomic<bool>* killSignal) : _keepAlive(killSignal) {
+GenericWindow::GenericWindow(const std::string& title, std::atomic<bool>& killSignal) : _keepAlive(killSignal) {
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
@@ -33,14 +33,14 @@ void GenericWindow::Update() {
 
 	Uint32 ticks;  
 
-	while (*_keepAlive) {
+	while (!_keepAlive) {
 		
 		// Get events
 		while (SDL_PollEvent(&_event)) {
 
-			if (_event.type == SDL_QUIT) {
-				*_keepAlive = false;
-				break;
+			if (_event.type == SDL_MOUSEBUTTONDOWN) {
+				eventWriter->WriteMessage(_event);
+				eventWriter2->WriteMessage(_event);
 			}
 
 		}

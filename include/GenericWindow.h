@@ -1,8 +1,10 @@
 #pragma once
 
-
 #include "Types.h"
 #include "Packet.h"
+#include "Messages.h"
+#include <functional>
+
 
 class GenericWindow {
 
@@ -10,8 +12,7 @@ protected:
 
 	GenericWindow() = delete;
 
-	//GenericWindow(const std::string& title);
-	GenericWindow(const std::string& title, std::atomic<bool>* killSignal);
+	GenericWindow(const std::string& title, std::atomic<bool>& killSignal);
 
 	GenericWindow(const GenericWindow&) = delete;
 	GenericWindow(GenericWindow&&) = delete;
@@ -34,7 +35,7 @@ protected:
 
 	Uint32 _targetFPS;	  // FPS to target
 
-	std::atomic<bool>* _keepAlive;
+	std::atomic<bool> const& _keepAlive;
 
 	virtual bool Draw() = 0;  // Draw to window
 
@@ -43,4 +44,7 @@ protected:
 public:
 	virtual ~GenericWindow();
 	virtual void Update();    // Update window
+
+	MessageWriter<SDL_Event>* eventWriter = nullptr;
+	MessageWriter<SDL_Event>* eventWriter2 = nullptr;
 };

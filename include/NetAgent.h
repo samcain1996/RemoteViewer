@@ -3,6 +3,7 @@
 #include <thread>
 #include <random>
 #include "Packet.h"
+#include "Messages.h"
 
 using boost::asio::ip::udp;
 
@@ -39,17 +40,16 @@ protected:
 	udp::socket _socket;
 	boost::system::error_code _errcode;
 
-
+	// A map that maps packet groups to a priority queue
+	PacketGroupPriorityQueueMap _incompletePackets;
 	PacketGroupMap _packetGroups;
 
-	std::atomic<bool> _keepAlive;
+	//std::atomic<bool>* const _exit;
 
 	virtual void Receive() = 0;
-	virtual void Send(ByteArray bytes, size_t len) = 0;
+	virtual void Send(ByteArray const bytes, const size_t len) = 0;
 	virtual void ProcessPacket(const Packet&) = 0;
 
 public:
 	virtual ~NetAgent();
-	// A map that maps packet groups to a priority queue
-	PacketGroupPriorityQueueMap _incompletePackets;
 };

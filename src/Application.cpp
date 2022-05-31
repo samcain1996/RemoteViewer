@@ -1,5 +1,4 @@
 #include "Application.h"
-
 bool Application::_init = false;
 
 bool Application::_isClient = true;
@@ -10,11 +9,14 @@ GenericWindow* Application::_window = nullptr;
 
 NetAgent* Application::_netAgent = nullptr;
 
-std::thread* Application::_networkThr = nullptr;
+MessageReader<ByteArray>* Application::eventReader = nullptr;
+MessageReader<SDL_Event>* Application::sigh = nullptr;
 
-void Application::Init(const bool isClient) {
+bool Application::Init(const bool isClient) {
 
 	_isClient = isClient;
+
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
 
 	if (_isClient) {
 		_netAgent = new Client(10008, "192.168.50.160");
@@ -25,47 +27,70 @@ void Application::Init(const bool isClient) {
 
 	_init = true;
 
+	return true;
+
 }
 
 void Application::Run() {
 
 	if (!_init) { return; }
 
-	if (_isClient) { RunClient(); }
-	else { RunServer(); }
+	if (_isClient) { RunClient(dynamic_cast<Client&>(*_netAgent)); }
+	else { RunServer(dynamic_cast<Server&>(*_netAgent)); }
 
 	Cleanup();
 
 }
 
-void Application::RunClient() {
+void Application::RunClient(Client& client) {
 
-	Client& client = dynamic_cast<Client&>(*_netAgent);
 	if (!client.Connect("10009")) { return; }
 
-	_window = new RenderWindow("192.168.50.160", &_exit, client._incompletePackets);
+	_window = new RenderWindow("192.168.50.160", _exit);
 	RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
 
 	ConnectMsgHandlers(client.writer, renderWindow.completeGroups);
+	ConnectMsgHandlers(renderWindow.eventWriter, client.eventReader);
+	ConnectMsgHandlers(renderWindow.eventWriter2, sigh);
 
-	_networkThr = new std::thread(&Client::Receive, &client);
+	std::thread msgThr([&](){
+		while (!_exit) {
+			if (!sigh->Empty()) {
+				
+				if (sigh->ReadMessage().type == SDL_MOUSEBUTTONDOWN) {
+					_exit = true;
+					
+				}
+
+			}
+		}
+		});
+
+	std::thread networkThr(&Client::Receive, &client);
 
 	renderWindow.Update();
 
-	_networkThr->join();
-	delete _networkThr;
+	msgThr.join();
+	networkThr.join();
+
 
 }
 
-void Application::RunServer() {
-
-	Server& server = dynamic_cast<Server&>(*_netAgent);
+void Application::RunServer(Server& server) {
 
 	server.Listen();
+	ConnectMsgHandlers(server.eventWriter, eventReader);
 
 	while (!_exit) {
+		if (!eventReader->Empty()) {
+			if (eventReader->ReadMessage()) {
+				_exit = true;
+			}
+		}
 		server.Serve();
 	}
+
+	server.Disconnect();
 
 }
 
@@ -73,4 +98,6 @@ void Application::Cleanup() {
 
 	delete _netAgent;
 	delete _window;
+
+	SDL_Quit();
 }

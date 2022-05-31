@@ -10,10 +10,13 @@ private:
 	PacketList ConvertToPackets(ByteArray& bytes, size_t len);
 
 	// Send a buffer of bytes to the client
-	void Send(ByteArray bytes, size_t len) override;
+	void Send(ByteArray const bytes, const size_t len) override;
 
 	void Receive() override {};
 	void ProcessPacket(const Packet&) override {};
+
+	ScreenCapture _screen;
+	ByteArray _capture;
 
 public:
 
@@ -31,4 +34,10 @@ public:
 	void Listen();
 	// Serve content to client
 	void Serve();
+
+	void Disconnect();
+
+	MessageWriter<ByteArray>* eventWriter = nullptr;
+
+	~Server();
 };

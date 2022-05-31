@@ -9,12 +9,9 @@ int main(int argc, char* argv[]) {
 #endif
 
 	SDL_SetMainReady();
-	SDL_Init(SDL_INIT_EVERYTHING);
 
-	Application::Init(false);
+	Application::Init(true);
 	Application::Run();
-
-	SDL_Quit();
 
 	//ScreenCapture screen;
 	//screen.CaptureScreen();

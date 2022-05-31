@@ -1,8 +1,7 @@
 #include "RenderWindow.h"
 
-RenderWindow::RenderWindow(const std::string& title, std::atomic<bool>* killSignal, 
-	ScreenFragmentsRef sfr) : 
-	GenericWindow(title, killSignal), _bmpPiecesPtr(sfr) {
+RenderWindow::RenderWindow(const std::string& title, std::atomic<bool>& killSignal) : 
+	GenericWindow(title, killSignal) {
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -19,8 +18,7 @@ bool RenderWindow::Draw() {
 	if (completeGroups->Empty()) { return false; } // No image is ready, skip frame
 
 	// Assemble image buffer
-	const PacketGroup group = completeGroups->ReadMessage();
-	AssembleImage(group);
+	AssembleImage(completeGroups->ReadMessage());
 
 	// Create image to render
 	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
@@ -39,31 +37,30 @@ bool RenderWindow::Draw() {
 	return true;
 }
 
-void RenderWindow::AssembleImage(const PacketGroup group) {
-
-	PacketPriorityQueue& queue = _bmpPiecesPtr[group];
+void RenderWindow::AssembleImage(PacketPriorityQueue* const queue) {
 
 	// Build image from packets
-	for (size_t packetNo = 0; !queue.empty(); packetNo++) {
+	for (size_t packetNo = 0; !queue->empty(); packetNo++) {
 
 		// Offset in full image to location that this fragment belongs
 		const Uint32 offset = packetNo * MAX_PACKET_PAYLOAD_SIZE;
 
 		// Retrieve payload from top packet_bitmapData
-		const Packet& packet = queue.top();
+		const Packet& packet = queue->top();
 
 		// Append payload to vector
 		std::memcpy(&_bitmap[offset], packet.Payload().data(), packet.Header().size - PACKET_HEADER_SIZE);
 
-		queue.pop();  // Remove packet from queue
+		queue->pop();  // Remove packet from queue
 	}
 
-	_bmpPiecesPtr.erase(group); // Erase queue
+	delete queue;
 }
 
 RenderWindow::~RenderWindow() {
 	SDL_RWclose(_bmpDataStream);
 	SDL_DestroyRenderer(_renderer);
 
+	delete completeGroups;
 	delete[] _bitmap;
 }
