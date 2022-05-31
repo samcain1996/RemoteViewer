@@ -73,6 +73,9 @@ ScreenCapture::~ScreenCapture() {
     ReleaseDC(NULL, _srcHDC);
     DeleteObject(_memHDC);
 
+    if (_previousCapture)
+    delete[] _previousCapture;
+
 #elif defined(__APPLE__)
 
     CGImageRelease(_image);
