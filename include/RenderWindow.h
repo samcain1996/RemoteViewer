@@ -29,4 +29,7 @@ public:
 	RenderWindow& operator=(RenderWindow&&) = delete;
 
 	MessageReader<PacketPriorityQueue*>* completeGroups = nullptr;
+
+
+	friend void Update(RenderWindow& window);
 };

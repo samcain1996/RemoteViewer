@@ -31,29 +31,29 @@ GenericWindow::~GenericWindow() {
 
 void GenericWindow::Update() {
 
-	Uint32 ticks;  
+	//Uint32 ticks;  
 
-	while (!_keepAlive) {
-		
-		// Get events
-		while (SDL_PollEvent(&_event)) {
+	//while (!_keepAlive) {
+	//	
+	//	// Get events
+	//	while (SDL_PollEvent(&_event)) {
 
-			if (_event.type == SDL_MOUSEBUTTONDOWN) {
-				eventWriter->WriteMessage(_event);
-				eventWriter2->WriteMessage(_event);
-			}
+	//		if (_event.type == SDL_MOUSEBUTTONDOWN) {
+	//			eventWriter->WriteMessage(_event);
+	//			eventWriter2->WriteMessage(_event);
+	//		}
 
-		}
+	//	}
 
-		ticks = SDL_GetTicks();
+	//	ticks = SDL_GetTicks();
 
-		if (Draw()) {
-			SDL_FreeSurface(_surface);
-		}  // Draw content to window
+	//	if (Draw()) {
+	//		SDL_FreeSurface(_surface);
+	//	}  // Draw content to window
 
-		CapFPS(ticks);
+	//	CapFPS(ticks);
 
-	}
+	//}
 
 }
 

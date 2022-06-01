@@ -44,8 +44,6 @@ protected:
 	PacketGroupPriorityQueueMap _incompletePackets;
 	PacketGroupMap _packetGroups;
 
-	//std::atomic<bool>* const _exit;
-
 	virtual void Receive() = 0;
 	virtual void Send(ByteArray const bytes, const size_t len) = 0;
 	virtual void ProcessPacket(const Packet&) = 0;

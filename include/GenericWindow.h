@@ -5,9 +5,10 @@
 #include "Messages.h"
 #include <functional>
 
+class Application;
 
 class GenericWindow {
-
+	
 protected:
 
 	GenericWindow() = delete;
@@ -44,7 +45,4 @@ protected:
 public:
 	virtual ~GenericWindow();
 	virtual void Update();    // Update window
-
-	MessageWriter<SDL_Event>* eventWriter = nullptr;
-	MessageWriter<SDL_Event>* eventWriter2 = nullptr;
 };

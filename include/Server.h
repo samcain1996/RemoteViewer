@@ -35,8 +35,6 @@ public:
 	// Serve content to client
 	void Serve();
 
-	void Disconnect();
-
 	MessageWriter<ByteArray>* eventWriter = nullptr;
 
 	~Server();

@@ -16,8 +16,11 @@ private:
 	static GenericWindow* _window;
 	static NetAgent* _netAgent;
 
-	static MessageReader<ByteArray>* eventReader;
-	static MessageReader<SDL_Event>* sigh;
+	template <typename T>
+	static MsgWriterPtr<T> _writer;
+
+	template <typename T>
+	static MsgReaderPtr<T> _reader;
 
 	static void Cleanup();
 
@@ -33,4 +36,6 @@ private:
 public:
 	static bool Init(const bool isClient);
 	static void Run();
+
+	friend void Update(RenderWindow& window);
 };

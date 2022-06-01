@@ -68,6 +68,8 @@ void Client::Receive() {
                 packetData[2] = '0';
                 packetData[3] = '0';
             }
+            _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
+            break;
         }
 
         _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
@@ -81,5 +83,6 @@ void Client::Receive() {
 
 Client::~Client() {
     delete writer;
+    delete eventReader;
 }
 

@@ -29,9 +29,10 @@ bool RenderWindow::Draw() {
 	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
 	SDL_RenderPresent(_renderer);
 
-	SDL_UpdateWindowSurface(_window);
+	//SDL_UpdateWindowSurface(_window);
 
 	// Free resources
+	SDL_FreeSurface(_surface);
 	SDL_DestroyTexture(_texture);
 
 	return true;
@@ -58,7 +59,7 @@ void RenderWindow::AssembleImage(PacketPriorityQueue* const queue) {
 }
 
 RenderWindow::~RenderWindow() {
-	SDL_RWclose(_bmpDataStream);
+
 	SDL_DestroyRenderer(_renderer);
 
 	delete completeGroups;

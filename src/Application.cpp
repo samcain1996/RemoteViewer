@@ -9,8 +9,11 @@ GenericWindow* Application::_window = nullptr;
 
 NetAgent* Application::_netAgent = nullptr;
 
-MessageReader<ByteArray>* Application::eventReader = nullptr;
-MessageReader<SDL_Event>* Application::sigh = nullptr;
+template <typename T>
+MsgWriterPtr<T> Application::_writer = nullptr;
+
+template <typename T>
+MsgReaderPtr<T> Application::_reader = nullptr;
 
 bool Application::Init(const bool isClient) {
 
@@ -50,54 +53,70 @@ void Application::RunClient(Client& client) {
 	RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
 
 	ConnectMsgHandlers(client.writer, renderWindow.completeGroups);
-	ConnectMsgHandlers(renderWindow.eventWriter, client.eventReader);
-	ConnectMsgHandlers(renderWindow.eventWriter2, sigh);
-
-	std::thread msgThr([&](){
-		while (!_exit) {
-			if (!sigh->Empty()) {
-				
-				if (sigh->ReadMessage().type == SDL_MOUSEBUTTONDOWN) {
-					_exit = true;
-					
-				}
-
-			}
-		}
-		});
+	
+	ConnectMsgHandlers<SDL_Event>(_writer<SDL_Event>, client.eventReader);
 
 	std::thread networkThr(&Client::Receive, &client);
+	
+	Update(renderWindow);
 
-	renderWindow.Update();
-
-	msgThr.join();
 	networkThr.join();
 
-
+	delete _writer<SDL_Event>;
 }
 
 void Application::RunServer(Server& server) {
 
 	server.Listen();
-	ConnectMsgHandlers(server.eventWriter, eventReader);
+
+	ConnectMsgHandlers<ByteArray>(server.eventWriter, _reader<ByteArray>);
 
 	while (!_exit) {
-		if (!eventReader->Empty()) {
-			if (eventReader->ReadMessage()) {
+		if (!_reader<ByteArray>->Empty()) {
+			if (_reader<ByteArray>->ReadMessage()) {
 				_exit = true;
+				break;
 			}
 		}
 		server.Serve();
 	}
-
-	server.Disconnect();
 
 }
 
 void Application::Cleanup() {
 
 	delete _netAgent;
-	delete _window;
+
+	if (_isClient)
+		delete _window;
 
 	SDL_Quit();
+}
+
+void Update(RenderWindow& window) {
+
+	Uint32 ticks;
+
+	while (!Application::_exit) {
+
+		// Get events
+		while (SDL_PollEvent(&(window._event))) {
+
+			if (window._event.type == SDL_MOUSEBUTTONDOWN) {
+				Application::_exit = true;
+				Application::_writer<SDL_Event>->WriteMessage(window._event);
+			}
+
+		}
+
+		ticks = SDL_GetTicks();
+
+		if (window.Draw()) {
+			//SDL_FreeSurface(window->_surface);
+		}  // Draw content to window
+
+		window.CapFPS(ticks);
+
+	}
+
 }

@@ -1,6 +1,6 @@
 #include "Server.h"
 
-Server::Server(const unsigned short listenPort) : NetAgent(listenPort) {}
+Server::Server(const unsigned short listenPort) : NetAgent(listenPort), _screen(1920, 1080, 1920, 1080) {}
 
 void Server::Listen() {
     Byte connectionBuffer[PACKET_HEADER_ELEMENT_SIZE];  // Buffer to hold handshake message
@@ -49,13 +49,9 @@ void Server::Send(ByteArray bytes, size_t len) {
     
 }
 
-void Server::Disconnect() {
-    ByteArray empty = new Byte[4]{ '0','0','0','0' };
-    _socket.send_to(boost::asio::buffer(empty, 4), _remoteEndpoint, 0, _errcode);
-}
-
 Server::~Server() {
     delete _capture;
+    delete eventWriter;
 }
 
 PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)
