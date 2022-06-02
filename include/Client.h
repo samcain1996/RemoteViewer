@@ -1,6 +1,5 @@
 #pragma once
 #include "NetAgent.h"
-#include "RenderWindow.h"
 
 class Client : public NetAgent {
 private:

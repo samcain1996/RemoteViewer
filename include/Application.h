@@ -1,6 +1,7 @@
 #pragma once
 #include "Server.h"
 #include "Client.h"
+#include "Window.h"
 #include <functional>
 
 class Application {

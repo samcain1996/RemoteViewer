@@ -21,8 +21,8 @@ bool Application::Init() {
 
 	EventHandler func = [&](const SDL_Event& ev, const ElementList& elems) {
 
-		const auto& clientButton = elems.GetElement("Client Button");
-		const auto& serverButton = elems.GetElement("Server Button");
+		const auto& clientButton = elems.GetElementByName("Client Button");
+		const auto& serverButton = elems.GetElementByName("Server Button");
 	
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 
@@ -79,7 +79,6 @@ void Application::RunClient(Client& client) {
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 			_exit = true;
 			_writer<SDL_Event>->WriteMessage(ev);
-
 		}
 		return true;
 	};
@@ -97,7 +96,6 @@ void Application::RunClient(Client& client) {
 	networkThr.join();
 
 	delete _writer<SDL_Event>;
-
 	delete _window;
 }
 
