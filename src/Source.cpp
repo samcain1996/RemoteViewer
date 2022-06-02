@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_SetMainReady();
 
-	Application::Init(true);
+	Application::Init();
 	Application::Run();
 
 	//ScreenCapture screen;

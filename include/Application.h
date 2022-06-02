@@ -1,10 +1,10 @@
 #pragma once
 #include "Server.h"
 #include "Client.h"
-
-#define DEBUG 1
+#include <functional>
 
 class Application {
+
 private:
 
 	Application() = delete;
@@ -34,8 +34,6 @@ private:
 	}
 
 public:
-	static bool Init(const bool isClient);
+	static bool Init();
 	static void Run();
-
-	friend void Update(RenderWindow& window);
 };

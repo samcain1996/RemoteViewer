@@ -27,7 +27,7 @@ protected:
 	constexpr const static Ushort DISCONNECT_SIZE = 4;
 	constexpr const static Byte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = { 'B', 'Y', 'E', '!' };
 	
-	static 	std::random_device rd;  // Used to seed random number generator
+	static std::random_device rd;  // Used to seed random number generator
 
 	// Random number generator, C-style rand does not have enough precision
 	static std::mt19937 randomGenerator;
@@ -42,7 +42,6 @@ protected:
 
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
-	PacketGroupMap _packetGroups;
 
 	virtual void Receive() = 0;
 	virtual void Send(ByteArray const bytes, const size_t len) = 0;

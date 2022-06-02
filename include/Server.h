@@ -16,7 +16,7 @@ private:
 	void ProcessPacket(const Packet&) override {};
 
 	ScreenCapture _screen;
-	ByteArray _capture;
+	ByteArray _capture = nullptr;
 
 public:
 
@@ -25,7 +25,7 @@ public:
 	Server(const Server&) = delete;
 	Server(Server&&) 	  = delete;
 	
-	Server(const unsigned short listenPort);
+	Server(const Ushort listenPort);
 
 	Server& operator=(const Server&) = delete;
 	Server& operator=(Server&&) = delete;
@@ -35,7 +35,7 @@ public:
 	// Serve content to client
 	void Serve();
 
-	MessageWriter<ByteArray>* eventWriter = nullptr;
+	MsgWriterPtr<ByteArray> eventWriter = nullptr;
 
 	~Server();
 };

@@ -1,7 +1,7 @@
 #include "Application.h"
 bool Application::_init = false;
 
-bool Application::_isClient = true;
+bool Application::_isClient = false;
 
 std::atomic<bool> Application::_exit = false;
 
@@ -15,11 +15,36 @@ MsgWriterPtr<T> Application::_writer = nullptr;
 template <typename T>
 MsgReaderPtr<T> Application::_reader = nullptr;
 
-bool Application::Init(const bool isClient) {
-
-	_isClient = isClient;
+bool Application::Init() {
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
+
+	EventHandler func = [&](const SDL_Event& ev, const ElementList& elems) {
+
+		const auto& clientButton = elems.GetElement("Client Button");
+		const auto& serverButton = elems.GetElement("Server Button");
+	
+		if (ev.type == SDL_MOUSEBUTTONDOWN) {
+
+			SDL_Rect mouse;
+			mouse.w = 32;
+			mouse.h = 32;
+
+			SDL_GetMouseState(&mouse.x, &mouse.y);
+
+			_isClient = SDL_HasIntersection(&mouse, &clientButton.Bounds());
+
+			return !(_isClient || SDL_HasIntersection(&mouse, &serverButton.Bounds()));
+		}
+
+		return true;
+		
+	};
+
+	_window = new InitWindow("RemoteViewer", func);
+	InitWindow& initWin = dynamic_cast<InitWindow&>(*_window);
+
+	initWin.Update();
 
 	if (_isClient) {
 		_netAgent = new Client(10008, "192.168.50.160");
@@ -29,6 +54,7 @@ bool Application::Init(const bool isClient) {
 	}
 
 	_init = true;
+	delete _window;
 
 	return true;
 
@@ -49,20 +75,30 @@ void Application::RunClient(Client& client) {
 
 	if (!client.Connect("10009")) { return; }
 
-	_window = new RenderWindow("192.168.50.160", _exit);
+	EventHandler func = [&](const SDL_Event& ev, const ElementList& elems) {
+		if (ev.type == SDL_MOUSEBUTTONDOWN) {
+			_exit = true;
+			_writer<SDL_Event>->WriteMessage(ev);
+
+		}
+		return true;
+	};
+
+	_window = new RenderWindow("192.168.50.160", func);
 	RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
 
 	ConnectMsgHandlers(client.writer, renderWindow.completeGroups);
-	
 	ConnectMsgHandlers<SDL_Event>(_writer<SDL_Event>, client.eventReader);
 
 	std::thread networkThr(&Client::Receive, &client);
 	
-	Update(renderWindow);
+	renderWindow.Update();
 
 	networkThr.join();
 
 	delete _writer<SDL_Event>;
+
+	delete _window;
 }
 
 void Application::RunServer(Server& server) {
@@ -87,36 +123,5 @@ void Application::Cleanup() {
 
 	delete _netAgent;
 
-	if (_isClient)
-		delete _window;
-
 	SDL_Quit();
-}
-
-void Update(RenderWindow& window) {
-
-	Uint32 ticks;
-
-	while (!Application::_exit) {
-
-		// Get events
-		while (SDL_PollEvent(&(window._event))) {
-
-			if (window._event.type == SDL_MOUSEBUTTONDOWN) {
-				Application::_exit = true;
-				Application::_writer<SDL_Event>->WriteMessage(window._event);
-			}
-
-		}
-
-		ticks = SDL_GetTicks();
-
-		if (window.Draw()) {
-			//SDL_FreeSurface(window->_surface);
-		}  // Draw content to window
-
-		window.CapFPS(ticks);
-
-	}
-
 }

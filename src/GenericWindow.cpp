@@ -3,7 +3,7 @@
 #if defined(_WIN32)
 #pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
 #endif
-GenericWindow::GenericWindow(const std::string& title, std::atomic<bool>& killSignal) : _keepAlive(killSignal) {
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eh) : _eventHandler(eh) {
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
@@ -21,6 +21,8 @@ GenericWindow::GenericWindow(const std::string& title, std::atomic<bool>& killSi
 	_surface = nullptr;
 	_texture = nullptr;
 
+	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+
 	_targetFPS = 60;
 }
 
@@ -31,29 +33,25 @@ GenericWindow::~GenericWindow() {
 
 void GenericWindow::Update() {
 
-	//Uint32 ticks;  
+	Uint32 ticks;  
 
-	//while (!_keepAlive) {
-	//	
-	//	// Get events
-	//	while (SDL_PollEvent(&_event)) {
+	bool keepAlive = true;
+	while (keepAlive) {
+		
+		// Get events
+		while (SDL_PollEvent(&_event)) {
 
-	//		if (_event.type == SDL_MOUSEBUTTONDOWN) {
-	//			eventWriter->WriteMessage(_event);
-	//			eventWriter2->WriteMessage(_event);
-	//		}
+			keepAlive = _eventHandler(_event, _elements);
 
-	//	}
+		}
 
-	//	ticks = SDL_GetTicks();
+		ticks = SDL_GetTicks();
 
-	//	if (Draw()) {
-	//		SDL_FreeSurface(_surface);
-	//	}  // Draw content to window
+		Draw();
 
-	//	CapFPS(ticks);
+		CapFPS(ticks);
 
-	//}
+	}
 
 }
 

@@ -6,6 +6,7 @@ class Client : public NetAgent {
 private:
 	std::string _hostname;  // Hostname of computer to connect to
 
+	PacketGroupMap _packetGroups;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -41,14 +42,6 @@ public:
 	 */
 	bool Connect(const std::string& hostname);
 
-	///**
-	// * @brief Assembles complete message from individual packets
-	// * 
-	// * @param const PacketGroup& 	Packet group to assemble
-	// * @return ByteVec 				Vector of bytes representing the message
-	// */
-	//size_t AssembleMessage(const PacketGroup&, ByteArray&);
-
 	/**
 	 * @brief Receive data from server
 	 * 
@@ -56,6 +49,6 @@ public:
 	void Receive() override;
 
 
-	MessageWriter<PacketPriorityQueue*>* writer = nullptr;
-	MessageReader<SDL_Event>* eventReader = nullptr;
+	MsgWriterPtr<PacketPriorityQueue*> writer = nullptr;
+	MsgReaderPtr<SDL_Event> eventReader = nullptr;
 };

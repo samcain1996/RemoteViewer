@@ -1,6 +1,6 @@
 #include "Server.h"
 
-Server::Server(const unsigned short listenPort) : NetAgent(listenPort), _screen(1920, 1080, 1920, 1080) {}
+Server::Server(const Ushort listenPort) : NetAgent(listenPort), _screen(1920, 1080, 1920, 1080) {}
 
 void Server::Listen() {
     Byte connectionBuffer[PACKET_HEADER_ELEMENT_SIZE];  // Buffer to hold handshake message
@@ -22,7 +22,6 @@ void Server::Serve() {
     size_t captureSize = _screen.WholeDeal(_capture);
 
     Send(_capture, captureSize);
-
 
 }
 

@@ -1,9 +1,7 @@
 #include "RenderWindow.h"
 
-RenderWindow::RenderWindow(const std::string& title, std::atomic<bool>& killSignal) : 
-	GenericWindow(title, killSignal) {
-
-	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+RenderWindow::RenderWindow(const std::string& title, const EventHandler& ev) : 
+	GenericWindow(title, ev) {
 
 	// Allocate memory for bitmap
 	_bitmapSize = 54 + CalculateTheoreticalBMPSize(_width, _height);
@@ -13,7 +11,7 @@ RenderWindow::RenderWindow(const std::string& title, std::atomic<bool>& killSign
 
 }
 
-bool RenderWindow::Draw() {
+const bool RenderWindow::Draw() {
 
 	if (completeGroups->Empty()) { return false; } // No image is ready, skip frame
 
@@ -28,8 +26,6 @@ bool RenderWindow::Draw() {
 	// Render image
 	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
 	SDL_RenderPresent(_renderer);
-
-	//SDL_UpdateWindowSurface(_window);
 
 	// Free resources
 	SDL_FreeSurface(_surface);
