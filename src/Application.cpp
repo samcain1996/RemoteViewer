@@ -7,7 +7,7 @@ std::atomic<bool> Application::_exit = false;
 
 GenericWindow* Application::_window = nullptr;
 
-NetAgent* Application::_netAgent = nullptr;
+std::unique_ptr<NetAgent> Application::_netAgent = nullptr;
 
 template <typename T>
 MsgWriterPtr<T> Application::_writer = nullptr;
@@ -19,10 +19,14 @@ bool Application::Init() {
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
 
-	EventHandler func = [&](const SDL_Event& ev, const ElementManager& elems) {
+	std::string ipToConnectTo("");
+
+	EventHandler func = [&](const SDL_Event& ev, const ElementView& elems) {
 		
 		const auto& clientButton = elems.GetElementByName("Client");
 		const auto& serverButton = elems.GetElementByName("Server");
+
+		TextBox& tBox = (TextBox&)elems.GetElementByName("TEST");
 	
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 
@@ -32,29 +36,41 @@ bool Application::Init() {
 
 			SDL_GetMouseState(&mouse.x, &mouse.y);
 
+			ipToConnectTo = tBox.Text();
+
 			_isClient = SDL_HasIntersection(&mouse, &clientButton.Bounds());
 
 			return !(_isClient || SDL_HasIntersection(&mouse, &serverButton.Bounds()));
+		}
+
+		if (ev.type == SDL_KEYDOWN) {
+
+			if (ev.key.keysym.sym == SDLK_BACKSPACE) {
+				tBox.RemoveLetter();
+			}
+			else {
+				tBox.Add(ev.key.keysym.sym);
+			}
 		}
 
 		return true;
 		
 	};
 
-	_window = new InitWindow("192.168.50.160", func);
+	_window = new InitWindow("Remote Viewer", func);
 	InitWindow& initWin = dynamic_cast<InitWindow&>(*_window);
 
 	initWin.Update();
 
 	if (_isClient) {
-		_netAgent = new Client(10008, "192.168.50.160");
+		_netAgent = std::unique_ptr<NetAgent>(new Client(10008, ipToConnectTo));
 	}
 	else {
-		_netAgent = new Server(10009);
+		_netAgent = std::unique_ptr<NetAgent>(new Server(10009));
 	}
 
-	_init = true;
 	delete _window;
+	_init = true;
 
 	return true;
 
@@ -75,7 +91,7 @@ void Application::RunClient(Client& client) {
 
 	if (!client.Connect("10009")) { return; }
 
-	EventHandler func = [&](const SDL_Event& ev, const ElementManager& elems) {
+	EventHandler func = [&](const SDL_Event& ev, const ElementView& elems) {
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 			_exit = true;
 			_writer<SDL_Event>->WriteMessage(ev);
@@ -96,8 +112,8 @@ void Application::RunClient(Client& client) {
 
 	networkThr.join();
 
-	delete _writer<SDL_Event>;
 	delete _window;
+	delete _writer<SDL_Event>;
 }
 
 void Application::RunServer(Server& server) {
@@ -119,8 +135,6 @@ void Application::RunServer(Server& server) {
 }
 
 void Application::Cleanup() {
-
-	delete _netAgent;
 
 	SDL_Quit();
 }

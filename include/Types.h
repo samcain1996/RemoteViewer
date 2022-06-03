@@ -19,6 +19,7 @@
 #include <queue>
 #include <cstring>
 #include <atomic>
+#include <memory>
 
 constexpr const Uint32 ONE_BYTE    = 8;
 constexpr const Uint32 TWO_BYTES   = (ONE_BYTE + ONE_BYTE);

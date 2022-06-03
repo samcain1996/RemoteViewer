@@ -43,6 +43,7 @@ void Server::Send(ByteArray bytes, size_t len) {
 
         if (std::memcmp(dummyBuf, empty, 4) == 0) {
             eventWriter->WriteMessage(empty);
+            return;
         }
     }
     

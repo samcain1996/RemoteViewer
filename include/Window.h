@@ -1,39 +1,25 @@
 #pragma once
 
 #include "WindowElement.h"
+#include <iostream>
 #include <functional>
 
 class GenericWindow;
+class InitWindow;
 
-class ElementManager {
-	friend GenericWindow;
-private:
-	GenericWindow* _window;
+struct ElementView {
+	std::vector<std::reference_wrapper<WindowElement>>& elements;
 
-	ElementManager() = delete;
-	ElementManager(GenericWindow* window);
-
-	~ElementManager();
-
-	ElementManager(const ElementManager&) = delete;
-	ElementManager(ElementManager&&) = delete;
-
-	Uint32 _idCounter = 0;
-	std::vector<WindowElement*> elements;
-public:
-	void Add(WindowElement* element);
-
-	void RenderElements();
-
-	const WindowElement& GetElementByName(const std::string& elementName) const;
-	const WindowElement& GetElementById(const Uint32 id) const;
-
+	ElementView() = delete;
+	ElementView(std::vector<std::reference_wrapper<WindowElement>>& elements) : elements(elements) {}
+	WindowElement& GetElementByName(const std::string& elementName) const;
+	WindowElement& GetElementById(const Uint32 id) const;
 };
 
-using EventHandler = std::function<bool(const SDL_Event&, const ElementManager&)>;
+using EventHandler = std::function<bool(const SDL_Event&, const ElementView&)>;
 
 class GenericWindow {
-	friend ElementManager;
+
 protected:
 
 	TTF_Font* _font;
@@ -48,8 +34,10 @@ protected:
 	GenericWindow& operator=(const GenericWindow&) = delete;
 	GenericWindow& operator=(GenericWindow&&) = delete;
 
-	ElementManager _elementManager;
+	std::vector<std::reference_wrapper<WindowElement>> _elements;
 	EventHandler _eventHandler;
+
+	WindowElement* _focussedElement = nullptr;
 
 	SDL_Window* _window;	// GenericWindow to render to
 	SDL_Surface* _surface;	// Pixel data to render to window
@@ -79,9 +67,9 @@ public:
 class InitWindow : public GenericWindow {
 private:
 	TTF_Font* _font;
-	SDL_Color _fontColor{ 255, 0, 255, 100 };
 	Button* _clientButton;
 	Button* _serverButton;
+	TextBox* _tBox;
 
 public:
 	InitWindow(const std::string& title, const EventHandler& eventHandler);
@@ -98,7 +86,6 @@ private:
 	SDL_RWops* _bmpDataStream;  // Current image to render
 
 	ByteArray _bitmap;  // Buffer to hold image to render
-
 	Uint32 _bitmapSize; // Buffer size
 
 	const bool Draw() override;  // Draws _bitmap to the window

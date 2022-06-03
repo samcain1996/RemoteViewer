@@ -3,8 +3,7 @@
 #if defined(_WIN32)
 #pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
 #endif
-GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler) : _eventHandler(eventHandler),
-	_elementManager(this) {
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler) : _eventHandler(eventHandler) {
 	
 	TTF_Init();
 
@@ -26,7 +25,7 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
-	_targetFPS = 60;
+	_targetFPS = 10;
 }
 
 void GenericWindow::Update() {
@@ -39,7 +38,12 @@ void GenericWindow::Update() {
 		// Get events
 		while (SDL_PollEvent(&_event)) {
 
-			keepAlive = _eventHandler(_event, _elementManager);
+			if (_event.type == SDL_QUIT) {
+				keepAlive = false;
+				break;
+			}
+
+			keepAlive = _eventHandler(_event, ElementView(_elements));
 		}
 
 		ticks = SDL_GetTicks();
@@ -56,9 +60,16 @@ void GenericWindow::CapFPS(const Uint32 prevTicks) {
 	if ((1000 / _targetFPS) > SDL_GetTicks() - prevTicks) { 
 		SDL_Delay(1000 / _targetFPS - (SDL_GetTicks() - prevTicks)); 
 	}
+
+	std::cout << "FPS: " << std::to_string((SDL_GetTicks() - prevTicks) / 1000.0) << "\n";
 }
 
 GenericWindow::~GenericWindow() {
+
+	//for (int i = _elements.size() - 1; i >= 0; i--) {
+	//	delete _elements[i];
+	//	_elements.pop_back();
+	//}
 
 	TTF_CloseFont(_font);
 	TTF_Quit();
@@ -68,7 +79,10 @@ GenericWindow::~GenericWindow() {
 
 InitWindow::InitWindow(const std::string& title, const EventHandler& eventHandler) : GenericWindow(title, eventHandler) {
 
-	_font = TTF_OpenFont("tahoma.ttf", 24);
+	_font = TTF_OpenFont("tahoma.ttf", 54);
+
+	SDL_Color fontColor{ 255, 0, 255 };
+	SDL_Color backgroundColor{ 0, 255, 0 };
 
 	SDL_Rect clientRect;
 
@@ -87,17 +101,37 @@ InitWindow::InitWindow(const std::string& title, const EventHandler& eventHandle
 	serverRect.x = (_width - serverRect.w) - serverRect.w;
 	serverRect.y = (_height - serverRect.h) / 2;
 
-	_clientButton = new Button(_font, _fontColor, "Client", clientRect);
-	_serverButton = new Button(_font, _fontColor, "Server", serverRect);
+	_clientButton = new Button(_font, fontColor, backgroundColor, "Client", clientRect);
+	_serverButton = new Button(_font, fontColor, backgroundColor, "Server", serverRect);
 
-	_elementManager.Add(_clientButton);
-	_elementManager.Add(_serverButton);
+	SDL_Rect tboxRect;
+	tboxRect.w = 300;
+	tboxRect.h = 100;
+	tboxRect.x = serverRect.x;
+	tboxRect.y = serverRect.y - 300;
+	_tBox = new TextBox(_font, "TEST", tboxRect);
+
+	_elements.push_back(*_clientButton);
+	_elements.push_back(*_serverButton);
+	_elements.push_back(*_tBox);
 
 }
 
 const bool InitWindow::Draw() {
 
-	_elementManager.RenderElements();
+	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
+
+	_surface = SDL_CreateRGBSurface(0, _width, _height, 32, 0, 0, 0, 0);
+	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
+
+	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+
+	SDL_FreeSurface(_surface);
+	SDL_DestroyTexture(_texture);
+
+	for (WindowElement& windowElement : _elements) {
+		windowElement.RenderElement(_renderer);
+	}
 
 	SDL_RenderPresent(_renderer);
 
@@ -108,19 +142,20 @@ void InitWindow::Update() {
 	Uint32 ticks = 0;
 	bool keepAlive = true;
 
-	Draw();
-
 	while (keepAlive) {
 
 		while (SDL_PollEvent(&_event)) {
-			keepAlive = _eventHandler(_event, _elementManager);
+			keepAlive = _eventHandler(_event, ElementView(_elements));
 		}
+		ticks = SDL_GetTicks();
 
+		Draw();
+
+		CapFPS(ticks);
 	}
 }
 
-InitWindow::~InitWindow() {
-}
+InitWindow::~InitWindow() {}
 
 RenderWindow::RenderWindow(const std::string& title, const EventHandler& eventHandler) :
 	GenericWindow(title, eventHandler) {
@@ -184,35 +219,13 @@ RenderWindow::~RenderWindow() {
 	delete[] _bitmap;
 }
 
-// Element Manager
 
-ElementManager::ElementManager(GenericWindow* window) : _window(window) {
-}
-
-ElementManager::~ElementManager() {
-
-	for (int i = elements.size() - 1; i >= 0; i--) {
-		delete elements[i];
-		elements.pop_back();
-	}
-
-}
-void ElementManager::Add(WindowElement* element) {
-	elements.push_back(element);
-}
-
-void ElementManager::RenderElements() {
-	for (WindowElement* element : elements) {
-		element->RenderElement(_window->_surface, _window->_texture, _window->_renderer);
-	}
-}
-
-const WindowElement& ElementManager::GetElementByName(const std::string& elementName) const {
+WindowElement& ElementView::GetElementByName(const std::string& elementName) const {
 	for (int i = 0; i < elements.size(); i++) {
-		if (elements[i]->Name() == elementName) { return *elements.at(i); }
+		if (elements[i].get().Name() == elementName) { return elements[i]; }
 	}
 }
 
-const WindowElement& ElementManager::GetElementById(const Uint32 id) const {
-	if (_idCounter >= id) { return *elements[id]; }
+WindowElement& ElementView::GetElementById(const Uint32 id) const {
+	if (elements.size() > id) { return elements[id]; }
 }

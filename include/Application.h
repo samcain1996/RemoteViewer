@@ -14,7 +14,7 @@ private:
 	static std::atomic<bool> _exit;
 
 	static GenericWindow* _window;
-	static NetAgent* _netAgent;
+	static std::unique_ptr<NetAgent> _netAgent;
 
 	template <typename T>
 	static MsgWriterPtr<T> _writer;
