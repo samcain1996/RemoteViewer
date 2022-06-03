@@ -3,12 +3,10 @@
 #if defined(_WIN32)
 #pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
 #endif
-GenericWindow::GenericWindow(const std::string& title, const EventHandler& eh) : _eventHandler(eh),
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler) : _eventHandler(eventHandler),
 	_elementManager(this) {
 	
 	TTF_Init();
-
-
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
@@ -64,19 +62,14 @@ GenericWindow::~GenericWindow() {
 
 	TTF_CloseFont(_font);
 	TTF_Quit();
+
 	SDL_DestroyWindow(_window);
 }
 
-InitWindow::InitWindow(const std::string& title, const EventHandler& wev) : GenericWindow(title, wev) {
+InitWindow::InitWindow(const std::string& title, const EventHandler& eventHandler) : GenericWindow(title, eventHandler) {
 
 	_font = TTF_OpenFont("tahoma.ttf", 24);
 
-	InitButtons();
-
-
-}
-
-void InitWindow::InitButtons() {
 	SDL_Rect clientRect;
 
 	// Position buttons
@@ -99,6 +92,7 @@ void InitWindow::InitButtons() {
 
 	_elementManager.Add(_clientButton);
 	_elementManager.Add(_serverButton);
+
 }
 
 const bool InitWindow::Draw() {
@@ -110,11 +104,26 @@ const bool InitWindow::Draw() {
 	return true;
 }
 
+void InitWindow::Update() {
+	Uint32 ticks = 0;
+	bool keepAlive = true;
+
+	Draw();
+
+	while (keepAlive) {
+
+		while (SDL_PollEvent(&_event)) {
+			keepAlive = _eventHandler(_event, _elementManager);
+		}
+
+	}
+}
+
 InitWindow::~InitWindow() {
 }
 
-RenderWindow::RenderWindow(const std::string& title, const EventHandler& ev) :
-	GenericWindow(title, ev) {
+RenderWindow::RenderWindow(const std::string& title, const EventHandler& eventHandler) :
+	GenericWindow(title, eventHandler) {
 
 	// Allocate memory for bitmap
 	_bitmapSize = 54 + CalculateTheoreticalBMPSize(_width, _height);
@@ -181,6 +190,11 @@ ElementManager::ElementManager(GenericWindow* window) : _window(window) {
 }
 
 ElementManager::~ElementManager() {
+
+	for (int i = elements.size() - 1; i >= 0; i--) {
+		delete elements[i];
+		elements.pop_back();
+	}
 
 }
 void ElementManager::Add(WindowElement* element) {

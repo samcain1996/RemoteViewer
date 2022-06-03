@@ -38,7 +38,7 @@ protected:
 
 	TTF_Font* _font;
 
-	GenericWindow(const std::string& title, const EventHandler& eh);
+	GenericWindow(const std::string& title, const EventHandler& eventHandler);
 
 	GenericWindow() = delete;
 
@@ -83,26 +83,11 @@ private:
 	Button* _clientButton;
 	Button* _serverButton;
 
-	void InitButtons();
 public:
-	InitWindow(const std::string& title, const EventHandler& wev);
+	InitWindow(const std::string& title, const EventHandler& eventHandler);
 
 	const bool Draw() override;
-	void Update() override {
-
-		Uint32 ticks = 0;
-		bool keepAlive = true;
-
-		Draw();
-
-		while (keepAlive) {
-
-			while (SDL_PollEvent(&_event)) {
-				keepAlive = _eventHandler(_event, _elementManager);
-			}
-
-		}
-	}
+	void Update() override;
 
 	~InitWindow();
 };
@@ -122,7 +107,7 @@ private:
 public:
 	RenderWindow() = delete;
 
-	RenderWindow(const std::string& title, const EventHandler& ev);
+	RenderWindow(const std::string& title, const EventHandler& eventHandler);
 
 	RenderWindow(const RenderWindow&) = delete;
 	RenderWindow(RenderWindow&&) = delete;

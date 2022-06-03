@@ -47,5 +47,5 @@ private:
 
 	void RenderElement(SDL_Surface* surface, SDL_Texture* texture, SDL_Renderer* renderer) override;
 public:
-	Button(TTF_Font* font, const SDL_Color& fontColor, const std::string& name, SDL_Rect& bounds);
+	Button(TTF_Font* font, const SDL_Color& fontColor, const std::string& name, const SDL_Rect& bounds);
 };

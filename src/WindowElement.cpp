@@ -4,7 +4,7 @@
 // Window Element
 
 WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect) :
-	_name(name), _bounds(rect) {};
+	_elementId(0), _name(name), _bounds(rect) {};
 
 WindowElement::WindowElement() : WindowElement("ERROR", SDL_Rect()) {}
 
@@ -20,6 +20,14 @@ const SDL_Rect& WindowElement::Bounds() const { return _bounds; }
 
 
 // Button
+
+Button::Button(TTF_Font* font, const SDL_Color& fontColor, const std::string& name, const SDL_Rect& bounds) :
+	WindowElement(name, bounds) {
+	_font = font;
+	_fontColor = fontColor;
+	_backgroundColor = 0xff00ff00;
+}
+
 void Button::RenderElement(SDL_Surface* surface, SDL_Texture* texture, SDL_Renderer* renderer) {
 
 	SDL_FillRect(surface, &_bounds, _backgroundColor);
@@ -37,12 +45,5 @@ void Button::RenderElement(SDL_Surface* surface, SDL_Texture* texture, SDL_Rende
 	SDL_FreeSurface(surface);
 	SDL_DestroyTexture(texture);
 
-}
-
-Button::Button(TTF_Font* font, const SDL_Color& fontColor, const std::string& name, SDL_Rect& bounds) :
-	WindowElement(name, bounds) {
-	_font = font;
-	_fontColor = fontColor;
-	_backgroundColor = 0xff00ff00;
 }
 

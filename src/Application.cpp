@@ -79,6 +79,7 @@ void Application::RunClient(Client& client) {
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 			_exit = true;
 			_writer<SDL_Event>->WriteMessage(ev);
+			return false;
 		}
 		return true;
 	};
