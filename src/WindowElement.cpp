@@ -67,7 +67,7 @@ void TextBox::RenderElement(SDL_Renderer* renderer) {
 		SDL_RenderFillRect(renderer, &cursorBarRect);
 	}
 
-	displayBar = !displayBar;
+	if (hasFocus) { displayBar = !displayBar; }
 }
 
 TextBox::TextBox(TTF_Font* font, const std::string& name, const SDL_Rect& bounds) :

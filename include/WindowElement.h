@@ -18,6 +18,8 @@ protected:
 
 public:
 
+	bool hasFocus = false;
+
 	WindowElement();
 	WindowElement(const std::string& name, const SDL_Rect& rect);
 
@@ -29,7 +31,7 @@ public:
 	WindowElement& operator=(const WindowElement& other) = delete;
 	WindowElement& operator=(WindowElement&& other) = delete;
 
-	virtual void Update() {};
+	virtual void Update(SDL_Event& ev) {};
 
 	virtual void RenderElement(SDL_Renderer* renderer) = 0;
 
@@ -68,6 +70,9 @@ private:
 	SDL_Rect cursorBarRect;
 	bool displayBar = false;
 
+	void RemoveLetter() { if (!_text.empty()) { _text.erase(_text.end() - 1); } }
+	void Add(const char letter) { _text += letter; }
+
 public:
 
 	TextBox() = delete;
@@ -82,11 +87,19 @@ public:
 
 	void RenderElement(SDL_Renderer* renderer) override;
 
-	void Update() override {
+	void Update(SDL_Event& ev) override {
 
+		if (ev.type == SDL_KEYDOWN) {
+
+			if (ev.key.keysym.sym == SDLK_BACKSPACE) {
+				RemoveLetter();
+			}
+			else {
+				Add(ev.key.keysym.sym);
+			}
+		}
 	}
 
-	void RemoveLetter() { if (!_text.empty()) { _text.erase(_text.end() - 1); } }
-	void Add(const char letter) { _text += letter; }
+
 	const std::string& Text() const { return _text; }
 };

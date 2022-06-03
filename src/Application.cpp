@@ -18,6 +18,7 @@ MsgReaderPtr<T> Application::_reader = nullptr;
 bool Application::Init() {
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
+	if (TTF_Init() != 0) { return false; }
 
 	std::string ipToConnectTo("");
 
@@ -43,15 +44,6 @@ bool Application::Init() {
 			return !(_isClient || SDL_HasIntersection(&mouse, &serverButton.Bounds()));
 		}
 
-		if (ev.type == SDL_KEYDOWN) {
-
-			if (ev.key.keysym.sym == SDLK_BACKSPACE) {
-				tBox.RemoveLetter();
-			}
-			else {
-				tBox.Add(ev.key.keysym.sym);
-			}
-		}
 
 		return true;
 		
@@ -60,7 +52,7 @@ bool Application::Init() {
 	_window = new InitWindow("Remote Viewer", func);
 	InitWindow& initWin = dynamic_cast<InitWindow&>(*_window);
 
-	initWin.Update();
+	_window->Update();
 
 	if (_isClient) {
 		_netAgent = std::unique_ptr<NetAgent>(new Client(10008, ipToConnectTo));
@@ -89,7 +81,32 @@ void Application::Run() {
 
 void Application::RunClient(Client& client) {
 
-	if (!client.Connect("10009")) { return; }
+	TTF_Font* font = TTF_OpenFont("tahoma.ttf", 54);
+
+	SDL_Rect tbBounds;
+	tbBounds.x = 500;
+	tbBounds.y = 500;
+	tbBounds.h = 300;
+	tbBounds.w = 100;
+	TextBox portTb(font, "Port TextBox", tbBounds);
+	std::vector<std::reference_wrapper<WindowElement>> elements{ portTb };
+
+	EventHandler ev = [&](const SDL_Event& ev, const ElementView& elems) {
+
+		if (ev.type == SDL_KEYDOWN) {
+			if (ev.key.keysym.sym == SDLK_RETURN) {
+				return !client.Connect(portTb.Text());
+			}
+		}
+
+		return true;
+
+	};
+
+	_window = new GenericWindow("Connect To Port", ev, elements);
+	_window->Update();
+
+	delete _window;
 
 	EventHandler func = [&](const SDL_Event& ev, const ElementView& elems) {
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
@@ -136,5 +153,6 @@ void Application::RunServer(Server& server) {
 
 void Application::Cleanup() {
 
+	TTF_Quit();
 	SDL_Quit();
 }

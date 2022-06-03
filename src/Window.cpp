@@ -4,8 +4,6 @@
 #pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
 #endif
 GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler) : _eventHandler(eventHandler) {
-	
-	TTF_Init();
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
@@ -16,6 +14,8 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 	// Center window
 	_posX = (_displayData.w - _width) / 2;
 	_posY = (_displayData.h - _height) / 2;
+
+	_mouseRect.w = _mouseRect.h = 32;
 
 	// Create window
 	_window = SDL_CreateWindow(title.c_str(), _posX, _posY, _width, _height, NULL);
@@ -28,9 +28,25 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 	_targetFPS = 10;
 }
 
+void GenericWindow::GetFocus() {
+	for (auto& element : _elements) {
+		if (SDL_HasIntersection(&_mouseRect, &element.get().Bounds())) {
+			if (_focussedElement) _focussedElement->hasFocus = false;
+			_focussedElement = &element.get();
+			_focussedElement->hasFocus = true;
+			return;
+		}
+	}
+}
+
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, std::vector<std::reference_wrapper<WindowElement>>& els) : GenericWindow(title, eventHandler)
+{
+	_elements = els;
+}
+
 void GenericWindow::Update() {
 
-	Uint32 ticks;  
+	Uint32 ticks = 0;  
 
 	bool keepAlive = true;
 	while (keepAlive) {
@@ -44,6 +60,18 @@ void GenericWindow::Update() {
 			}
 
 			keepAlive = _eventHandler(_event, ElementView(_elements));
+
+			if (_event.type == SDL_MOUSEBUTTONDOWN) {
+
+				SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
+
+				GetFocus();
+
+			}
+
+			if (_focussedElement != nullptr) {
+				_focussedElement->Update(_event);
+			}
 		}
 
 		ticks = SDL_GetTicks();
@@ -54,6 +82,19 @@ void GenericWindow::Update() {
 
 	}
 
+}
+
+const bool GenericWindow::Draw() {
+	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
+	SDL_RenderClear(_renderer);
+
+	for (WindowElement& windowElement : _elements) {
+		windowElement.RenderElement(_renderer);
+	}
+
+	SDL_RenderPresent(_renderer);
+
+	return true;
 }
 
 void GenericWindow::CapFPS(const Uint32 prevTicks) {
@@ -72,7 +113,7 @@ GenericWindow::~GenericWindow() {
 	//}
 
 	TTF_CloseFont(_font);
-	TTF_Quit();
+	//TTF_Quit();
 
 	SDL_DestroyWindow(_window);
 }
@@ -115,44 +156,6 @@ InitWindow::InitWindow(const std::string& title, const EventHandler& eventHandle
 	_elements.push_back(*_serverButton);
 	_elements.push_back(*_tBox);
 
-}
-
-const bool InitWindow::Draw() {
-
-	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
-
-	_surface = SDL_CreateRGBSurface(0, _width, _height, 32, 0, 0, 0, 0);
-	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
-
-	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
-
-	SDL_FreeSurface(_surface);
-	SDL_DestroyTexture(_texture);
-
-	for (WindowElement& windowElement : _elements) {
-		windowElement.RenderElement(_renderer);
-	}
-
-	SDL_RenderPresent(_renderer);
-
-	return true;
-}
-
-void InitWindow::Update() {
-	Uint32 ticks = 0;
-	bool keepAlive = true;
-
-	while (keepAlive) {
-
-		while (SDL_PollEvent(&_event)) {
-			keepAlive = _eventHandler(_event, ElementView(_elements));
-		}
-		ticks = SDL_GetTicks();
-
-		Draw();
-
-		CapFPS(ticks);
-	}
 }
 
 InitWindow::~InitWindow() {}

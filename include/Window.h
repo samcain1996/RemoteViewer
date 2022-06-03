@@ -37,6 +37,8 @@ protected:
 	std::vector<std::reference_wrapper<WindowElement>> _elements;
 	EventHandler _eventHandler;
 
+	void GetFocus();
+
 	WindowElement* _focussedElement = nullptr;
 
 	SDL_Window* _window;	// GenericWindow to render to
@@ -55,11 +57,12 @@ protected:
 
 	Uint32 _targetFPS;	  // FPS to target
 
-	virtual const bool Draw() = 0;  // Draw to window
+	virtual const bool Draw();  // Draw to window
 
 	void CapFPS(const Uint32 prevTicks);  // Limit FPS
 
 public:
+	GenericWindow(const std::string& title, const EventHandler& eventHandler, std::vector< std::reference_wrapper<WindowElement>>& els);
 	virtual void Update();
 	virtual ~GenericWindow();
 };
@@ -73,9 +76,6 @@ private:
 
 public:
 	InitWindow(const std::string& title, const EventHandler& eventHandler);
-
-	const bool Draw() override;
-	void Update() override;
 
 	~InitWindow();
 };
