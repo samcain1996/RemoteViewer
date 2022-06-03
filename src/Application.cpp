@@ -19,10 +19,10 @@ bool Application::Init() {
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
 
-	EventHandler func = [&](const SDL_Event& ev, const ElementList& elems) {
-
-		const auto& clientButton = elems.GetElementByName("Client Button");
-		const auto& serverButton = elems.GetElementByName("Server Button");
+	EventHandler func = [&](const SDL_Event& ev, const ElementManager& elems) {
+		
+		const auto& clientButton = elems.GetElementByName("Client");
+		const auto& serverButton = elems.GetElementByName("Server");
 	
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 
@@ -41,7 +41,7 @@ bool Application::Init() {
 		
 	};
 
-	_window = new InitWindow("RemoteViewer", func);
+	_window = new InitWindow("192.168.50.160", func);
 	InitWindow& initWin = dynamic_cast<InitWindow&>(*_window);
 
 	initWin.Update();
@@ -75,7 +75,7 @@ void Application::RunClient(Client& client) {
 
 	if (!client.Connect("10009")) { return; }
 
-	EventHandler func = [&](const SDL_Event& ev, const ElementList& elems) {
+	EventHandler func = [&](const SDL_Event& ev, const ElementManager& elems) {
 		if (ev.type == SDL_MOUSEBUTTONDOWN) {
 			_exit = true;
 			_writer<SDL_Event>->WriteMessage(ev);

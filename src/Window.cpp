@@ -1,59 +1,14 @@
 #include "Window.h"
 
-// Window Element
-
-WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect) :
-	_name(name), _bounds(rect) {};
-
-WindowElement::WindowElement() : WindowElement("ERROR", SDL_Rect()) {}
-
-WindowElement& WindowElement::operator=(WindowElement&& other) noexcept {
-	_name = std::move(other._name);
-	_bounds = std::move(other._bounds);
-
-	return *this;
-}
-
-const std::string& WindowElement::Name() const { return _name; }
-const SDL_Rect& WindowElement::Bounds() const { return _bounds; }
-
-
-// Element List
-
-
-const std::pair<bool, Uint32> ElementList::ElementNameExists(const std::string& name) const {
-	for (const auto& [id, elem] : elements) {
-		if (elem._name == name) { return std::make_pair(true, id); }
-	}
-	return std::make_pair(false, 0);
-}
-
-void ElementList::Add(std::string& name, const SDL_Rect& rect) {
-	if (ElementNameExists(name).first) {
-		name = std::to_string(_idCounter);
-	}
-
-	elements[_idCounter++] = std::move(WindowElement(name, rect));
-}
-
-const WindowElement& ElementList::GetElementByName(const std::string& elementName) const {
-	auto [exists, id] = ElementNameExists(elementName);
-	if (exists) {
-		return elements.at(id);
-	}
-}
-
-const WindowElement& ElementList::GetElementById(const Uint32 id) const {
-	if (id < _idCounter) {
-		return WindowElement();
-	}
-	return elements.at(id);
-}
-
 #if defined(_WIN32)
 #pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
 #endif
-GenericWindow::GenericWindow(const std::string& title, const EventHandler& eh) : _eventHandler(eh) {
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eh) : _eventHandler(eh),
+	_elementManager(this) {
+	
+	TTF_Init();
+
+
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);
 
@@ -86,7 +41,7 @@ void GenericWindow::Update() {
 		// Get events
 		while (SDL_PollEvent(&_event)) {
 
-			keepAlive = _eventHandler(_event, _elements);
+			keepAlive = _eventHandler(_event, _elementManager);
 		}
 
 		ticks = SDL_GetTicks();
@@ -107,64 +62,48 @@ void GenericWindow::CapFPS(const Uint32 prevTicks) {
 
 GenericWindow::~GenericWindow() {
 
+	TTF_CloseFont(_font);
+	TTF_Quit();
 	SDL_DestroyWindow(_window);
 }
 
 InitWindow::InitWindow(const std::string& title, const EventHandler& wev) : GenericWindow(title, wev) {
-	// Init font
-	TTF_Init();
 
-	font = TTF_OpenFont("tahoma.ttf", 24);
+	_font = TTF_OpenFont("tahoma.ttf", 24);
+
+	InitButtons();
+
+
+}
+
+void InitWindow::InitButtons() {
+	SDL_Rect clientRect;
 
 	// Position buttons
-	_clientButton.w = 300;
-	_clientButton.h = 100;
+	clientRect.w = 300;
+	clientRect.h = 100;
 
-	_clientButton.x = _clientButton.w * 2;
-	_clientButton.y = (_height - _clientButton.h) / 2;
+	clientRect.x = clientRect.w * 2;
+	clientRect.y = (_height - clientRect.h) / 2;
 
-	_serverButton.w = 300;
-	_serverButton.h = 100;
+	SDL_Rect serverRect;
 
-	_serverButton.x = (_width - _serverButton.w) - _serverButton.w;
-	_serverButton.y = (_height - _serverButton.h) / 2;
+	serverRect.w = 300;
+	serverRect.h = 100;
 
-	std::string elementName = "Client Button";
-	_elements.Add(elementName, _clientButton);
+	serverRect.x = (_width - serverRect.w) - serverRect.w;
+	serverRect.y = (_height - serverRect.h) / 2;
 
-	elementName = "Server Button";
-	_elements.Add(elementName, _serverButton);
+	_clientButton = new Button(_font, _fontColor, "Client", clientRect);
+	_serverButton = new Button(_font, _fontColor, "Server", serverRect);
+
+	_elementManager.Add(_clientButton);
+	_elementManager.Add(_serverButton);
 }
 
 const bool InitWindow::Draw() {
 
-	// Create button backgrounds
-
-	_surface = SDL_CreateRGBSurface(0, _width, _height, 32, 0, 0, 0, 0);
-	SDL_FillRect(_surface, &_clientButton, 0xff0000ff);
-	SDL_FillRect(_surface, &_serverButton, 0xff0000ff);
-	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
-	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
-
-	SDL_DestroyTexture(_texture);
-	SDL_FreeSurface(_surface);
-
-	// Create button text
-	_surface = TTF_RenderText_Solid(font, "Client", fontColor);
-	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
-	SDL_SetTextureBlendMode(_texture, SDL_BLENDMODE_NONE);
-	SDL_RenderCopy(_renderer, _texture, NULL, &_clientButton);
-
-	SDL_DestroyTexture(_texture);
-	SDL_FreeSurface(_surface);
-
-	_surface = TTF_RenderText_Solid(font, "Server", fontColor);
-	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
-	SDL_SetTextureBlendMode(_texture, SDL_BLENDMODE_NONE);
-	SDL_RenderCopy(_renderer, _texture, NULL, &_serverButton);
-
-	SDL_DestroyTexture(_texture);
-	SDL_FreeSurface(_surface);
+	_elementManager.RenderElements();
 
 	SDL_RenderPresent(_renderer);
 
@@ -172,8 +111,6 @@ const bool InitWindow::Draw() {
 }
 
 InitWindow::~InitWindow() {
-	TTF_CloseFont(font);
-	TTF_Quit();
 }
 
 RenderWindow::RenderWindow(const std::string& title, const EventHandler& ev) :
@@ -238,3 +175,30 @@ RenderWindow::~RenderWindow() {
 	delete[] _bitmap;
 }
 
+// Element Manager
+
+ElementManager::ElementManager(GenericWindow* window) : _window(window) {
+}
+
+ElementManager::~ElementManager() {
+
+}
+void ElementManager::Add(WindowElement* element) {
+	elements.push_back(element);
+}
+
+void ElementManager::RenderElements() {
+	for (WindowElement* element : elements) {
+		element->RenderElement(_window->_surface, _window->_texture, _window->_renderer);
+	}
+}
+
+const WindowElement& ElementManager::GetElementByName(const std::string& elementName) const {
+	for (int i = 0; i < elements.size(); i++) {
+		if (elements[i]->Name() == elementName) { return *elements.at(i); }
+	}
+}
+
+const WindowElement& ElementManager::GetElementById(const Uint32 id) const {
+	if (_idCounter >= id) { return *elements[id]; }
+}

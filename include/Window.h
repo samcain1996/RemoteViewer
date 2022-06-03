@@ -1,62 +1,42 @@
 #pragma once
 
-#include "Packet.h"
-#include "Messages.h"
+#include "WindowElement.h"
 #include <functional>
 
-class ElementList;
-
-class WindowElement {
-	friend ElementList;
-private:
-	std::string _name;
-	SDL_Rect _bounds;
-
-	WindowElement(const std::string& name, const SDL_Rect& rect);
-
-public:
-
-	WindowElement();
-	
-	WindowElement(WindowElement&&) = delete;
-	WindowElement(const WindowElement&) = delete;
-
-	WindowElement& operator=(const WindowElement& other) = delete;
-	WindowElement& operator=(WindowElement&& other) noexcept;
-
-	const std::string& Name() const;
-	const SDL_Rect& Bounds() const;
-
-};
-
 class GenericWindow;
-class InitWindow;
-class RenderWindow;
 
-class ElementList {
+class ElementManager {
 	friend GenericWindow;
-	friend InitWindow;
-	friend RenderWindow;
 private:
+	GenericWindow* _window;
+
+	ElementManager() = delete;
+	ElementManager(GenericWindow* window);
+
+	~ElementManager();
+
+	ElementManager(const ElementManager&) = delete;
+	ElementManager(ElementManager&&) = delete;
+
 	Uint32 _idCounter = 0;
-	std::unordered_map<Uint32, WindowElement> elements;
-
-	const std::pair<bool, Uint32> ElementNameExists(const std::string& name) const;
-
-	void Add(std::string& name, const SDL_Rect& rect);
-
+	std::vector<WindowElement*> elements;
 public:
+	void Add(WindowElement* element);
+
+	void RenderElements();
 
 	const WindowElement& GetElementByName(const std::string& elementName) const;
 	const WindowElement& GetElementById(const Uint32 id) const;
 
 };
 
-using EventHandler = std::function<bool(const SDL_Event&, const ElementList&)>;
+using EventHandler = std::function<bool(const SDL_Event&, const ElementManager&)>;
 
 class GenericWindow {
-
+	friend ElementManager;
 protected:
+
+	TTF_Font* _font;
 
 	GenericWindow(const std::string& title, const EventHandler& eh);
 
@@ -68,7 +48,7 @@ protected:
 	GenericWindow& operator=(const GenericWindow&) = delete;
 	GenericWindow& operator=(GenericWindow&&) = delete;
 
-	ElementList _elements;
+	ElementManager _elementManager;
 	EventHandler _eventHandler;
 
 	SDL_Window* _window;	// GenericWindow to render to
@@ -98,10 +78,12 @@ public:
 
 class InitWindow : public GenericWindow {
 private:
-	TTF_Font* font;
-	SDL_Color fontColor = { 255,255,0,100 };
-	SDL_Rect _clientButton, _serverButton;
+	TTF_Font* _font;
+	SDL_Color _fontColor{ 255, 0, 255, 100 };
+	Button* _clientButton;
+	Button* _serverButton;
 
+	void InitButtons();
 public:
 	InitWindow(const std::string& title, const EventHandler& wev);
 
@@ -116,7 +98,7 @@ public:
 		while (keepAlive) {
 
 			while (SDL_PollEvent(&_event)) {
-				keepAlive = _eventHandler(_event, _elements);
+				keepAlive = _eventHandler(_event, _elementManager);
 			}
 
 		}
