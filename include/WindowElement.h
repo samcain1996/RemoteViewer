@@ -47,6 +47,7 @@ public:
 class Button : public WindowElement {
 private:
 	TTF_Font* _font;
+	std::string _text = "";
 	SDL_Color _fontColor, _backgroundColor;
 
 public:
@@ -59,6 +60,7 @@ public:
 	Button& operator=(Button&& other) = delete;
 
 	Button(TTF_Font* font, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds);
+	Button(int x, int y, const std::string& name, const std::string& text);
 
 	void RenderElement(SDL_Renderer* renderer) override;
 };
@@ -66,12 +68,11 @@ public:
 class TextBox : public WindowElement {
 private:
 	TTF_Font* _font;
-	std::string _text;
-	SDL_Rect cursorBarRect;
+	std::string _text = "";
+	SDL_Rect _cursorBarRect;
 	bool displayBar = false;
-
-	void RemoveLetter() { if (!_text.empty()) { _text.erase(_text.end() - 1); } }
-	void Add(const char letter) { _text += letter; }
+	const int skipFrames = 15;
+	int curFrame = 0;
 
 public:
 
@@ -83,23 +84,13 @@ public:
 	TextBox& operator=(const TextBox&) = delete;
 	TextBox& operator=(TextBox&&) = delete;
 
-	TextBox(TTF_Font* font, const std::string& name, const SDL_Rect& bounds);
+	TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds);
+	TextBox(int x, int y, const std::string& name, const std::string& text);
 
 	void RenderElement(SDL_Renderer* renderer) override;
 
-	void Update(SDL_Event& ev) override {
-
-		if (ev.type == SDL_KEYDOWN) {
-
-			if (ev.key.keysym.sym == SDLK_BACKSPACE) {
-				RemoveLetter();
-			}
-			else {
-				Add(ev.key.keysym.sym);
-			}
-		}
-	}
+	void Update(SDL_Event& ev) override;
 
 
-	const std::string& Text() const { return _text; }
+	const std::string& Text() const;
 };

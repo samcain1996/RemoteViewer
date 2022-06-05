@@ -25,7 +25,7 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
-	_targetFPS = 10;
+	_targetFPS = 60;
 }
 
 void GenericWindow::GetFocus() {
@@ -39,27 +39,26 @@ void GenericWindow::GetFocus() {
 	}
 }
 
-GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, std::vector<std::reference_wrapper<WindowElement>>& els) : GenericWindow(title, eventHandler)
-{
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList& els) :
+	GenericWindow(title, eventHandler) {
 	_elements = els;
+
+	Update();
+}
+
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList&& els) :
+	GenericWindow(title, eventHandler) {
+	_elements = std::move(els);
 }
 
 void GenericWindow::Update() {
+	Uint32 ticks = 0;
+	SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
 
-	Uint32 ticks = 0;  
-
-	bool keepAlive = true;
 	while (keepAlive) {
 		
 		// Get events
 		while (SDL_PollEvent(&_event)) {
-
-			if (_event.type == SDL_QUIT) {
-				keepAlive = false;
-				break;
-			}
-
-			keepAlive = _eventHandler(_event, ElementView(_elements));
 
 			if (_event.type == SDL_MOUSEBUTTONDOWN) {
 
@@ -67,6 +66,13 @@ void GenericWindow::Update() {
 
 				GetFocus();
 
+			}
+
+			keepAlive = _eventHandler(EventData(_event, _mouseRect, _width, _height), ElementView(_elements, *_focussedElement));
+
+			if (_event.type == SDL_QUIT) {
+				keepAlive = false;
+				break;
 			}
 
 			if (_focussedElement != nullptr) {
@@ -84,17 +90,24 @@ void GenericWindow::Update() {
 
 }
 
-const bool GenericWindow::Draw() {
-	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
-	SDL_RenderClear(_renderer);
+void GenericWindow::Draw() {
+	//Uint32 ticks = 0;
 
-	for (WindowElement& windowElement : _elements) {
-		windowElement.RenderElement(_renderer);
-	}
+	//while (keepAlive) {
+		//ticks = SDL_GetTicks();
 
-	SDL_RenderPresent(_renderer);
+		SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
+		SDL_RenderClear(_renderer);
 
-	return true;
+		for (WindowElement& windowElement : _elements) {
+			windowElement.RenderElement(_renderer);
+		}
+
+		SDL_RenderPresent(_renderer);
+
+
+		
+	//}
 }
 
 void GenericWindow::CapFPS(const Uint32 prevTicks) {
@@ -107,58 +120,10 @@ void GenericWindow::CapFPS(const Uint32 prevTicks) {
 
 GenericWindow::~GenericWindow() {
 
-	//for (int i = _elements.size() - 1; i >= 0; i--) {
-	//	delete _elements[i];
-	//	_elements.pop_back();
-	//}
-
 	TTF_CloseFont(_font);
-	//TTF_Quit();
-
+	SDL_DestroyRenderer(_renderer);
 	SDL_DestroyWindow(_window);
 }
-
-InitWindow::InitWindow(const std::string& title, const EventHandler& eventHandler) : GenericWindow(title, eventHandler) {
-
-	_font = TTF_OpenFont("tahoma.ttf", 54);
-
-	SDL_Color fontColor{ 255, 0, 255 };
-	SDL_Color backgroundColor{ 0, 255, 0 };
-
-	SDL_Rect clientRect;
-
-	// Position buttons
-	clientRect.w = 300;
-	clientRect.h = 100;
-
-	clientRect.x = clientRect.w * 2;
-	clientRect.y = (_height - clientRect.h) / 2;
-
-	SDL_Rect serverRect;
-
-	serverRect.w = 300;
-	serverRect.h = 100;
-
-	serverRect.x = (_width - serverRect.w) - serverRect.w;
-	serverRect.y = (_height - serverRect.h) / 2;
-
-	_clientButton = new Button(_font, fontColor, backgroundColor, "Client", clientRect);
-	_serverButton = new Button(_font, fontColor, backgroundColor, "Server", serverRect);
-
-	SDL_Rect tboxRect;
-	tboxRect.w = 300;
-	tboxRect.h = 100;
-	tboxRect.x = serverRect.x;
-	tboxRect.y = serverRect.y - 300;
-	_tBox = new TextBox(_font, "TEST", tboxRect);
-
-	_elements.push_back(*_clientButton);
-	_elements.push_back(*_serverButton);
-	_elements.push_back(*_tBox);
-
-}
-
-InitWindow::~InitWindow() {}
 
 RenderWindow::RenderWindow(const std::string& title, const EventHandler& eventHandler) :
 	GenericWindow(title, eventHandler) {
@@ -171,27 +136,28 @@ RenderWindow::RenderWindow(const std::string& title, const EventHandler& eventHa
 
 }
 
-const bool RenderWindow::Draw() {
+void RenderWindow::Draw() {
 
-	if (completeGroups->Empty()) { return false; } // No image is ready, skip frame
+	//while (keepAlive) {
+		if (msgReader->Empty()) { return; } // No image is ready, skip frame
 
-	// Assemble image buffer
-	AssembleImage(completeGroups->ReadMessage());
+		// Assemble image buffer
+		AssembleImage(msgReader->ReadMessage());
 
-	// Create image to render
-	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
-	_surface = SDL_LoadBMP_RW(_bmpDataStream, SDL_TRUE);
-	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
+		// Create image to render
+		_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
+		_surface = SDL_LoadBMP_RW(_bmpDataStream, SDL_TRUE);
+		_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
 
-	// Render image
-	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
-	SDL_RenderPresent(_renderer);
+		// Render image
+		SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+		SDL_RenderPresent(_renderer);
 
-	// Free resources
-	SDL_FreeSurface(_surface);
-	SDL_DestroyTexture(_texture);
+		// Free resources
+		SDL_FreeSurface(_surface);
+		SDL_DestroyTexture(_texture);
+	//}
 
-	return true;
 }
 
 void RenderWindow::AssembleImage(PacketPriorityQueue* const queue) {
@@ -210,15 +176,11 @@ void RenderWindow::AssembleImage(PacketPriorityQueue* const queue) {
 
 		queue->pop();  // Remove packet from queue
 	}
-
 	delete queue;
 }
 
 RenderWindow::~RenderWindow() {
 
-	SDL_DestroyRenderer(_renderer);
-
-	delete completeGroups;
 	delete[] _bitmap;
 }
 

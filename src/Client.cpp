@@ -24,7 +24,7 @@ void Client::ProcessPacket(const Packet& packet) {
         PacketPriorityQueue* completeGroup = new PacketPriorityQueue(std::move(_incompletePackets[group]));
         _incompletePackets.erase(group);
 
-        writer->WriteMessage(completeGroup);
+        groupWriter->WriteMessage(completeGroup);
         _packetGroups.erase(group);
     }
 }
@@ -62,7 +62,8 @@ void Client::Receive() {
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
 
         if (!eventReader->Empty()) {
-            if (eventReader->ReadMessage().type == SDL_MOUSEBUTTONDOWN) {
+            SDL_Event ev = eventReader->ReadMessage();
+            if (ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_QUIT) {
                 packetData[0] = '0';
                 packetData[1] = '0';
                 packetData[2] = '0';
@@ -82,7 +83,7 @@ void Client::Receive() {
 }
 
 Client::~Client() {
-    delete writer;
+   // delete writer;
     delete eventReader;
 }
 

@@ -44,6 +44,27 @@ constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 using DWORD = std::uint32_t;
 #endif
 
+template <typename Message>
+class MessageReader;
+
+template <typename Message>
+class MessageWriter;
+
+template <typename Message>
+class Messageable {
+    friend class Application;
+protected:
+    MessageWriter<Message>* msgWriter = nullptr;
+    MessageReader<Message>* msgReader = nullptr;
+
+    virtual ~Messageable() {
+        if (msgWriter != nullptr) {
+            delete msgWriter;
+            delete msgReader;
+        }
+    }
+};
+
 /*----------------FUNCTIONS--------------------*/
 
 constexpr void encode256(ByteEncodedUint32 encodedNumber, const Uint32 numberToEncode,

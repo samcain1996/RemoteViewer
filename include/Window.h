@@ -4,23 +4,35 @@
 #include <iostream>
 #include <functional>
 
-class GenericWindow;
-class InitWindow;
+using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
 
 struct ElementView {
-	std::vector<std::reference_wrapper<WindowElement>>& elements;
+	const WindowElement& elemInFocus;
+	ElementList& elements;
 
 	ElementView() = delete;
-	ElementView(std::vector<std::reference_wrapper<WindowElement>>& elements) : elements(elements) {}
+	ElementView(ElementList& elements, WindowElement& elementInFocus) : elements(elements), elemInFocus(elementInFocus) {}
+
 	WindowElement& GetElementByName(const std::string& elementName) const;
 	WindowElement& GetElementById(const Uint32 id) const;
 };
 
-using EventHandler = std::function<bool(const SDL_Event&, const ElementView&)>;
+struct EventData {
+	const SDL_Event& windowEvent;
+	const SDL_Rect& mouseRect;
+	const int& windowWidth;
+	const int& windowHeight;
+
+	EventData(const SDL_Event& evnt, const SDL_Rect& mouseRect, const int width, const int height) : 
+		windowEvent(evnt), mouseRect(mouseRect), windowWidth(width), windowHeight(height) {};
+};
+
+using EventHandler = std::function<bool(const EventData&, const ElementView&)>;
 
 class GenericWindow {
 
 protected:
+	bool keepAlive = true;
 
 	TTF_Font* _font;
 
@@ -34,7 +46,7 @@ protected:
 	GenericWindow& operator=(const GenericWindow&) = delete;
 	GenericWindow& operator=(GenericWindow&&) = delete;
 
-	std::vector<std::reference_wrapper<WindowElement>> _elements;
+	ElementList _elements;
 	EventHandler _eventHandler;
 
 	void GetFocus();
@@ -57,30 +69,18 @@ protected:
 
 	Uint32 _targetFPS;	  // FPS to target
 
-	virtual const bool Draw();  // Draw to window
+	virtual void Draw();  // Draw to window
 
 	void CapFPS(const Uint32 prevTicks);  // Limit FPS
 
 public:
-	GenericWindow(const std::string& title, const EventHandler& eventHandler, std::vector< std::reference_wrapper<WindowElement>>& els);
+	GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList& els);
+	GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList&& els);
 	virtual void Update();
 	virtual ~GenericWindow();
 };
 
-class InitWindow : public GenericWindow {
-private:
-	TTF_Font* _font;
-	Button* _clientButton;
-	Button* _serverButton;
-	TextBox* _tBox;
-
-public:
-	InitWindow(const std::string& title, const EventHandler& eventHandler);
-
-	~InitWindow();
-};
-
-class RenderWindow : public GenericWindow {
+class RenderWindow : public GenericWindow, public Messageable<PacketPriorityQueue*> {
 
 private:
 	SDL_RWops* _bmpDataStream;  // Current image to render
@@ -88,7 +88,7 @@ private:
 	ByteArray _bitmap;  // Buffer to hold image to render
 	Uint32 _bitmapSize; // Buffer size
 
-	const bool Draw() override;  // Draws _bitmap to the window
+	void Draw() override;  // Draws _bitmap to the window
 	void AssembleImage(PacketPriorityQueue* const queue);  // Assembles _bitmap from image fragments
 
 public:
@@ -103,6 +103,12 @@ public:
 
 	RenderWindow& operator=(const RenderWindow&) = delete;
 	RenderWindow& operator=(RenderWindow&&) = delete;
-
-	MsgReaderPtr<PacketPriorityQueue*> completeGroups = nullptr;
 };
+
+template <class T>
+concept IsTypeOfWindow = std::derived_from<T, GenericWindow> || std::same_as<T, GenericWindow>;
+
+template <class Window>
+concept IsSubTypeOfWindow = IsTypeOfWindow<Window> && !std::same_as<Window, GenericWindow>;
+
+//template <class Window>

@@ -42,7 +42,7 @@ void Server::Send(ByteArray bytes, size_t len) {
         _socket.receive(boost::asio::buffer(dummyBuf, sizeof dummyBuf), 0, _errcode);
 
         if (std::memcmp(dummyBuf, empty, 4) == 0) {
-            eventWriter->WriteMessage(empty);
+            msgWriter->WriteMessage(empty);
             return;
         }
     }
@@ -51,7 +51,7 @@ void Server::Send(ByteArray bytes, size_t len) {
 
 Server::~Server() {
     delete _capture;
-    delete eventWriter;
+    //delete eventWriter;
 }
 
 PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)

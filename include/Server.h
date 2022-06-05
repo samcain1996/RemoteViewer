@@ -2,7 +2,7 @@
 #include "NetAgent.h"
 #include "Capture.h"
 
-class Server : public NetAgent {
+class Server : public NetAgent, public Messageable<ByteArray> {
 private:
 
 	// Converts an arbitrarily long array of bytes
@@ -20,7 +20,7 @@ private:
 
 public:
 
-	// Severs should only be instantiated with a port number
+	// Servers should only be instantiated with a port number
 	Server() 			  = delete;
 	Server(const Server&) = delete;
 	Server(Server&&) 	  = delete;
@@ -35,7 +35,7 @@ public:
 	// Serve content to client
 	void Serve();
 
-	MsgWriterPtr<ByteArray> eventWriter = nullptr;
+	//MsgWriterPtr<ByteArray> eventWriter = nullptr;
 
 	~Server();
 };

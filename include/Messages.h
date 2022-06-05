@@ -1,32 +1,11 @@
 #pragma once
 #include "Types.h"
+#include <concepts>
 
 /*---------------------------------------*/
 /*		Allows for threads to send		 */
 /*	    messages between eachother       */
 /*---------------------------------------*/
-
-// Aliases for classes
-template <typename Message>
-class MessageHandler;
-template <typename Message>
-using MsgHandlerPtr = MessageHandler<Message>*;
-
-template <typename Message>
-class MessageReader;
-template <typename Message>
-using MsgReaderPtr = MessageReader<Message>*;
-
-template <typename Message>
-class MessageWriter;
-template <typename Message>
-using MsgWriterPtr = MessageWriter<Message>*;
-
-template <typename Message>
-using MessageWriterList = std::vector<MessageWriter<Message> >;
-
-template <typename Message>
-using MessageReaderList = std::vector<MessageReader<Message> >;
 
 template <typename Message>
 class MessageHandler {
@@ -43,7 +22,7 @@ protected:
 	MessageHandler() : _queuePtr(new std::queue<Message>), _mutex(new std::mutex), _ownsQueue(true) {};
 
 	// If constructed from another MessageHandler, share its queue
-	MessageHandler(MsgHandlerPtr<Message> const msgHandler) : _queuePtr(msgHandler->_queuePtr), _mutex(msgHandler->_mutex), _ownsQueue(false) {};
+	MessageHandler(MessageHandler<Message>* const msgHandler) : _queuePtr(msgHandler->_queuePtr), _mutex(msgHandler->_mutex), _ownsQueue(false) {};
 
 	MessageHandler(const MessageHandler&) = delete;
 	MessageHandler(MessageHandler&&) = delete;
@@ -92,7 +71,7 @@ public:
 	MessageReader() : MessageHandler<Message>() {};
 
 	// Create from existing queue
-	MessageReader(MsgWriterPtr<Message> const writer) : MessageHandler<Message>(writer) {}
+	MessageReader(MessageWriter<Message>* const writer) : MessageHandler<Message>(writer) {}
 
 	// Do not allow copying
 	MessageReader(const MessageReader&) = delete;
@@ -121,7 +100,7 @@ public:
 	MessageWriter() : MessageHandler<Message>() {};
 
 	// Create from existing queue
-	MessageWriter(MsgReaderPtr<Message> const reader) : MessageHandler<Message>(reader) {}
+	MessageWriter(MessageReader<Message>* const reader) : MessageHandler<Message>(reader) {}
 
 	// Do not allow copying
 	MessageWriter(const MessageWriter&) = delete;

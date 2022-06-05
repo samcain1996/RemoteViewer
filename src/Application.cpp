@@ -5,63 +5,109 @@ bool Application::_isClient = false;
 
 std::atomic<bool> Application::_exit = false;
 
-GenericWindow* Application::_window = nullptr;
-
 std::unique_ptr<NetAgent> Application::_netAgent = nullptr;
 
-template <typename T>
-MsgWriterPtr<T> Application::_writer = nullptr;
+std::unique_ptr<GenericWindow> Application::_window = nullptr;
 
-template <typename T>
-MsgReaderPtr<T> Application::_reader = nullptr;
+template <typename Message>
+Messageable<Message> Application::_msgHandler;
 
 bool Application::Init() {
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
 	if (TTF_Init() != 0) { return false; }
 
-	std::string ipToConnectTo("");
 
-	EventHandler func = [&](const SDL_Event& ev, const ElementView& elems) {
-		
-		const auto& clientButton = elems.GetElementByName("Client");
-		const auto& serverButton = elems.GetElementByName("Server");
+	Button clientButton(500, 500, "Client Button", "Client");
+	Button serverButton(1000, 500, "Server Button", "Server");
 
-		TextBox& tBox = (TextBox&)elems.GetElementByName("TEST");
-	
-		if (ev.type == SDL_MOUSEBUTTONDOWN) {
+	TextBox localPortTb(500, 500, "Local Port Textbox", "Local Port");
+	TextBox remotePortTb(1000, 500, "Remote Port TextBox", "Remote Port");
+	TextBox ipTextbox(1500, 500, "IP Textbox", "IP to connect to");
 
-			SDL_Rect mouse;
-			mouse.w = 32;
-			mouse.h = 32;
 
-			SDL_GetMouseState(&mouse.x, &mouse.y);
+	ElementList elements { clientButton, serverButton };
 
-			ipToConnectTo = tBox.Text();
 
-			_isClient = SDL_HasIntersection(&mouse, &clientButton.Bounds());
+	EventHandler clientInitEventHandler = [&](const EventData& ed, const ElementView& elemView) {
 
-			return !(_isClient || SDL_HasIntersection(&mouse, &serverButton.Bounds()));
+		const SDL_Rect& mouseRect = ed.mouseRect;
+		const WindowElement& elementInFocus = elemView.elemInFocus;
+
+		if (ed.windowEvent.type == SDL_KEYDOWN) {
+			if (elementInFocus == ipTextbox) {
+				if (ed.windowEvent.key.keysym.sym == SDLK_RETURN) {
+					_netAgent = std::unique_ptr<NetAgent>(new Client(std::stoi(remotePortTb.Text()), ipTextbox.Text()));
+					return false;
+				}
+			}
 		}
 
-
 		return true;
-		
 	};
 
-	_window = new InitWindow("Remote Viewer", func);
-	InitWindow& initWin = dynamic_cast<InitWindow&>(*_window);
 
+	EventHandler serverInitEventHandler = [&](const EventData& ed, const ElementView& elemView) {
+
+		const SDL_Rect& mouseRect = ed.mouseRect;
+		const WindowElement& elementInFocus = elemView.elemInFocus;
+
+		if (ed.windowEvent.type == SDL_KEYDOWN) {
+
+			if (elementInFocus == localPortTb) {
+				if (ed.windowEvent.key.keysym.sym == SDLK_RETURN) {
+					_netAgent = std::unique_ptr<NetAgent>(new Server(std::stoi(localPortTb.Text())));
+					return false;
+				}
+				
+			}
+		}
+
+		return true;
+
+	};
+
+	EventHandler eventHandler = [&](const EventData& ed, const ElementView& elemView) {
+
+		const SDL_Rect& mouseRect = ed.mouseRect;
+
+		// Check if either button has been hit
+		if (SDL_HasIntersection(&mouseRect, &clientButton.Bounds())) {
+			_isClient = true;
+
+			elements.clear();
+			elements.emplace_back(ipTextbox);
+			elements.emplace_back(remotePortTb);
+
+		}
+
+		else if (SDL_HasIntersection(&mouseRect, &serverButton.Bounds())) {
+			_isClient = false;
+
+			elements.clear();
+
+		}
+
+		else {
+			return true;
+		}
+
+		elements.emplace_back( localPortTb );
+
+		return false;
+	};
+
+
+	_window = std::unique_ptr<GenericWindow>(new GenericWindow("Anonymous Window", eventHandler, elements));
+	_window.reset();
+
+	_window = _isClient ? std::unique_ptr<GenericWindow>(new GenericWindow("Client Initialization", clientInitEventHandler, elements)) :
+		std::unique_ptr<GenericWindow>(new GenericWindow("Server Initialization", serverInitEventHandler, elements));
 	_window->Update();
+	_window.reset();
 
-	if (_isClient) {
-		_netAgent = std::unique_ptr<NetAgent>(new Client(10008, ipToConnectTo));
-	}
-	else {
-		_netAgent = std::unique_ptr<NetAgent>(new Server(10009));
-	}
 
-	delete _window;
+	elements.clear();
 	_init = true;
 
 	return true;
@@ -81,67 +127,40 @@ void Application::Run() {
 
 void Application::RunClient(Client& client) {
 
-	TTF_Font* font = TTF_OpenFont("tahoma.ttf", 54);
+	EventHandler func = [&](const EventData& ed, const ElementView& elems) {
 
-	SDL_Rect tbBounds;
-	tbBounds.x = 500;
-	tbBounds.y = 500;
-	tbBounds.h = 300;
-	tbBounds.w = 100;
-	TextBox portTb(font, "Port TextBox", tbBounds);
-	std::vector<std::reference_wrapper<WindowElement>> elements{ portTb };
+		const SDL_Event& windowEvent = ed.windowEvent;
 
-	EventHandler ev = [&](const SDL_Event& ev, const ElementView& elems) {
-
-		if (ev.type == SDL_KEYDOWN) {
-			if (ev.key.keysym.sym == SDLK_RETURN) {
-				return !client.Connect(portTb.Text());
-			}
-		}
-
-		return true;
-
-	};
-
-	_window = new GenericWindow("Connect To Port", ev, elements);
-	_window->Update();
-
-	delete _window;
-
-	EventHandler func = [&](const SDL_Event& ev, const ElementView& elems) {
-		if (ev.type == SDL_MOUSEBUTTONDOWN) {
+		if (windowEvent.type == SDL_MOUSEBUTTONDOWN || windowEvent.type == SDL_QUIT) {
 			_exit = true;
-			_writer<SDL_Event>->WriteMessage(ev);
+			_msgHandler<SDL_Event>.msgWriter->WriteMessage(windowEvent);
 			return false;
 		}
 		return true;
 	};
 
-	_window = new RenderWindow("192.168.50.160", func);
+	_window = std::unique_ptr<GenericWindow>(new RenderWindow("192.168.50.160", func));
 	RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
 
-	ConnectMsgHandlers(client.writer, renderWindow.completeGroups);
-	ConnectMsgHandlers<SDL_Event>(_writer<SDL_Event>, client.eventReader);
+	ConnectMessageHandlers<PacketPriorityQueue*>(&client, &renderWindow);
+	ConnectMessageHandlers<SDL_Event>(&client, &_msgHandler<SDL_Event>);
 
 	std::thread networkThr(&Client::Receive, &client);
 	
 	renderWindow.Update();
 
 	networkThr.join();
-
-	delete _window;
-	delete _writer<SDL_Event>;
 }
 
 void Application::RunServer(Server& server) {
 
 	server.Listen();
 
-	ConnectMsgHandlers<ByteArray>(server.eventWriter, _reader<ByteArray>);
+	ConnectMessageHandlers<ByteArray>(&server, &_msgHandler<ByteArray>);
 
 	while (!_exit) {
-		if (!_reader<ByteArray>->Empty()) {
-			if (_reader<ByteArray>->ReadMessage()) {
+		if (!_msgHandler<ByteArray>.msgReader->Empty()) {
+			if (_msgHandler<ByteArray>.msgReader->ReadMessage()) {
 				_exit = true;
 				break;
 			}
