@@ -1,5 +1,14 @@
 #include "Window.h"
 
+
+WindowData::WindowData(SDL_Event& evnt, SDL_Rect& mouseRect, int width, int height) :
+	windowEvent(evnt), mouseRect(mouseRect), windowWidth(width), windowHeight(height) {
+}
+
+
+EventData::EventData(const WindowData& windowData, const int focusIdx, WindowList& windowList, ElementList& elementList) :
+	_windowData(windowData), _focusIdx(focusIdx), _windowList(windowList), _elemList(elementList) {}
+
 const WindowElement& EventData::GetElementByName(const std::string& elementName) const {
 	for (int i = 0; i < _elemList.size(); i++) {
 		if (_elemList.at(i).get().Name() == elementName) { return _elemList.at(i); }
@@ -10,6 +19,10 @@ const WindowElement& EventData::GetElementByName(const std::string& elementName)
 const WindowElement& EventData::GetElementById(const Uint32 id) const {
 	if (_elemList.size() > id) { return _elemList.at(id); }
 	std::terminate(); // <-- Come back to this later
+}
+
+const WindowElement& EventData::GetFocussedElement() const {
+	return _elemList[_focusIdx];
 }
 
 void EventData::ChangeWindow(ElementList& elements, EventHandler& newEventHandler) const {
@@ -46,27 +59,32 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 bool GenericWindow::LocalUpdate() {
 
+	// Get focused element
 	if (_event.type == SDL_MOUSEBUTTONDOWN) {
+
 		SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
 
-		for (auto& element : _elements) {
+		for (size_t index = 0; index < _elements.size(); index++) {
 
-			if (SDL_HasIntersection(&_mouseRect, &element.get().Bounds())) {
+			WindowElement& element = _elements.at(index);
 
-				if (_focussedElement) {
-					_focussedElement->hasFocus = false;
-				}
+			if (SDL_HasIntersection(&_mouseRect, &element.Bounds())) {
 
-				_focussedElement = &element.get();
-				_focussedElement->hasFocus = true;
 
-				break;
+					focussedElementIndex = index;
+
+					break;
+
+
 			}
 		}
 	}
 
+	// Go back a window if escape is hit
 	if (_event.type == SDL_KEYDOWN) {
 		if (_event.key.keysym.sym == SDLK_ESCAPE) {
+
+			focussedElementIndex = -1;
 
 			_windowList.pop_front();
 
@@ -114,7 +132,9 @@ void GenericWindow::Update() {
 				return;
 			}
 
-			EventData eventData(_event, _mouseRect, _width, _height, _focussedElement, _windowList, std::ref(_elements));
+			WindowData windowData(_event, _mouseRect, _width, _height);
+
+			EventData eventData(windowData, focussedElementIndex, _windowList, std::ref(_elements));
 			bool newElements = _eventHandler(eventData);
 
 			if (newElements) {
@@ -125,6 +145,8 @@ void GenericWindow::Update() {
 
 					_elements = newData.first;
 					_eventHandler = newData.second;
+
+					focussedElementIndex = -1;
 
 
 				}
@@ -137,17 +159,18 @@ void GenericWindow::Update() {
 				break;
 			}
 
-			if (_focussedElement != nullptr) {
-				_focussedElement->Update(_event);
-			}
+
+
+
 		}
 
 		if (CapFPS2(ticks)) {
-
+			if (focussedElementIndex > -1) {
+				_elements[focussedElementIndex].get().Update(_event);
+			}
 			Draw();
 			ticks = SDL_GetTicks();
 		}
-		continue;
 
 		//CapFPS(ticks);
 
@@ -182,9 +205,9 @@ bool GenericWindow::CapFPS2(const Uint32 prevTicks) {
 
 GenericWindow::~GenericWindow() {
 
-	//TTF_CloseFont(_font);
-	//SDL_DestroyRenderer(_renderer);
-	//SDL_DestroyWindow(_window);
+	TTF_CloseFont(_font);
+	SDL_DestroyRenderer(_renderer);
+	SDL_DestroyWindow(_window);
 }
 
 RenderWindow::RenderWindow(const std::string& title, EventHandler& eventHandler) :
@@ -245,5 +268,3 @@ RenderWindow::~RenderWindow() {
 
 	delete[] _bitmap;
 }
-
-

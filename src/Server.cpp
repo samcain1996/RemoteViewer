@@ -51,7 +51,6 @@ void Server::Send(ByteArray bytes, size_t len) {
 
 Server::~Server() {
     delete _capture;
-    //delete eventWriter;
 }
 
 PacketList Server::ConvertToPackets(ByteArray& bytes, size_t len)

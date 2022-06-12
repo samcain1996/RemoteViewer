@@ -20,6 +20,7 @@
 #include <cstring>
 #include <atomic>
 #include <memory>
+#include <functional>
 
 constexpr const Uint32 ONE_BYTE    = 8;
 constexpr const Uint32 TWO_BYTES   = (ONE_BYTE + ONE_BYTE);
@@ -37,6 +38,9 @@ using ByteEncodedUint32 = Byte[FOUR_BYTES];
 using Ushort			= std::uint16_t;
 
 using ThreadLock		= std::lock_guard<std::mutex>;
+
+template <typename T>
+using Validator = std::function<bool(T)>;
 
 enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
@@ -105,3 +109,20 @@ constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber, const Endianes
 constexpr const Uint32 CalculateTheoreticalBMPSize(const Uint32 width, const Uint32 height) {
     return ((width * 32 + 31) / 32) * 4 * height;
 }
+
+
+static const Validator<const char> NUMERIC_VALIDATOR = [](const char c) {
+	return (c >= '0' && c <= '9');
+};
+
+static const Validator<const char> ALPHABETIC_VALIDAOTR = [](const char c) {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+};
+
+static const Validator<const char> ALPHANUMERIC_VALIDATOR = [](const char c) {
+	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+};
+
+static const Validator<const char> IP_VALIDATOR = [](const char c) {
+	return (c >= '0' && c <= '9') || (c == '.');
+};

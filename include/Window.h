@@ -9,29 +9,40 @@ using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
 class EventData;
 using EventHandler = std::function<bool(EventData&)>;
 using WindowCore = std::pair<ElementList, EventHandler>;
-
 using WindowList = std::forward_list<WindowCore>;
 
+struct WindowData {
+	SDL_Event& windowEvent;
+	SDL_Rect& mouseRect;
+	int& windowWidth;
+	int& windowHeight;
+
+	WindowData(SDL_Event& evnt, SDL_Rect& mouseRect, int width, int height);
+};
+
 class EventData {
-
-public:
-	const SDL_Event& windowEvent;
-	const SDL_Rect& mouseRect;
-	const int& windowWidth;
-	const int& windowHeight;
-
+private:
+	
 	WindowList& _windowList;
 	ElementList& _elemList;
-	const WindowElement* const elemInFocus;
+	int _focusIdx;
+	
+public:
+	
+	const WindowData& _windowData;
 
-	EventData(const SDL_Event& evnt, const SDL_Rect& mouseRect, const int width, const int height,
-		const WindowElement* const elementInFocus, WindowList& windowList,
-		ElementList& elementList) :
-		windowEvent(evnt), mouseRect(mouseRect), windowWidth(width), windowHeight(height), 
-		elemInFocus(elementInFocus), _windowList(windowList), _elemList(elementList) {};
+
+	EventData(const WindowData& windowData, const int focusIdx, WindowList& windowList, ElementList& elementList);
+
+	EventData(const EventData&) = delete;
+	EventData(EventData&&) = delete;
+
+	EventData& operator=(const EventData&) = delete;
+	EventData& operator=(EventData&&) = delete;
 
 	const WindowElement& GetElementByName(const std::string& elementName) const;
 	const WindowElement& GetElementById(const Uint32 id) const;
+	const WindowElement& GetFocussedElement() const;
 
 	void ChangeWindow(ElementList& elements, EventHandler& newEventHandler) const;
 
@@ -65,7 +76,7 @@ protected:
 
 	WindowList _windowList;
 
-	WindowElement* _focussedElement = nullptr;
+	int focussedElementIndex = -1;
 
 	SDL_Window* _window;	// GenericWindow to render to
 	SDL_Surface* _surface;	// Pixel data to render to window

@@ -19,8 +19,6 @@ protected:
 
 public:
 
-	bool hasFocus = false;
-
 	WindowElement();
 	WindowElement(const std::string& name, const SDL_Rect& rect);
 
@@ -68,7 +66,6 @@ public:
 	void RenderElement(SDL_Renderer* const renderer) override;
 };
 
-using InputValidator = std::function<bool(const char)>;
 
 class TextBox : public WindowElement {
 private:
@@ -79,7 +76,7 @@ private:
 	const Ushort skipFrames = 15;
 	Ushort curFrame = 0;
 
-	InputValidator inputValidator;
+	Validator<const char> _validator;
 
 	TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds);
 
@@ -97,7 +94,7 @@ public:
 
 	
 	TextBox(int x, int y, const std::string& name, const std::string& text);
-	TextBox(int x, int y, const std::string& name, const std::string& text, InputValidator validator);
+	TextBox(int x, int y, const std::string& name, const std::string& text, Validator<const char> validator);
 
 	void RenderElement(SDL_Renderer* const renderer) override;
 

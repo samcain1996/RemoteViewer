@@ -22,23 +22,22 @@ bool Application::Init() {
 	Button clientButton(500, 500, "Client Button", "Client");
 	Button serverButton(1000, 500, "Server Button", "Server");
 
-	TextBox localPortTb(500, 500, "Local Port Textbox", "Local Port");
-	TextBox remotePortTb(1000, 500, "Remote Port TextBox", "Remote Port");
-	TextBox ipTextbox(1500, 500, "IP Textbox", "IP to connect to");
+	TextBox localPortTb(500, 500, "Local Port Textbox", "Local Port", NUMERIC_VALIDATOR);
+	TextBox remotePortTb(1000, 500, "Remote Port TextBox", "Remote Port", NUMERIC_VALIDATOR);
+	TextBox ipTextbox(1500, 500, "IP Textbox", "IP to connect to", IP_VALIDATOR);
 
 
 	ElementList elements { clientButton, serverButton };
 
 	EventHandler eventHandler;
 
-	EventHandler clientInitEventHandler = [&](EventData& eventData) {
+	EventHandler clientInitEventHandler = [&](const EventData& eventData) {
 
-		const SDL_Rect& mouseRect = eventData.mouseRect;
-		const WindowElement& elementInFocus = *eventData.elemInFocus;
+		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 
-		if (eventData.windowEvent.type == SDL_KEYDOWN) {
-			if (elementInFocus == ipTextbox) {
-				if (eventData.windowEvent.key.keysym.sym == SDLK_RETURN) {
+		if (eventData._windowData.windowEvent.type == SDL_KEYDOWN) {
+			if (eventData.GetFocussedElement() == ipTextbox) {
+				if (eventData._windowData.windowEvent.key.keysym.sym == SDLK_RETURN) {
 					_netAgent = std::unique_ptr<NetAgent>(new Client(std::stoi(remotePortTb.Text()), ipTextbox.Text()));
 					return true;
 				}
@@ -49,15 +48,14 @@ bool Application::Init() {
 	};
 
 
-	EventHandler serverInitEventHandler = [&](EventData& eventData) {
+	EventHandler serverInitEventHandler = [&](const EventData& eventData) {
 
-		const SDL_Rect& mouseRect = eventData.mouseRect;
-		const WindowElement& elementInFocus = *eventData.elemInFocus;
+		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 
-		if (eventData.windowEvent.type == SDL_KEYDOWN) {
+		if (eventData._windowData.windowEvent.type == SDL_KEYDOWN) {
 
-			if (elementInFocus == localPortTb) {
-				if (eventData.windowEvent.key.keysym.sym == SDLK_RETURN) {
+			if (eventData.GetFocussedElement() == localPortTb) {
+				if (eventData._windowData.windowEvent.key.keysym.sym == SDLK_RETURN) {
 					_netAgent = std::unique_ptr<NetAgent>(new Server(std::stoi(localPortTb.Text())));
 					return true;
 				}
@@ -69,11 +67,11 @@ bool Application::Init() {
 
 	};
 
-	eventHandler = [&](EventData& eventData) {
+	eventHandler = [&](const EventData& eventData) {
 
-		const SDL_Rect& mouseRect = eventData.mouseRect;
+		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 
-		if (eventData.windowEvent.type == SDL_MOUSEBUTTONDOWN) {
+		if (eventData._windowData.windowEvent.type == SDL_MOUSEBUTTONDOWN) {
 
 			// Check if either button has been hit
 			if (SDL_HasIntersection(&mouseRect, &clientButton.Bounds())) {
@@ -130,7 +128,7 @@ void Application::RunClient(Client& client) {
 
 	EventHandler func = [&]( EventData& eventData) {
 
-		const SDL_Event& windowEvent = eventData.windowEvent;
+		const SDL_Event& windowEvent = eventData._windowData.windowEvent;
 
 		if (windowEvent.type == SDL_MOUSEBUTTONDOWN || windowEvent.type == SDL_QUIT) {
 			_exit = true;

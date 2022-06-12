@@ -1,17 +1,5 @@
 #include "WindowElement.h"
 
-const InputValidator NUMERIC_INPUT_VALIDATOR = [](const char input) {
-	return (input > '0' && input < '9');
-};
-
-const InputValidator ALPHABETIC_INPUT_VALIDATOR = [](const char input) {
-	return ((input > 'a' && input < 'z') || (input > 'A' && input < 'Z'));
-};
-
-const InputValidator ALPHANUMERIC_INPUT_VALIDATOR = [](const char input) {
-	return NUMERIC_INPUT_VALIDATOR(input) || ALPHABETIC_INPUT_VALIDATOR(input);
-};
-
 // Window Element
 
 int WindowElement::idGen = 0;
@@ -85,9 +73,6 @@ void TextBox::RenderElement(SDL_Renderer* const renderer) {
 		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
 		SDL_RenderFillRect(renderer, &_cursorBarRect);
 	}
-
-	if (hasFocus && curFrame++ == skipFrames) { displayBar = !displayBar; curFrame = 0; }
-	else if (!hasFocus) { displayBar = false; }
 }
 
 TextBox::TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds) :
@@ -99,19 +84,24 @@ TextBox::TextBox(TTF_Font* font, const std::string& name, const std::string& tex
 	_cursorBarRect.w = 10;
 	_cursorBarRect.x += ((_bounds.w / 2.0) - (_cursorBarRect.w / 2.0));
 
-	inputValidator = ALPHANUMERIC_INPUT_VALIDATOR;
+	_validator = ALPHANUMERIC_VALIDATOR;
 }
 
 TextBox::TextBox(int x, int y, const std::string& name, const std::string& text) :
 	TextBox(TTF_OpenFont("tahoma.ttf", 54), name, text, SDL_Rect{x, y, 300, 100}) {}
 
-TextBox::TextBox(int x, int y, const std::string& name, const std::string& text, InputValidator validator) :
+TextBox::TextBox(int x, int y, const std::string& name, const std::string& text, Validator<const char> validator) :
 	TextBox(TTF_OpenFont("tahoma.ttf", 54), name, text, SDL_Rect{ x, y, 300, 100 }) {
 	
-	inputValidator = validator;
+	_validator = validator;
 }
 
 void TextBox::Update(SDL_Event& ev) {
+
+	if (curFrame++ == skipFrames) { 
+		displayBar = !displayBar; 
+		curFrame = 0; 
+	}
 
 	if (ev.type == SDL_KEYDOWN) {
 
@@ -121,7 +111,7 @@ void TextBox::Update(SDL_Event& ev) {
 			}
 		}
 		else {
-			if (inputValidator(ev.key.keysym.sym)) {
+			if (_validator(ev.key.keysym.sym)) {
 				_text += ev.key.keysym.sym;
 			}
 		}
