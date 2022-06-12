@@ -54,6 +54,7 @@ class GenericWindow {
 
 private:
 
+	bool GetNewWindow();
 	bool LocalUpdate();
 
 protected:

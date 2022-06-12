@@ -57,6 +57,19 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 }
 
+bool GenericWindow::GetNewWindow() {
+
+	if (_windowList.empty()) { return false; }
+	WindowCore newData = _windowList.front();
+
+	_elements = newData.first;
+	_eventHandler = newData.second;
+
+	focussedElementIndex = -1;
+
+	return true;
+}
+
 bool GenericWindow::LocalUpdate() {
 
 	// Get focused element
@@ -70,11 +83,9 @@ bool GenericWindow::LocalUpdate() {
 
 			if (SDL_HasIntersection(&_mouseRect, &element.Bounds())) {
 
+				focussedElementIndex = index;
 
-					focussedElementIndex = index;
-
-					break;
-
+				break;
 
 			}
 		}
@@ -88,11 +99,7 @@ bool GenericWindow::LocalUpdate() {
 
 			_windowList.pop_front();
 
-			if (_windowList.empty()) { return false; }
-			WindowCore newData = _windowList.front();
-
-			_elements = newData.first;
-			_eventHandler = newData.second;
+			return GetNewWindow();
 
 		}
 	}
@@ -133,26 +140,11 @@ void GenericWindow::Update() {
 			}
 
 			WindowData windowData(_event, _mouseRect, _width, _height);
-
 			EventData eventData(windowData, focussedElementIndex, _windowList, std::ref(_elements));
+			
 			bool newElements = _eventHandler(eventData);
 
-			if (newElements) {
-				
-				if (!_windowList.empty()) {
-
-					WindowCore newData = _windowList.front();
-
-					_elements = newData.first;
-					_eventHandler = newData.second;
-
-					focussedElementIndex = -1;
-
-
-				}
-
-				continue; 
-			}
+			if (newElements) { GetNewWindow(); }
 
 			if (_event.type == SDL_QUIT) {
 				_keepAlive = false;
@@ -160,19 +152,17 @@ void GenericWindow::Update() {
 			}
 
 
-
-
 		}
 
 		if (CapFPS2(ticks)) {
+			
 			if (focussedElementIndex > -1) {
 				_elements[focussedElementIndex].get().Update(_event);
 			}
+			
 			Draw();
 			ticks = SDL_GetTicks();
 		}
-
-		//CapFPS(ticks);
 
 	}
 

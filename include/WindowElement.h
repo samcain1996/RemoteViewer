@@ -12,10 +12,14 @@ class WindowElement {
 private:
 	static int idGen;
 	const int* const _elementId;
+	
+	int skippedFrames = 0;
+	int currentFrame = 0;
 
 protected:
 	std::string _name;
 	SDL_Rect _bounds;
+	float _updateRatioToWindow = 0.25f;
 
 public:
 
@@ -30,7 +34,8 @@ public:
 	WindowElement& operator=(const WindowElement& other) = delete;
 	WindowElement& operator=(WindowElement&& other) = delete;
 
-	virtual void Update(SDL_Event& ev) {};
+	virtual void Update(SDL_Event& ev);
+	virtual bool UpdateDraw();
 	virtual void RenderElement(SDL_Renderer* const ghrenderer) = 0;
 
 	const int Id() const;

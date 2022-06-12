@@ -5,12 +5,30 @@
 int WindowElement::idGen = 0;
 
 WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect) :
-	_elementId(new int{ GetNextId() }), _name(name), _bounds(rect) {};
+	_elementId(new int{ GetNextId() }), _name(name), _bounds(rect) {
+
+	skippedFrames = 1 / _updateRatioToWindow;
+
+};
 
 WindowElement::WindowElement() : WindowElement("ERROR", SDL_Rect()) {}
 
 WindowElement::~WindowElement() {
 	delete _elementId;
+}
+
+void WindowElement::Update(SDL_Event& ev) {
+}
+
+bool WindowElement::UpdateDraw() {
+	if (currentFrame++ == skippedFrames) {
+		currentFrame = 0;
+
+		return true;
+
+	}
+	
+	return false;
 }
 
 const int WindowElement::Id() const { return *_elementId; }
@@ -69,10 +87,10 @@ void TextBox::RenderElement(SDL_Renderer* const renderer) {
 	SDL_FreeSurface(surface);
 	SDL_DestroyTexture(texture);
 
-	if (displayBar) {
-		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
-		SDL_RenderFillRect(renderer, &_cursorBarRect);
-	}
+	const SDL_Color& drawColor = displayBar ? green : white;
+
+	SDL_SetRenderDrawColor(renderer, drawColor.r, drawColor.g, drawColor.b, 100);
+	SDL_RenderFillRect(renderer, &_cursorBarRect);
 }
 
 TextBox::TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds) :
@@ -98,9 +116,8 @@ TextBox::TextBox(int x, int y, const std::string& name, const std::string& text,
 
 void TextBox::Update(SDL_Event& ev) {
 
-	if (curFrame++ == skipFrames) { 
-		displayBar = !displayBar; 
-		curFrame = 0; 
+	if (UpdateDraw()) {
+		displayBar = !displayBar;
 	}
 
 	if (ev.type == SDL_KEYDOWN) {
