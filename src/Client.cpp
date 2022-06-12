@@ -33,6 +33,41 @@ void Client::Send(ByteArray const bytes, const size_t len) {
 
 }
 
+void Client::AsyncSend(ByteArray const bytes, const size_t len)
+{
+}
+
+void Client::AsyncReceive()
+{
+
+    PacketBuffer packetData;
+
+    for (;;) {
+
+        _socket.async_receive(boost::asio::buffer(packetData, packetData.max_size()), [&](const boost::system::error_code& ec,
+            std::size_t bytes_transferred) 
+{
+				
+                // Copy buffer to dummy packet
+                ProcessPacket(Packet(packetData));
+
+                if (!eventReader->Empty()) {
+                    SDL_Event ev = eventReader->ReadMessage();
+                    if (ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_QUIT) {
+                        packetData[0] = '0';
+                        packetData[1] = '0';
+                        packetData[2] = '0';
+                        packetData[3] = '0';
+                    }
+                    _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
+                    return;
+                }
+
+                _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
+            });
+    }
+}
+
 bool Client::Connect(const std::string& serverPort) {
 
     // Find endpoint to connect to

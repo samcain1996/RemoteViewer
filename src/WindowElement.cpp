@@ -141,7 +141,7 @@ void TextBox::Update(SDL_Event& ev) {
 		}
 		else {
 			
-			for (auto& validator : _inputValidators) {
+			for (const auto& validator : _inputValidators) {
 				if (!validator(key)) {
 					return;
 				}

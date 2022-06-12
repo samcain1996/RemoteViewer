@@ -146,7 +146,7 @@ void Application::RunClient(Client& client) {
 	ConnectMessageHandlers<PacketPriorityQueue*>(&client, &renderWindow);
 	ConnectMessageHandlers<SDL_Event>(&client, &_msgHandler<SDL_Event>);
 
-	std::thread networkThr(&Client::Receive, &client);
+	std::thread networkThr(&Client::AsyncReceive, &client);
 	
 	renderWindow.Update();
 

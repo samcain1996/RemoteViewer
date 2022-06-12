@@ -49,6 +49,14 @@ void Server::Send(ByteArray bytes, size_t len) {
     
 }
 
+void Server::AsyncSend(ByteArray const bytes, const size_t len)
+{
+}
+
+void Server::AsyncReceive()
+{
+}
+
 Server::~Server() {
     delete _capture;
 }

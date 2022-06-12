@@ -12,6 +12,9 @@ private:
 	// Send a buffer of bytes to the client
 	void Send(ByteArray const bytes, const size_t len) override;
 
+	void AsyncSend(ByteArray const bytes, const size_t len) override;
+	void AsyncReceive() override;
+
 	void Receive() override {};
 	void ProcessPacket(const Packet&) override {};
 

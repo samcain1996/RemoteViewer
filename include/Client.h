@@ -21,6 +21,10 @@ private:
 
 	void Send(ByteArray const bytes, const size_t len) override;
 
+	void AsyncSend(ByteArray const bytes, const size_t len) override;
+public:
+	void AsyncReceive() override;
+
 public:
 
 	// Constructors

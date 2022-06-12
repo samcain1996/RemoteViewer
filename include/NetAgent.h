@@ -47,6 +47,9 @@ protected:
 	virtual void Send(ByteArray const bytes, const size_t len) = 0;
 	virtual void ProcessPacket(const Packet&) = 0;
 
+	virtual void AsyncSend(ByteArray const bytes, const size_t len) = 0;
+	virtual void AsyncReceive() = 0;
+
 public:
 	virtual ~NetAgent();
 };
