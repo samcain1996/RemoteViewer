@@ -84,7 +84,7 @@ bool Application::Init() {
 				elements.emplace_back(remotePortTb);
 				elements.emplace_back(localPortTb);
 
-				eventData.New(elements, clientInitEventHandler);
+				eventData.ChangeWindow(elements, clientInitEventHandler);
 				return true;
 			}
 
@@ -94,7 +94,7 @@ bool Application::Init() {
 				elements.clear();
 				elements.emplace_back(localPortTb);
 
-				eventData.New(elements, serverInitEventHandler);
+				eventData.ChangeWindow(elements, serverInitEventHandler);
 				return true;
 			}
 
@@ -128,29 +128,29 @@ void Application::Run() {
 
 void Application::RunClient(Client& client) {
 
-	//EventHandler func = [&]( EventData& eventData) {
+	EventHandler func = [&]( EventData& eventData) {
 
-	//	const SDL_Event& windowEvent = eventData.windowEvent;
+		const SDL_Event& windowEvent = eventData.windowEvent;
 
-	//	if (windowEvent.type == SDL_MOUSEBUTTONDOWN || windowEvent.type == SDL_QUIT) {
-	//		_exit = true;
-	//		_msgHandler<SDL_Event>.msgWriter->WriteMessage(windowEvent);
-	//		return false;
-	//	}
-	//	return true;
-	//};
+		if (windowEvent.type == SDL_MOUSEBUTTONDOWN || windowEvent.type == SDL_QUIT) {
+			_exit = true;
+			_msgHandler<SDL_Event>.msgWriter->WriteMessage(windowEvent);
+			return false;
+		}
+		return true;
+	};
 
-	//_window = std::unique_ptr<GenericWindow>(new RenderWindow("192.168.50.160", func));
-	//RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
+	_window = std::unique_ptr<GenericWindow>(new RenderWindow("192.168.50.160", func));
+	RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
 
-	//ConnectMessageHandlers<PacketPriorityQueue*>(&client, &renderWindow);
-	//ConnectMessageHandlers<SDL_Event>(&client, &_msgHandler<SDL_Event>);
+	ConnectMessageHandlers<PacketPriorityQueue*>(&client, &renderWindow);
+	ConnectMessageHandlers<SDL_Event>(&client, &_msgHandler<SDL_Event>);
 
-	//std::thread networkThr(&Client::Receive, &client);
-	//
-	//renderWindow.Update();
+	std::thread networkThr(&Client::Receive, &client);
+	
+	renderWindow.Update();
 
-	//networkThr.join();
+	networkThr.join();
 }
 
 void Application::RunServer(Server& server) {

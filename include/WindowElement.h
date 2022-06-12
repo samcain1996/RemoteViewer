@@ -1,6 +1,7 @@
 #pragma once
 #include "Packet.h"
 #include "Messages.h"
+#include <functional>
 
 class WindowElement {
 
@@ -67,6 +68,8 @@ public:
 	void RenderElement(SDL_Renderer* const renderer) override;
 };
 
+using InputValidator = std::function<bool(const char)>;
+
 class TextBox : public WindowElement {
 private:
 	TTF_Font* _font;
@@ -75,6 +78,8 @@ private:
 	bool displayBar = false;
 	const Ushort skipFrames = 15;
 	Ushort curFrame = 0;
+
+	InputValidator inputValidator;
 
 	TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds);
 
@@ -92,6 +97,7 @@ public:
 
 	
 	TextBox(int x, int y, const std::string& name, const std::string& text);
+	TextBox(int x, int y, const std::string& name, const std::string& text, InputValidator validator);
 
 	void RenderElement(SDL_Renderer* const renderer) override;
 

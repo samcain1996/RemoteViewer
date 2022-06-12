@@ -12,9 +12,9 @@ const WindowElement& EventData::GetElementById(const Uint32 id) const {
 	std::terminate(); // <-- Come back to this later
 }
 
-void EventData::New(ElementList& elements, EventHandler& newEventHandler) const {
+void EventData::ChangeWindow(ElementList& elements, EventHandler& newEventHandler) const {
 
-	_prevWindows.push_front(std::make_pair(elements, newEventHandler));
+	_windowList.push_front(std::make_pair(elements, newEventHandler));
 
 }
 
@@ -68,10 +68,10 @@ bool GenericWindow::LocalUpdate() {
 	if (_event.type == SDL_KEYDOWN) {
 		if (_event.key.keysym.sym == SDLK_ESCAPE) {
 
-			_prevWindows.pop_front();
+			_windowList.pop_front();
 
-			if (_prevWindows.empty()) { return false; }
-			WindowData newData = _prevWindows.front();
+			if (_windowList.empty()) { return false; }
+			WindowCore newData = _windowList.front();
 
 			_elements = newData.first;
 			_eventHandler = newData.second;
@@ -100,7 +100,7 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 void GenericWindow::Update() {
 
-	_prevWindows.push_front(std::make_pair(_elements, _eventHandler));
+	_windowList.push_front(std::make_pair(_elements, _eventHandler));
 
 	Uint32 ticks = SDL_GetTicks();
 	SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
@@ -114,14 +114,14 @@ void GenericWindow::Update() {
 				return;
 			}
 
-			EventData eventData(_event, _mouseRect, _width, _height, _focussedElement, _prevWindows, std::ref(_elements));
+			EventData eventData(_event, _mouseRect, _width, _height, _focussedElement, _windowList, std::ref(_elements));
 			bool newElements = _eventHandler(eventData);
 
 			if (newElements) {
 				
-				if (!_prevWindows.empty()) {
+				if (!_windowList.empty()) {
 
-					WindowData newData = _prevWindows.front();
+					WindowCore newData = _windowList.front();
 
 					_elements = newData.first;
 					_eventHandler = newData.second;
@@ -131,7 +131,6 @@ void GenericWindow::Update() {
 
 				continue; 
 			}
-			
 
 			if (_event.type == SDL_QUIT) {
 				_keepAlive = false;

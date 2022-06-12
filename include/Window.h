@@ -3,15 +3,14 @@
 #include "WindowElement.h"
 #include <forward_list>
 #include <iostream>
-#include <functional>
 
 using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
 
 class EventData;
 using EventHandler = std::function<bool(EventData&)>;
-using WindowData = std::pair<ElementList, EventHandler>;
+using WindowCore = std::pair<ElementList, EventHandler>;
 
-using WindowDataList = std::forward_list<WindowData>;
+using WindowList = std::forward_list<WindowCore>;
 
 class EventData {
 
@@ -21,20 +20,20 @@ public:
 	const int& windowWidth;
 	const int& windowHeight;
 
-	WindowDataList& _prevWindows;
+	WindowList& _windowList;
 	ElementList& _elemList;
 	const WindowElement* const elemInFocus;
 
 	EventData(const SDL_Event& evnt, const SDL_Rect& mouseRect, const int width, const int height,
-		const WindowElement* const elementInFocus, WindowDataList& prevWindows,
+		const WindowElement* const elementInFocus, WindowList& windowList,
 		ElementList& elementList) :
 		windowEvent(evnt), mouseRect(mouseRect), windowWidth(width), windowHeight(height), 
-		elemInFocus(elementInFocus), _prevWindows(prevWindows), _elemList(elementList) {};
+		elemInFocus(elementInFocus), _windowList(windowList), _elemList(elementList) {};
 
 	const WindowElement& GetElementByName(const std::string& elementName) const;
 	const WindowElement& GetElementById(const Uint32 id) const;
 
-	void New(ElementList& elements, EventHandler& newEventHandler) const;
+	void ChangeWindow(ElementList& elements, EventHandler& newEventHandler) const;
 
 };
 
@@ -45,7 +44,6 @@ class GenericWindow {
 private:
 
 	bool LocalUpdate();
-
 
 protected:
 	GenericWindow(const std::string& title, const EventHandler& eventHandler);
@@ -65,7 +63,7 @@ protected:
 	ElementList _elements;
 	EventHandler _eventHandler;
 
-	WindowDataList _prevWindows;
+	WindowList _windowList;
 
 	WindowElement* _focussedElement = nullptr;
 

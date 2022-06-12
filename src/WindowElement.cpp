@@ -1,5 +1,16 @@
 #include "WindowElement.h"
 
+const InputValidator NUMERIC_INPUT_VALIDATOR = [](const char input) {
+	return (input > '0' && input < '9');
+};
+
+const InputValidator ALPHABETIC_INPUT_VALIDATOR = [](const char input) {
+	return ((input > 'a' && input < 'z') || (input > 'A' && input < 'Z'));
+};
+
+const InputValidator ALPHANUMERIC_INPUT_VALIDATOR = [](const char input) {
+	return NUMERIC_INPUT_VALIDATOR(input) || ALPHABETIC_INPUT_VALIDATOR(input);
+};
 
 // Window Element
 
@@ -87,10 +98,18 @@ TextBox::TextBox(TTF_Font* font, const std::string& name, const std::string& tex
 	_cursorBarRect = _bounds;
 	_cursorBarRect.w = 10;
 	_cursorBarRect.x += ((_bounds.w / 2.0) - (_cursorBarRect.w / 2.0));
+
+	inputValidator = ALPHANUMERIC_INPUT_VALIDATOR;
 }
 
 TextBox::TextBox(int x, int y, const std::string& name, const std::string& text) :
 	TextBox(TTF_OpenFont("tahoma.ttf", 54), name, text, SDL_Rect{x, y, 300, 100}) {}
+
+TextBox::TextBox(int x, int y, const std::string& name, const std::string& text, InputValidator validator) :
+	TextBox(TTF_OpenFont("tahoma.ttf", 54), name, text, SDL_Rect{ x, y, 300, 100 }) {
+	
+	inputValidator = validator;
+}
 
 void TextBox::Update(SDL_Event& ev) {
 
@@ -102,7 +121,9 @@ void TextBox::Update(SDL_Event& ev) {
 			}
 		}
 		else {
-			_text += ev.key.keysym.sym;
+			if (inputValidator(ev.key.keysym.sym)) {
+				_text += ev.key.keysym.sym;
+			}
 		}
 	}
 }
