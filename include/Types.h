@@ -26,6 +26,7 @@ constexpr const Uint32 TWO_BYTES   = (ONE_BYTE + ONE_BYTE);
 constexpr const Uint32 THREE_BYTES = (TWO_BYTES + ONE_BYTE);
 constexpr const Uint32 FOUR_BYTES  = (TWO_BYTES + TWO_BYTES);
 
+
 /*------------------TYPES--------------------*/
 using Byte				= unsigned char;
 using ByteArray         = Byte*;
@@ -39,6 +40,13 @@ using ThreadLock		= std::lock_guard<std::mutex>;
 
 enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
+
+constexpr const Ushort MillisInSecs = 1000;
+
+constexpr const SDL_Color white = { 255, 255, 255 };
+constexpr const SDL_Color green = { 0,255,0 };
+constexpr const SDL_Color pink = { 255,0,255 };
+constexpr const SDL_Color black = { 0,0,0 };
 
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;

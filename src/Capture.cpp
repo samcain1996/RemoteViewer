@@ -87,7 +87,7 @@ ScreenCapture::~ScreenCapture() {
 #endif
 
     if (_previousCapture) {
-        delete[] _previousCapture;
+        delete[](ByteArray)_previousCapture;
     }
 
 }

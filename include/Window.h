@@ -1,41 +1,53 @@
 #pragma once
 
 #include "WindowElement.h"
+#include <forward_list>
 #include <iostream>
 #include <functional>
 
 using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
 
-struct ElementView {
-	const WindowElement& elemInFocus;
-	ElementList& elements;
+class EventData;
+using EventHandler = std::function<bool(EventData&)>;
+using WindowData = std::pair<ElementList, EventHandler>;
 
-	ElementView() = delete;
-	ElementView(ElementList& elements, WindowElement& elementInFocus) : elements(elements), elemInFocus(elementInFocus) {}
+using WindowDataList = std::forward_list<WindowData>;
 
-	WindowElement& GetElementByName(const std::string& elementName) const;
-	WindowElement& GetElementById(const Uint32 id) const;
-};
+class EventData {
 
-struct EventData {
+public:
 	const SDL_Event& windowEvent;
 	const SDL_Rect& mouseRect;
 	const int& windowWidth;
 	const int& windowHeight;
 
-	EventData(const SDL_Event& evnt, const SDL_Rect& mouseRect, const int width, const int height) : 
-		windowEvent(evnt), mouseRect(mouseRect), windowWidth(width), windowHeight(height) {};
+	WindowDataList& _prevWindows;
+	ElementList& _elemList;
+	const WindowElement* const elemInFocus;
+
+	EventData(const SDL_Event& evnt, const SDL_Rect& mouseRect, const int width, const int height,
+		const WindowElement* const elementInFocus, WindowDataList& prevWindows,
+		ElementList& elementList) :
+		windowEvent(evnt), mouseRect(mouseRect), windowWidth(width), windowHeight(height), 
+		elemInFocus(elementInFocus), _prevWindows(prevWindows), _elemList(elementList) {};
+
+	const WindowElement& GetElementByName(const std::string& elementName) const;
+	const WindowElement& GetElementById(const Uint32 id) const;
+
+	void New(ElementList& elements, EventHandler& newEventHandler) const;
+
 };
 
-using EventHandler = std::function<bool(const EventData&, const ElementView&)>;
+
 
 class GenericWindow {
 
+private:
+
+	bool LocalUpdate();
+
+
 protected:
-	bool keepAlive = true;
-
-	TTF_Font* _font;
-
 	GenericWindow(const std::string& title, const EventHandler& eventHandler);
 
 	GenericWindow() = delete;
@@ -46,36 +58,41 @@ protected:
 	GenericWindow& operator=(const GenericWindow&) = delete;
 	GenericWindow& operator=(GenericWindow&&) = delete;
 
+	bool _keepAlive = true;
+
+	TTF_Font* _font;
+
 	ElementList _elements;
 	EventHandler _eventHandler;
 
-	void GetFocus();
+	WindowDataList _prevWindows;
 
 	WindowElement* _focussedElement = nullptr;
 
 	SDL_Window* _window;	// GenericWindow to render to
 	SDL_Surface* _surface;	// Pixel data to render to window
-	SDL_Renderer* _renderer;	// Render remote screen to window
 	SDL_Texture* _texture;	// Driver-specific, pixel data used to render
+	SDL_Renderer* _renderer;	// Render remote screen to window
 
 	SDL_DisplayMode _displayData;  // Data about connected monitors
 
-	SDL_Event _event;  // Used to get input from user
+	SDL_Event _event; 
+	SDL_Rect _mouseRect; 
 
-	SDL_Rect _mouseRect;
+	int _width, _height;  
+	int _posX, _posY;	 
 
-	int _width, _height;  // Width and height of window
-	int _posX, _posY;	  // X and Y position of window
+	Uint32 _targetFPS;
 
-	Uint32 _targetFPS;	  // FPS to target
+	virtual void Draw(); 
 
-	virtual void Draw();  // Draw to window
-
-	void CapFPS(const Uint32 prevTicks);  // Limit FPS
+	void CapFPS(const Uint32 prevTicks);  
+	bool CapFPS2(const Uint32 prevTicks);
 
 public:
-	GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList& els);
+	GenericWindow(const std::string& title, const EventHandler& eventHandler, const ElementList& els);
 	GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList&& els);
+
 	virtual void Update();
 	virtual ~GenericWindow();
 };
@@ -94,7 +111,7 @@ private:
 public:
 	RenderWindow() = delete;
 
-	RenderWindow(const std::string& title, const EventHandler& eventHandler);
+	RenderWindow(const std::string& title, EventHandler& eventHandler);
 
 	RenderWindow(const RenderWindow&) = delete;
 	RenderWindow(RenderWindow&&) = delete;
@@ -108,7 +125,5 @@ public:
 template <class T>
 concept IsTypeOfWindow = std::derived_from<T, GenericWindow> || std::same_as<T, GenericWindow>;
 
-template <class Window>
-concept IsSubTypeOfWindow = IsTypeOfWindow<Window> && !std::same_as<Window, GenericWindow>;
-
-//template <class Window>
+template <class T>
+concept IsSubTypeOfWindow = IsTypeOfWindow<T> && !std::same_as<T, GenericWindow>;

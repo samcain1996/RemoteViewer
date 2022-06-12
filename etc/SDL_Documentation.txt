@@ -1,5 +1,5 @@
 Data Structures:
-SDL_Window: GenericWindow to render things onto
+SDL_Window: Window to render things onto
 SDL_Texture: Contains driver-specific representation of pizel data
 SDL_Surface: Collection of pixels
 SDL_RWops: Abstract interface to stream I/O

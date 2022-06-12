@@ -32,8 +32,7 @@ public:
 	WindowElement& operator=(WindowElement&& other) = delete;
 
 	virtual void Update(SDL_Event& ev) {};
-
-	virtual void RenderElement(SDL_Renderer* renderer) = 0;
+	virtual void RenderElement(SDL_Renderer* const ghrenderer) = 0;
 
 	const int Id() const;
 	const std::string& Name() const;
@@ -50,19 +49,22 @@ private:
 	std::string _text = "";
 	SDL_Color _fontColor, _backgroundColor;
 
+	Button(TTF_Font* font, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds);
+
 public:
 	Button() = delete;
 
 	Button(Button&&) = delete;
 	Button(const Button&) = delete;
 
-	Button& operator=(const Button& other) = delete;
-	Button& operator=(Button&& other) = delete;
+	~Button();
 
-	Button(TTF_Font* font, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds);
+	Button& operator=(const Button& other) = delete;
+	Button& operator=(Button && other) = delete;
+
 	Button(int x, int y, const std::string& name, const std::string& text);
 
-	void RenderElement(SDL_Renderer* renderer) override;
+	void RenderElement(SDL_Renderer* const renderer) override;
 };
 
 class TextBox : public WindowElement {
@@ -71,8 +73,10 @@ private:
 	std::string _text = "";
 	SDL_Rect _cursorBarRect;
 	bool displayBar = false;
-	const int skipFrames = 15;
-	int curFrame = 0;
+	const Ushort skipFrames = 15;
+	Ushort curFrame = 0;
+
+	TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds);
 
 public:
 
@@ -81,16 +85,17 @@ public:
 	TextBox(const TextBox&) = delete;
 	TextBox(TextBox&&) = delete;
 
+	~TextBox();
+
 	TextBox& operator=(const TextBox&) = delete;
 	TextBox& operator=(TextBox&&) = delete;
 
-	TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds);
+	
 	TextBox(int x, int y, const std::string& name, const std::string& text);
 
-	void RenderElement(SDL_Renderer* renderer) override;
+	void RenderElement(SDL_Renderer* const renderer) override;
 
 	void Update(SDL_Event& ev) override;
-
 
 	const std::string& Text() const;
 };

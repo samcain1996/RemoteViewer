@@ -1,8 +1,23 @@
 #include "Window.h"
 
-#if defined(_WIN32)
-#pragma warning(suppress: 26495)	// Warning for uninitialized SDL_Event can be silenced, it is init before use.
-#endif
+const WindowElement& EventData::GetElementByName(const std::string& elementName) const {
+	for (int i = 0; i < _elemList.size(); i++) {
+		if (_elemList.at(i).get().Name() == elementName) { return _elemList.at(i); }
+	}
+	std::terminate(); // <-- Come back to this later
+}
+
+const WindowElement& EventData::GetElementById(const Uint32 id) const {
+	if (_elemList.size() > id) { return _elemList.at(id); }
+	std::terminate(); // <-- Come back to this later
+}
+
+void EventData::New(ElementList& elements, EventHandler& newEventHandler) const {
+
+	_prevWindows.push_front(std::make_pair(elements, newEventHandler));
+
+}
+
 GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler) : _eventHandler(eventHandler) {
 
 	SDL_GetDesktopDisplayMode(0, &_displayData);
@@ -26,21 +41,51 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
 	_targetFPS = 60;
+
 }
 
-void GenericWindow::GetFocus() {
-	for (auto& element : _elements) {
-		if (SDL_HasIntersection(&_mouseRect, &element.get().Bounds())) {
-			if (_focussedElement) _focussedElement->hasFocus = false;
-			_focussedElement = &element.get();
-			_focussedElement->hasFocus = true;
-			return;
+bool GenericWindow::LocalUpdate() {
+
+	if (_event.type == SDL_MOUSEBUTTONDOWN) {
+		SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
+
+		for (auto& element : _elements) {
+
+			if (SDL_HasIntersection(&_mouseRect, &element.get().Bounds())) {
+
+				if (_focussedElement) {
+					_focussedElement->hasFocus = false;
+				}
+
+				_focussedElement = &element.get();
+				_focussedElement->hasFocus = true;
+
+				break;
+			}
 		}
 	}
+
+	if (_event.type == SDL_KEYDOWN) {
+		if (_event.key.keysym.sym == SDLK_ESCAPE) {
+
+			_prevWindows.pop_front();
+
+			if (_prevWindows.empty()) { return false; }
+			WindowData newData = _prevWindows.front();
+
+			_elements = newData.first;
+			_eventHandler = newData.second;
+
+		}
+	}
+
+	return true;
+
 }
 
-GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList& els) :
+GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, const ElementList& els) :
 	GenericWindow(title, eventHandler) {
+
 	_elements = els;
 
 	Update();
@@ -48,30 +93,48 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 GenericWindow::GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList&& els) :
 	GenericWindow(title, eventHandler) {
+
 	_elements = std::move(els);
 }
 
+
 void GenericWindow::Update() {
-	Uint32 ticks = 0;
+
+	_prevWindows.push_front(std::make_pair(_elements, _eventHandler));
+
+	Uint32 ticks = SDL_GetTicks();
 	SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
 
-	while (keepAlive) {
+	while (_keepAlive) {
 		
 		// Get events
 		while (SDL_PollEvent(&_event)) {
 
-			if (_event.type == SDL_MOUSEBUTTONDOWN) {
-
-				SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
-
-				GetFocus();
-
+			if (!LocalUpdate()) {
+				return;
 			}
 
-			keepAlive = _eventHandler(EventData(_event, _mouseRect, _width, _height), ElementView(_elements, *_focussedElement));
+			EventData eventData(_event, _mouseRect, _width, _height, _focussedElement, _prevWindows, std::ref(_elements));
+			bool newElements = _eventHandler(eventData);
+
+			if (newElements) {
+				
+				if (!_prevWindows.empty()) {
+
+					WindowData newData = _prevWindows.front();
+
+					_elements = newData.first;
+					_eventHandler = newData.second;
+
+
+				}
+
+				continue; 
+			}
+			
 
 			if (_event.type == SDL_QUIT) {
-				keepAlive = false;
+				_keepAlive = false;
 				break;
 			}
 
@@ -80,52 +143,52 @@ void GenericWindow::Update() {
 			}
 		}
 
-		ticks = SDL_GetTicks();
+		if (CapFPS2(ticks)) {
 
-		Draw();
+			Draw();
+			ticks = SDL_GetTicks();
+		}
+		continue;
 
-		CapFPS(ticks);
+		//CapFPS(ticks);
 
 	}
 
 }
 
 void GenericWindow::Draw() {
-	//Uint32 ticks = 0;
 
-	//while (keepAlive) {
-		//ticks = SDL_GetTicks();
+	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
+	SDL_RenderClear(_renderer);
 
-		SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
-		SDL_RenderClear(_renderer);
+	for (WindowElement& windowElement : _elements) {
+		windowElement.RenderElement(_renderer);
+	}
 
-		for (WindowElement& windowElement : _elements) {
-			windowElement.RenderElement(_renderer);
-		}
+	SDL_RenderPresent(_renderer);
 
-		SDL_RenderPresent(_renderer);
-
-
-		
-	//}
 }
 
 void GenericWindow::CapFPS(const Uint32 prevTicks) {
-	if ((1000 / _targetFPS) > SDL_GetTicks() - prevTicks) { 
-		SDL_Delay(1000 / _targetFPS - (SDL_GetTicks() - prevTicks)); 
+	if ((MillisInSecs / _targetFPS) > SDL_GetTicks() - prevTicks) { 
+		SDL_Delay(MillisInSecs / _targetFPS - (SDL_GetTicks() - prevTicks));
 	}
 
 	std::cout << "FPS: " << std::to_string((SDL_GetTicks() - prevTicks) / 1000.0) << "\n";
 }
 
-GenericWindow::~GenericWindow() {
-
-	TTF_CloseFont(_font);
-	SDL_DestroyRenderer(_renderer);
-	SDL_DestroyWindow(_window);
+bool GenericWindow::CapFPS2(const Uint32 prevTicks) {
+	return !((MillisInSecs / _targetFPS) > SDL_GetTicks() - prevTicks);
 }
 
-RenderWindow::RenderWindow(const std::string& title, const EventHandler& eventHandler) :
+GenericWindow::~GenericWindow() {
+
+	//TTF_CloseFont(_font);
+	//SDL_DestroyRenderer(_renderer);
+	//SDL_DestroyWindow(_window);
+}
+
+RenderWindow::RenderWindow(const std::string& title, EventHandler& eventHandler) :
 	GenericWindow(title, eventHandler) {
 
 	// Allocate memory for bitmap
@@ -138,25 +201,25 @@ RenderWindow::RenderWindow(const std::string& title, const EventHandler& eventHa
 
 void RenderWindow::Draw() {
 
-	//while (keepAlive) {
-		if (msgReader->Empty()) { return; } // No image is ready, skip frame
 
-		// Assemble image buffer
-		AssembleImage(msgReader->ReadMessage());
+	if (msgReader->Empty()) { return; } // No image is ready, skip frame
 
-		// Create image to render
-		_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
-		_surface = SDL_LoadBMP_RW(_bmpDataStream, SDL_TRUE);
-		_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
+	// Assemble image buffer
+	AssembleImage(msgReader->ReadMessage());
 
-		// Render image
-		SDL_RenderCopy(_renderer, _texture, NULL, NULL);
-		SDL_RenderPresent(_renderer);
+	// Create image to render
+	_bmpDataStream = SDL_RWFromMem(_bitmap, _bitmapSize);
+	_surface = SDL_LoadBMP_RW(_bmpDataStream, SDL_TRUE);
+	_texture = SDL_CreateTextureFromSurface(_renderer, _surface);
 
-		// Free resources
-		SDL_FreeSurface(_surface);
-		SDL_DestroyTexture(_texture);
-	//}
+	// Render image
+	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+	SDL_RenderPresent(_renderer);
+
+	// Free resources
+	SDL_FreeSurface(_surface);
+	SDL_DestroyTexture(_texture);
+
 
 }
 
@@ -185,12 +248,3 @@ RenderWindow::~RenderWindow() {
 }
 
 
-WindowElement& ElementView::GetElementByName(const std::string& elementName) const {
-	for (int i = 0; i < elements.size(); i++) {
-		if (elements[i].get().Name() == elementName) { return elements[i]; }
-	}
-}
-
-WindowElement& ElementView::GetElementById(const Uint32 id) const {
-	if (elements.size() > id) { return elements[id]; }
-}

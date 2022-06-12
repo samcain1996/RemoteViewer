@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 	SDL_SetMainReady();
 
 	Application::Init();
-	Application::Run();
+	//Application::Run();
 
 
 	return 0;

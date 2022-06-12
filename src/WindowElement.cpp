@@ -30,18 +30,15 @@ Button::Button(TTF_Font* font, const SDL_Color& fontColor, const SDL_Color& back
 	_font = font;
 	_fontColor = fontColor;
 	_backgroundColor = backColor;
-
-	_text = _name;
+	_text = name;
 }
 
-Button::Button(int x, int y, const std::string& name, const std::string& text) : 
-	Button(TTF_OpenFont("tahoma.ttf", 54), SDL_Color{ 0, 255, 0 }, SDL_Color{ 255,0,255 }, std::to_string(GetNextId()),
-	SDL_Rect{ x, y, 300, 100 }) {
-	_name = name;
+Button::Button(int x, int y, const std::string& name, const std::string& text) : Button(TTF_OpenFont("tahoma.ttf", 54), green, pink,
+	name, SDL_Rect{ x, y, 300, 150 }) { 
 	_text = text;
-}
+};
 
-void Button::RenderElement(SDL_Renderer* renderer) {
+void Button::RenderElement(SDL_Renderer* const renderer) {
 
 	SDL_Surface* surface = TTF_RenderText_Shaded(_font, _text.c_str(), _fontColor, _backgroundColor);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -53,11 +50,14 @@ void Button::RenderElement(SDL_Renderer* renderer) {
 
 }
 
-// Textbox
-void TextBox::RenderElement(SDL_Renderer* renderer) {
+Button::~Button() {
 
-	SDL_Color white = { 255, 255, 255 };
-	SDL_Color black = { 0,0,0 };
+}
+
+
+// Textbox
+
+void TextBox::RenderElement(SDL_Renderer* const renderer) {
 
 	SDL_Surface* surface = TTF_RenderText_Shaded(_font, _text.c_str(), black, white);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -76,6 +76,7 @@ void TextBox::RenderElement(SDL_Renderer* renderer) {
 	}
 
 	if (hasFocus && curFrame++ == skipFrames) { displayBar = !displayBar; curFrame = 0; }
+	else if (!hasFocus) { displayBar = false; }
 }
 
 TextBox::TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds) :
@@ -107,4 +108,8 @@ void TextBox::Update(SDL_Event& ev) {
 }
 
 const std::string& TextBox::Text() const { return _text; }
+
+TextBox::~TextBox() {
+	//delete _font;
+}
 

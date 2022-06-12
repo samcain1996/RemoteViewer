@@ -1,4 +1,5 @@
 #include "Application.h"
+
 bool Application::_init = false;
 
 bool Application::_isClient = false;
@@ -28,84 +29,84 @@ bool Application::Init() {
 
 	ElementList elements { clientButton, serverButton };
 
+	EventHandler eventHandler;
 
-	EventHandler clientInitEventHandler = [&](const EventData& ed, const ElementView& elemView) {
+	EventHandler clientInitEventHandler = [&](EventData& eventData) {
 
-		const SDL_Rect& mouseRect = ed.mouseRect;
-		const WindowElement& elementInFocus = elemView.elemInFocus;
+		const SDL_Rect& mouseRect = eventData.mouseRect;
+		const WindowElement& elementInFocus = *eventData.elemInFocus;
 
-		if (ed.windowEvent.type == SDL_KEYDOWN) {
+		if (eventData.windowEvent.type == SDL_KEYDOWN) {
 			if (elementInFocus == ipTextbox) {
-				if (ed.windowEvent.key.keysym.sym == SDLK_RETURN) {
+				if (eventData.windowEvent.key.keysym.sym == SDLK_RETURN) {
 					_netAgent = std::unique_ptr<NetAgent>(new Client(std::stoi(remotePortTb.Text()), ipTextbox.Text()));
-					return false;
+					return true;
 				}
 			}
 		}
-
-		return true;
-	};
-
-
-	EventHandler serverInitEventHandler = [&](const EventData& ed, const ElementView& elemView) {
-
-		const SDL_Rect& mouseRect = ed.mouseRect;
-		const WindowElement& elementInFocus = elemView.elemInFocus;
-
-		if (ed.windowEvent.type == SDL_KEYDOWN) {
-
-			if (elementInFocus == localPortTb) {
-				if (ed.windowEvent.key.keysym.sym == SDLK_RETURN) {
-					_netAgent = std::unique_ptr<NetAgent>(new Server(std::stoi(localPortTb.Text())));
-					return false;
-				}
-				
-			}
-		}
-
-		return true;
-
-	};
-
-	EventHandler eventHandler = [&](const EventData& ed, const ElementView& elemView) {
-
-		const SDL_Rect& mouseRect = ed.mouseRect;
-
-		// Check if either button has been hit
-		if (SDL_HasIntersection(&mouseRect, &clientButton.Bounds())) {
-			_isClient = true;
-
-			elements.clear();
-			elements.emplace_back(ipTextbox);
-			elements.emplace_back(remotePortTb);
-
-		}
-
-		else if (SDL_HasIntersection(&mouseRect, &serverButton.Bounds())) {
-			_isClient = false;
-
-			elements.clear();
-
-		}
-
-		else {
-			return true;
-		}
-
-		elements.emplace_back( localPortTb );
 
 		return false;
 	};
 
 
-	_window = std::unique_ptr<GenericWindow>(new GenericWindow("Anonymous Window", eventHandler, elements));
-	_window.reset();
+	EventHandler serverInitEventHandler = [&](EventData& eventData) {
 
-	_window = _isClient ? std::unique_ptr<GenericWindow>(new GenericWindow("Client Initialization", clientInitEventHandler, elements)) :
-		std::unique_ptr<GenericWindow>(new GenericWindow("Server Initialization", serverInitEventHandler, elements));
-	_window->Update();
-	_window.reset();
+		const SDL_Rect& mouseRect = eventData.mouseRect;
+		const WindowElement& elementInFocus = *eventData.elemInFocus;
 
+		if (eventData.windowEvent.type == SDL_KEYDOWN) {
+
+			if (elementInFocus == localPortTb) {
+				if (eventData.windowEvent.key.keysym.sym == SDLK_RETURN) {
+					_netAgent = std::unique_ptr<NetAgent>(new Server(std::stoi(localPortTb.Text())));
+					return true;
+				}
+				
+			}
+		}
+
+		return false;
+
+	};
+
+	eventHandler = [&](EventData& eventData) {
+
+		const SDL_Rect& mouseRect = eventData.mouseRect;
+
+		if (eventData.windowEvent.type == SDL_MOUSEBUTTONDOWN) {
+
+			// Check if either button has been hit
+			if (SDL_HasIntersection(&mouseRect, &clientButton.Bounds())) {
+				_isClient = true;
+
+				elements.clear();
+				elements.emplace_back(ipTextbox);
+				elements.emplace_back(remotePortTb);
+				elements.emplace_back(localPortTb);
+
+				eventData.New(elements, clientInitEventHandler);
+				return true;
+			}
+
+			else if (SDL_HasIntersection(&mouseRect, &serverButton.Bounds())) {
+				_isClient = false;
+
+				elements.clear();
+				elements.emplace_back(localPortTb);
+
+				eventData.New(elements, serverInitEventHandler);
+				return true;
+			}
+
+
+		}
+
+		return false;
+
+	};
+
+	_window = std::unique_ptr<GenericWindow>(new GenericWindow("Remote Viewer", eventHandler, elements));
+	_window.reset();
 
 	elements.clear();
 	_init = true;
@@ -127,29 +128,29 @@ void Application::Run() {
 
 void Application::RunClient(Client& client) {
 
-	EventHandler func = [&](const EventData& ed, const ElementView& elems) {
+	//EventHandler func = [&]( EventData& eventData) {
 
-		const SDL_Event& windowEvent = ed.windowEvent;
+	//	const SDL_Event& windowEvent = eventData.windowEvent;
 
-		if (windowEvent.type == SDL_MOUSEBUTTONDOWN || windowEvent.type == SDL_QUIT) {
-			_exit = true;
-			_msgHandler<SDL_Event>.msgWriter->WriteMessage(windowEvent);
-			return false;
-		}
-		return true;
-	};
+	//	if (windowEvent.type == SDL_MOUSEBUTTONDOWN || windowEvent.type == SDL_QUIT) {
+	//		_exit = true;
+	//		_msgHandler<SDL_Event>.msgWriter->WriteMessage(windowEvent);
+	//		return false;
+	//	}
+	//	return true;
+	//};
 
-	_window = std::unique_ptr<GenericWindow>(new RenderWindow("192.168.50.160", func));
-	RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
+	//_window = std::unique_ptr<GenericWindow>(new RenderWindow("192.168.50.160", func));
+	//RenderWindow& renderWindow = dynamic_cast<RenderWindow&>(*_window);
 
-	ConnectMessageHandlers<PacketPriorityQueue*>(&client, &renderWindow);
-	ConnectMessageHandlers<SDL_Event>(&client, &_msgHandler<SDL_Event>);
+	//ConnectMessageHandlers<PacketPriorityQueue*>(&client, &renderWindow);
+	//ConnectMessageHandlers<SDL_Event>(&client, &_msgHandler<SDL_Event>);
 
-	std::thread networkThr(&Client::Receive, &client);
-	
-	renderWindow.Update();
+	//std::thread networkThr(&Client::Receive, &client);
+	//
+	//renderWindow.Update();
 
-	networkThr.join();
+	//networkThr.join();
 }
 
 void Application::RunServer(Server& server) {
