@@ -126,3 +126,6 @@ static const Validator<const char> ALPHANUMERIC_VALIDATOR = [](const char c) {
 static const Validator<const char> IP_VALIDATOR = [](const char c) {
 	return (c >= '0' && c <= '9') || (c == '.');
 };
+
+template <typename T>
+using ValidatorList = std::vector<Validator<T>>;

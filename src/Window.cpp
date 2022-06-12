@@ -97,7 +97,10 @@ bool GenericWindow::LocalUpdate() {
 
 	// Go back a window if escape is hit
 	if (_event.type == SDL_KEYDOWN) {
-		if (_event.key.keysym.sym == SDLK_ESCAPE) {
+
+		const char& key = _event.key.keysym.sym;
+
+		if (key == SDLK_ESCAPE) {
 
 			focussedElementIndex = -1;
 
@@ -105,6 +108,10 @@ bool GenericWindow::LocalUpdate() {
 
 			return GetNewWindow();
 
+		}
+
+		else if (key == SDLK_RETURN) {
+			_submit = true;
 		}
 	}
 

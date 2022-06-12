@@ -34,10 +34,11 @@ bool Application::Init() {
 	EventHandler clientInitEventHandler = [&](const EventData& eventData) {
 
 		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
+		const char& key = eventData._windowData.windowEvent.key.keysym.sym;
 
 		if (eventData._windowData.windowEvent.type == SDL_KEYDOWN) {
 			if (eventData.GetFocussedElement() == ipTextbox) {
-				if (eventData._windowData.windowEvent.key.keysym.sym == SDLK_RETURN) {
+				if (key == SDLK_RETURN) {
 					_netAgent = std::unique_ptr<NetAgent>(new Client(std::stoi(remotePortTb.Text()), ipTextbox.Text()));
 					return true;
 				}
@@ -51,11 +52,12 @@ bool Application::Init() {
 	EventHandler serverInitEventHandler = [&](const EventData& eventData) {
 
 		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
+		const char& key = eventData._windowData.windowEvent.key.keysym.sym;
 
 		if (eventData._windowData.windowEvent.type == SDL_KEYDOWN) {
 
 			if (eventData.GetFocussedElement() == localPortTb) {
-				if (eventData._windowData.windowEvent.key.keysym.sym == SDLK_RETURN) {
+				if (key == SDLK_RETURN) {
 					_netAgent = std::unique_ptr<NetAgent>(new Server(std::stoi(localPortTb.Text())));
 					return true;
 				}

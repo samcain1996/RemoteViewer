@@ -4,8 +4,6 @@
 #include <forward_list>
 #include <iostream>
 
-using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
-
 class EventData;
 using EventHandler = std::function<bool(EventData&)>;
 using WindowCore = std::pair<ElementList, EventHandler>;
@@ -58,6 +56,9 @@ private:
 	bool LocalUpdate();
 
 protected:
+
+	bool _submit = false;
+	
 	GenericWindow(const std::string& title, const EventHandler& eventHandler);
 
 	GenericWindow() = delete;

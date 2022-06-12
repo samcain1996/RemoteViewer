@@ -1,6 +1,9 @@
 #pragma once
 #include "RenderTypes.h"
 
+class WindowElement;
+using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
+
 class WindowElement {
 
 	friend bool operator==(const WindowElement& we1, const WindowElement& we2) {
@@ -9,7 +12,7 @@ class WindowElement {
 
 private:
 	static int idGen;
-	const int* const _elementId;
+	const int _elementId;
 	
 	int _skippedFrames = 0;
 	int _currentFrame = 0;
@@ -33,11 +36,14 @@ protected:
 	static FontPool _fontPool;
 
 	FontRef _font;
-	
+
+	bool _updateElement = false;
+
 public:
 
 	WindowElement();
-	WindowElement(const std::string& name, const SDL_Rect& rect, const std::string& fontName = "default");
+	WindowElement(const std::string& name, const SDL_Rect& rect, const std::string& fontName = "default", 
+		const std::string& label = "PLACEHOLDER", const SDL_Color& backColor = PINK, const SDL_Color& textColor = GREEN);
 
 	WindowElement(WindowElement&&) = delete;
 	WindowElement(const WindowElement&) = delete;
@@ -48,7 +54,6 @@ public:
 	WindowElement& operator=(WindowElement&& other) = delete;
 
 	virtual void Update(SDL_Event& ev);
-	virtual bool UpdateDraw();
 	virtual void Unfocus();
 	virtual void RenderElement(SDL_Renderer* const ghrenderer) = 0;
 
@@ -88,7 +93,7 @@ private:
 	SDL_Rect _cursorBarRect;
 	bool displayCursorBar = false;
 
-	Validator<const char> _validator;
+	ValidatorList<const char> _inputValidators;
 
 	TextBox(const std::string& fontName, const std::string& name, const std::string& text, const SDL_Rect& bounds);
 
@@ -111,6 +116,9 @@ public:
 
 	void Update(SDL_Event& ev) override;
 	void Unfocus() override;
+
+	void AddValidator(const Validator<const char>& validator);
+
 
 	const std::string& Text() const;
 };

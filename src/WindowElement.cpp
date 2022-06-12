@@ -6,8 +6,9 @@ int WindowElement::idGen = 0;
 
 FontPool WindowElement::_fontPool;
 
-WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect, const std::string& fontName) :
-	_elementId(new int{ GetNextId() }), _name(name), _font(_fontPool.FindFont(fontName)) {
+WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect, const std::string& fontName,
+	const std::string& label, const SDL_Color& backColor, const SDL_Color& textColor) : 
+	_elementId(GetNextId()), _name(name), _label(label), _font(_fontPool.FindFont(fontName)), _backColor(backColor), _textColor(textColor) {
 
 	_xPos = rect.x;
 	_yPos = rect.y;
@@ -21,28 +22,24 @@ WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect, cons
 
 WindowElement::WindowElement() : WindowElement("ERROR", SDL_Rect()) {}
 
-WindowElement::~WindowElement() {
-	delete _elementId;
-}
+WindowElement::~WindowElement() {}
 
-void WindowElement::Update(SDL_Event& ev) {}
+void WindowElement::Update(SDL_Event& ev) {
 
-bool WindowElement::UpdateDraw() {
+	if (_updateElement) { _updateElement = false; }
+
 	if (_currentFrame++ == _skippedFrames) {
 		_currentFrame = 0;
-
-		return true;
-
+		_updateElement = true;
 	}
-	
-	return false;
+
 }
 
 void WindowElement::Unfocus() {
 	_currentFrame = 0;
 }
 
-const int WindowElement::Id() const { return *_elementId; }
+const int WindowElement::Id() const { return _elementId; }
 const std::string& WindowElement::Name() const { return _name; }
 const SDL_Rect& WindowElement::Bounds() const { 
 
@@ -62,10 +59,7 @@ const int WindowElement::GetNextId() const {
 // Button
 
 Button::Button(const std::string& fontName, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds) :
-	WindowElement(name, bounds, fontName) {
-	_textColor = fontColor;
-	_backColor = backColor;
-	_label = name;
+	WindowElement(name, bounds, fontName, name, fontColor, backColor) {
 }
 
 Button::Button(int x, int y, const std::string& name, const std::string& text) : Button("default", GREEN, PINK,
@@ -112,14 +106,11 @@ void TextBox::RenderElement(SDL_Renderer* const renderer) {
 }
 
 TextBox::TextBox(const std::string& fontName, const std::string& name, const std::string& text, const SDL_Rect& bounds) :
-	WindowElement(name, bounds, fontName) {
+	WindowElement(name, bounds, fontName, text) {
 
-	_label = text;
 	_cursorBarRect = Bounds();
 	_cursorBarRect.w = 10;
 	_cursorBarRect.x += ((_width / 2.0) - (_cursorBarRect.w / 2.0));
-
-	_validator = ALPHANUMERIC_VALIDATOR;
 }
 
 TextBox::TextBox(int x, int y, const std::string& name, const std::string& text) :
@@ -128,26 +119,36 @@ TextBox::TextBox(int x, int y, const std::string& name, const std::string& text)
 TextBox::TextBox(int x, int y, const std::string& name, const std::string& text, const Validator<const char>& validator) :
 	TextBox("default", name, text, SDL_Rect{ x, y, 300, 100 }) {
 	
-	_validator = validator;
+	_inputValidators.push_back(validator);
 }
 
 void TextBox::Update(SDL_Event& ev) {
 
-	if (UpdateDraw()) {
+	WindowElement::Update(ev);
+
+	if (_updateElement) {
 		displayCursorBar = !displayCursorBar;
 	}
 
 	if (ev.type == SDL_KEYDOWN) {
 
-		if (ev.key.keysym.sym == SDLK_BACKSPACE) {
+		const char& key = ev.key.keysym.sym;
+
+		if (key == SDLK_BACKSPACE) {
 			if (_label.size() > 0) {
 				_label.pop_back();
 			}
 		}
 		else {
-			if (_validator(ev.key.keysym.sym)) {
-				_label += ev.key.keysym.sym;
+			
+			for (auto& validator : _inputValidators) {
+				if (!validator(key)) {
+					return;
+				}
 			}
+			
+			_label += key;
+
 		}
 	}
 }
@@ -161,6 +162,13 @@ void TextBox::Unfocus() {
 }
 
 const std::string& TextBox::Text() const { return _label; }
+
+void TextBox::AddValidator(const Validator<const char>& validator) {
+
+	_inputValidators.push_back(validator);
+
+}
+
 
 TextBox::~TextBox() {
 }
