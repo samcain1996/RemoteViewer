@@ -70,8 +70,6 @@ protected:
 
 	bool _keepAlive = true;
 
-	TTF_Font* _font;
-
 	ElementList _elements;
 	EventHandler _eventHandler;
 

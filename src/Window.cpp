@@ -83,6 +83,10 @@ bool GenericWindow::LocalUpdate() {
 
 			if (SDL_HasIntersection(&_mouseRect, &element.Bounds())) {
 
+				if (focussedElementIndex > 0 && focussedElementIndex  != index) {
+					_elements[focussedElementIndex].get().Unfocus();
+				}
+
 				focussedElementIndex = index;
 
 				break;
@@ -195,7 +199,6 @@ bool GenericWindow::CapFPS2(const Uint32 prevTicks) {
 
 GenericWindow::~GenericWindow() {
 
-	TTF_CloseFont(_font);
 	SDL_DestroyRenderer(_renderer);
 	SDL_DestroyWindow(_window);
 }

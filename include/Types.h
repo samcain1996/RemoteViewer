@@ -47,10 +47,10 @@ constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 
 constexpr const Ushort MillisInSecs = 1000;
 
-constexpr const SDL_Color white = { 255, 255, 255 };
-constexpr const SDL_Color green = { 0,255,0 };
-constexpr const SDL_Color pink = { 255,0,255 };
-constexpr const SDL_Color black = { 0,0,0 };
+constexpr const SDL_Color WHITE = { 255, 255, 255 };
+constexpr const SDL_Color GREEN = { 0,255,0 };
+constexpr const SDL_Color PINK = { 255,0,255 };
+constexpr const SDL_Color BLACK = { 0,0,0 };
 
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;
@@ -120,7 +120,7 @@ static const Validator<const char> ALPHABETIC_VALIDAOTR = [](const char c) {
 };
 
 static const Validator<const char> ALPHANUMERIC_VALIDATOR = [](const char c) {
-	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+	return NUMERIC_VALIDATOR(c) || ALPHABETIC_VALIDAOTR(c);
 };
 
 static const Validator<const char> IP_VALIDATOR = [](const char c) {

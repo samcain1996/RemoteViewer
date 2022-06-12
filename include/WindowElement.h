@@ -1,7 +1,5 @@
 #pragma once
-#include "Packet.h"
-#include "Messages.h"
-#include <functional>
+#include "RenderTypes.h"
 
 class WindowElement {
 
@@ -13,18 +11,33 @@ private:
 	static int idGen;
 	const int* const _elementId;
 	
-	int skippedFrames = 0;
-	int currentFrame = 0;
+	int _skippedFrames = 0;
+	int _currentFrame = 0;
+
+	mutable SDL_Rect _bounds = { 0, 0, 0, 0 };
 
 protected:
-	std::string _name;
-	SDL_Rect _bounds;
-	float _updateRatioToWindow = 0.25f;
+	int _xPos = 0;
+	int _yPos = 0;
+	int _width = 0;
+	int _height = 0;
+	
+	std::string _name = "";
+	std::string _label = "";
 
+	SDL_Color _backColor = PINK;
+	SDL_Color _textColor = GREEN;
+	
+	float _updateRatioToWindow = 1 / 15.0f;
+
+	static FontPool _fontPool;
+
+	FontRef _font;
+	
 public:
 
 	WindowElement();
-	WindowElement(const std::string& name, const SDL_Rect& rect);
+	WindowElement(const std::string& name, const SDL_Rect& rect, const std::string& fontName = "default");
 
 	WindowElement(WindowElement&&) = delete;
 	WindowElement(const WindowElement&) = delete;
@@ -36,6 +49,7 @@ public:
 
 	virtual void Update(SDL_Event& ev);
 	virtual bool UpdateDraw();
+	virtual void Unfocus();
 	virtual void RenderElement(SDL_Renderer* const ghrenderer) = 0;
 
 	const int Id() const;
@@ -49,11 +63,8 @@ public:
 
 class Button : public WindowElement {
 private:
-	TTF_Font* _font;
-	std::string _text = "";
-	SDL_Color _fontColor, _backgroundColor;
 
-	Button(TTF_Font* font, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds);
+	Button(const std::string& fontName, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds);
 
 public:
 	Button() = delete;
@@ -74,16 +85,12 @@ public:
 
 class TextBox : public WindowElement {
 private:
-	TTF_Font* _font;
-	std::string _text = "";
 	SDL_Rect _cursorBarRect;
-	bool displayBar = false;
-	const Ushort skipFrames = 15;
-	Ushort curFrame = 0;
+	bool displayCursorBar = false;
 
 	Validator<const char> _validator;
 
-	TextBox(TTF_Font* font, const std::string& name, const std::string& text, const SDL_Rect& bounds);
+	TextBox(const std::string& fontName, const std::string& name, const std::string& text, const SDL_Rect& bounds);
 
 public:
 
@@ -97,13 +104,13 @@ public:
 	TextBox& operator=(const TextBox&) = delete;
 	TextBox& operator=(TextBox&&) = delete;
 
-	
 	TextBox(int x, int y, const std::string& name, const std::string& text);
-	TextBox(int x, int y, const std::string& name, const std::string& text, Validator<const char> validator);
+	TextBox(int x, int y, const std::string& name, const std::string& text, const Validator<const char>& validator);
 
 	void RenderElement(SDL_Renderer* const renderer) override;
 
 	void Update(SDL_Event& ev) override;
+	void Unfocus() override;
 
 	const std::string& Text() const;
 };
