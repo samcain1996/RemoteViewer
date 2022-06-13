@@ -52,12 +52,10 @@ class GenericWindow {
 
 private:
 
-	bool GetNewWindow();
+	bool GetTopWindow();
 	bool LocalUpdate();
 
 protected:
-
-	bool _submit = false;
 	
 	GenericWindow(const std::string& title, const EventHandler& eventHandler);
 

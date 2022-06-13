@@ -39,13 +39,13 @@ bool Application::Init() {
 		if (eventData._windowData.windowEvent.type == SDL_KEYDOWN) {
 			if (eventData.GetFocussedElement() == ipTextbox) {
 				if (key == SDLK_RETURN) {
-					_netAgent = std::unique_ptr<NetAgent>(new Client(std::stoi(remotePortTb.Text()), ipTextbox.Text()));
-					return true;
+					_netAgent = std::unique_ptr<NetAgent>(new Client(std::stoi(localPortTb.Text()), ipTextbox.Text()));
+					return false ;
 				}
 			}
 		}
 
-		return false;
+		return true;
 	};
 
 
@@ -59,13 +59,13 @@ bool Application::Init() {
 			if (eventData.GetFocussedElement() == localPortTb) {
 				if (key == SDLK_RETURN) {
 					_netAgent = std::unique_ptr<NetAgent>(new Server(std::stoi(localPortTb.Text())));
-					return true;
+					return false;
 				}
 				
 			}
 		}
 
-		return false;
+		return true;
 
 	};
 
@@ -85,7 +85,6 @@ bool Application::Init() {
 				elements.emplace_back(localPortTb);
 
 				eventData.ChangeWindow(elements, clientInitEventHandler);
-				return true;
 			}
 
 			else if (SDL_HasIntersection(&mouseRect, &serverButton.Bounds())) {
@@ -95,13 +94,12 @@ bool Application::Init() {
 				elements.emplace_back(localPortTb);
 
 				eventData.ChangeWindow(elements, serverInitEventHandler);
-				return true;
 			}
 
 
 		}
 
-		return false;
+		return true;
 
 	};
 
