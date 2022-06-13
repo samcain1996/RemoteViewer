@@ -141,11 +141,12 @@ void GenericWindow::Update() {
 	Uint32 ticks = SDL_GetTicks();
 	SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
 
+
 	while (_keepAlive) {
-		
+
 		// Get events
 		while (SDL_PollEvent(&_event)) {
-
+			
 			if (!LocalUpdate()) {
 				return;
 			}
@@ -162,13 +163,17 @@ void GenericWindow::Update() {
 				break;
 			}
 
+			if (focussedElementIndex > -1) {
+				_elements[focussedElementIndex].get().Update(_event);
+			}
+
 
 		}
 
 		if (CapFPS2(ticks)) {
 			
 			if (focussedElementIndex > -1) {
-				_elements[focussedElementIndex].get().Update(_event);
+				_elements[focussedElementIndex].get().DrawUpdate();
 			}
 			
 			Draw();

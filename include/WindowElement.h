@@ -37,8 +37,6 @@ protected:
 
 	FontRef _font;
 
-	bool _updateElement = false;
-
 public:
 
 	WindowElement();
@@ -53,9 +51,13 @@ public:
 	WindowElement& operator=(const WindowElement& other) = delete;
 	WindowElement& operator=(WindowElement&& other) = delete;
 
-	virtual void Update(SDL_Event& ev);
-	virtual void Unfocus();
+	virtual const bool ReadyToUpdateFrame();
+	virtual void DrawUpdate();
+	virtual void Update(SDL_Event& ev);  // Called every frame
 	virtual void RenderElement(SDL_Renderer* const ghrenderer) = 0;
+
+	virtual void UpdateOnFrameFunction();
+	virtual void Unfocus();
 
 	const int Id() const;
 	const std::string& Name() const;
@@ -119,6 +121,6 @@ public:
 
 	void AddValidator(const Validator<const char>& validator);
 
-
+	void DrawUpdate() override;
 	const std::string& Text() const;
 };

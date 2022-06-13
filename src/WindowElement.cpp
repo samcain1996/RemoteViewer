@@ -24,16 +24,25 @@ WindowElement::WindowElement() : WindowElement("ERROR", SDL_Rect()) {}
 
 WindowElement::~WindowElement() {}
 
-void WindowElement::Update(SDL_Event& ev) {
-
-	if (_updateElement) { _updateElement = false; }
+const bool WindowElement::ReadyToUpdateFrame()  {
 
 	if (_currentFrame++ == _skippedFrames) {
 		_currentFrame = 0;
-		_updateElement = true;
+		return true;
 	}
 
+	return false;
+
 }
+
+void WindowElement::DrawUpdate() {
+}
+
+void WindowElement::UpdateOnFrameFunction() {
+	
+}
+
+void WindowElement::Update(SDL_Event& ev) {}
 
 void WindowElement::Unfocus() {
 	_currentFrame = 0;
@@ -122,14 +131,16 @@ TextBox::TextBox(int x, int y, const std::string& name, const std::string& text,
 	_inputValidators.push_back(validator);
 }
 
-void TextBox::Update(SDL_Event& ev) {
-
-	WindowElement::Update(ev);
-
-	if (_updateElement) {
+void TextBox::DrawUpdate() {
+	
+	if (ReadyToUpdateFrame()) {
 		displayCursorBar = !displayCursorBar;
 	}
 
+}
+
+void TextBox::Update(SDL_Event& ev) {
+	
 	if (ev.type == SDL_KEYDOWN) {
 
 		const char& key = ev.key.keysym.sym;
