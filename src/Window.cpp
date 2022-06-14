@@ -165,10 +165,6 @@ void GenericWindow::Update() {
 
 		if (CapFPS2(ticks)) {
 			
-			if (focussedElementIndex > -1) {
-				_elements[focussedElementIndex].get().DrawUpdate();
-			}
-			
 			Draw();
 			ticks = SDL_GetTicks();
 		}
@@ -179,6 +175,10 @@ void GenericWindow::Update() {
 
 void GenericWindow::Draw() {
 
+	if (focussedElementIndex > -1) {
+		_elements[focussedElementIndex].get().DrawUpdate();
+	}
+	
 	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
 	SDL_RenderClear(_renderer);
 
