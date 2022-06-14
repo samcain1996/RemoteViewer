@@ -35,12 +35,9 @@ const bool WindowElement::ReadyToUpdateFrame()  {
 
 }
 
-void WindowElement::DrawUpdate() {
-}
+void WindowElement::DrawUpdate() {}
 
-void WindowElement::UpdateOnFrameFunction() {
-	
-}
+void WindowElement::UpdateOnFrameFunction() {}
 
 void WindowElement::Update(SDL_Event& ev) {}
 

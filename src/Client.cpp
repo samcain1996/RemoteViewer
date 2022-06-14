@@ -42,7 +42,7 @@ void Client::AsyncReceive()
 
     PacketBuffer packetData;
 
-    for (;;) {
+    //for (;;) {
 
         _socket.async_receive(boost::asio::buffer(packetData, packetData.max_size()), [&](const boost::system::error_code& ec,
             std::size_t bytes_transferred) 
@@ -63,9 +63,10 @@ void Client::AsyncReceive()
                     return;
                 }
 
-                _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
+                
             });
-    }
+        _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
+   // }
 }
 
 bool Client::Connect(const std::string& serverPort) {

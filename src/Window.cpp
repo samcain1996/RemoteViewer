@@ -58,17 +58,6 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 }
 
-bool GenericWindow::GetTopWindow() {
-
-	if (_windowList.empty()) { return false; }
-	WindowCore newData = _windowList.front();
-
-	_elements = newData.first;
-	_eventHandler = newData.second;
-	
-	return true;
-}
-
 bool GenericWindow::LocalUpdate() {
 
 	// Get focused element
@@ -110,7 +99,6 @@ bool GenericWindow::LocalUpdate() {
 
 	}
 
-	GetTopWindow();
 	return true;
 
 }
@@ -120,6 +108,8 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 
 	_elements = els;
 
+	_windowList.push_front(std::make_pair(_elements, _eventHandler));
+
 	Update();
 }
 
@@ -127,6 +117,8 @@ GenericWindow::GenericWindow(const std::string& title, const EventHandler& event
 	GenericWindow(title, eventHandler) {
 
 	_elements = std::move(els);
+
+	_windowList.push_front(std::make_pair(_elements, _eventHandler));
 }
 
 
@@ -134,15 +126,12 @@ void GenericWindow::Update() {
 
 	Uint32 ticks = SDL_GetTicks();
 	SDL_GetMouseState(&_mouseRect.x, &_mouseRect.y);
-
-	_windowList.push_front(std::make_pair(_elements, _eventHandler));
 	
 	while (_keepAlive) {
 
 		// Get events
 		while (SDL_PollEvent(&_event)) {
 		
-			
 			if (!LocalUpdate()) {
 				return;
 			}
@@ -152,6 +141,15 @@ void GenericWindow::Update() {
 			
 			_keepAlive = _eventHandler(eventData);
 			if (!_keepAlive) { return; }
+
+			if (_windowList.front().first != _elements) {
+				const WindowCore& newWindow = _windowList.front();
+				
+				_elements = newWindow.first;
+				_eventHandler = newWindow.second;
+
+				focussedElementIndex = -1;
+			}
 
 			if (_event.type == SDL_QUIT) {
 				_keepAlive = false;

@@ -52,7 +52,6 @@ class GenericWindow {
 
 private:
 
-	bool GetTopWindow();
 	bool LocalUpdate();
 
 protected:
@@ -97,6 +96,7 @@ protected:
 	bool CapFPS2(const Uint32 prevTicks);
 
 public:
+
 	GenericWindow(const std::string& title, const EventHandler& eventHandler, const ElementList& els);
 	GenericWindow(const std::string& title, const EventHandler& eventHandler, ElementList&& els);
 

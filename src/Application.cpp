@@ -18,7 +18,6 @@ bool Application::Init() {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) { return false; }
 	if (TTF_Init() != 0) { return false; }
 
-
 	Button clientButton(500, 500, "Client Button", "Client");
 	Button serverButton(1000, 500, "Server Button", "Server");
 
@@ -29,9 +28,9 @@ bool Application::Init() {
 
 	ElementList elements { clientButton, serverButton };
 
-	EventHandler eventHandler;
+	EventHandler eventHandler, clientInitEventHandler, serverInitEventHandler;
 
-	EventHandler clientInitEventHandler = [&](const EventData& eventData) {
+	clientInitEventHandler = [&](const EventData& eventData) {
 
 		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 		const char& key = eventData._windowData.windowEvent.key.keysym.sym;
@@ -49,7 +48,7 @@ bool Application::Init() {
 	};
 
 
-	EventHandler serverInitEventHandler = [&](const EventData& eventData) {
+	serverInitEventHandler = [&](const EventData& eventData) {
 
 		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 		const char& key = eventData._windowData.windowEvent.key.keysym.sym;
