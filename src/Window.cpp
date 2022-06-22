@@ -94,10 +94,15 @@ bool GenericWindow::LocalUpdate() {
 
 			_windowList.pop_front();
 
+			if (std::empty(_windowList)) { return false; }
+
 
 		}
 
 	}
+
+	_eventHandler = _windowList.front().second;
+	_elements = _windowList.front().first;
 
 	return true;
 
