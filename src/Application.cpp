@@ -30,7 +30,7 @@ bool Application::Init() {
 
 	EventHandler eventHandler, clientInitEventHandler, serverInitEventHandler;
 
-	clientInitEventHandler = [&](const EventData& eventData) {
+	clientInitEventHandler = [&ipTextbox, &localPortTb](const EventData& eventData) {
 
 		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 		const char& key = eventData._windowData.windowEvent.key.keysym.sym;
@@ -48,7 +48,7 @@ bool Application::Init() {
 	};
 
 
-	serverInitEventHandler = [&](const EventData& eventData) {
+	serverInitEventHandler = [&localPortTb](const EventData& eventData) {
 
 		const SDL_Rect& mouseRect = eventData._windowData.mouseRect;
 		const char& key = eventData._windowData.windowEvent.key.keysym.sym;

@@ -73,7 +73,7 @@ protected:
 
 	WindowList _windowList;
 
-	int focussedElementIndex = -1;
+	std::optional<std::reference_wrapper<WindowElement>> _focussedElement{};
 
 	SDL_Window* _window;	// GenericWindow to render to
 	SDL_Surface* _surface;	// Pixel data to render to window

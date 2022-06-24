@@ -71,11 +71,11 @@ bool GenericWindow::LocalUpdate() {
 
 			if (SDL_HasIntersection(&_mouseRect, &element.Bounds())) {
 
-				if (focussedElementIndex > 0 && focussedElementIndex != index) {
-					_elements[focussedElementIndex].get().Unfocus();
+				if (_focussedElement.has_value() && _focussedElement != element) {
+					_focussedElement.value().get().Unfocus();
 				}
 
-				focussedElementIndex = index;
+				_focussedElement = element;
 
 				break;
 
@@ -90,12 +90,11 @@ bool GenericWindow::LocalUpdate() {
 
 		if (key == SDLK_ESCAPE) {
 
-			focussedElementIndex = -1;
+			_focussedElement.reset();
 
 			_windowList.pop_front();
 
 			if (std::empty(_windowList)) { return false; }
-
 
 		}
 
@@ -141,8 +140,10 @@ void GenericWindow::Update() {
 				return;
 			}
 
+			int focusIdx = _focussedElement.has_value() ? _focussedElement.value().get().Id() : -1;
+			
 			WindowData windowData(_event, _mouseRect, _width, _height);
-			EventData eventData(windowData, focussedElementIndex, _windowList, std::ref(_elements));
+			EventData eventData(windowData, focusIdx, _windowList, std::ref(_elements));
 			
 			_keepAlive = _eventHandler(eventData);
 			if (!_keepAlive) { return; }
@@ -153,7 +154,7 @@ void GenericWindow::Update() {
 				_elements = newWindow.first;
 				_eventHandler = newWindow.second;
 
-				focussedElementIndex = -1;
+				_focussedElement.reset();
 			}
 
 			if (_event.type == SDL_QUIT) {
@@ -161,8 +162,8 @@ void GenericWindow::Update() {
 				break;
 			}
 
-			if (focussedElementIndex > -1) {
-				_elements[focussedElementIndex].get().Update(_event);
+			if (_focussedElement.has_value()) {
+				_focussedElement.value().get().Update(_event);
 			}
 
 
@@ -179,16 +180,16 @@ void GenericWindow::Update() {
 }
 
 void GenericWindow::Draw() {
-
-	if (focussedElementIndex > -1) {
-		_elements[focussedElementIndex].get().DrawUpdate();
-	}
 	
 	SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
 	SDL_RenderClear(_renderer);
 
 	for (WindowElement& windowElement : _elements) {
 		windowElement.RenderElement(_renderer);
+	}
+
+	if (_focussedElement.has_value()) {
+		_focussedElement.value().get().DrawUpdate();
 	}
 
 	SDL_RenderPresent(_renderer);

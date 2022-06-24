@@ -14,6 +14,13 @@ private:
 public:
 
 	FontPool();
+	
+	FontPool(const FontPool&) = delete;
+	FontPool(FontPool&&) = delete;
+
+	FontPool& operator=(const FontPool&) = delete;
+	FontPool& operator=(FontPool&&) = delete;
+
 	~FontPool();
 
 	const FontRef FindFont(const std::string& fontName);
@@ -50,6 +57,8 @@ protected:
 	SDL_Color _backColor = PINK;
 	SDL_Color _textColor = GREEN;
 	
+	// Ratio for how often this element should ne updated
+	// relative to the window it is on.
 	float _updateRatioToWindow = 1 / 15.0f;
 
 	static FontPool _fontPool;

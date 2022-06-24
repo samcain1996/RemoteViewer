@@ -114,3 +114,9 @@ public:
 		return this->Push(message);
 	}
 };
+
+//template <class T, typename Message>
+//concept IsMsgHandler = std::same_as<T, MessageHandler<Message>> || std::derived_from<T, MessageHandler<Message>>;
+//
+//template <class T, typename Message>
+//concept IsDerivedMsgHandler = IsMsgHandler<T, Message> && (!std::same_as<T, MessageHandler<Message>>);

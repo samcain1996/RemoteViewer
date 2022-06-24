@@ -11,7 +11,6 @@ FontPool::FontPool() {
 		}
 	}
 
-
 	_defaultFont = std::make_unique<TTF_Font*>(TTF_OpenFont("tahoma.ttf", 54));
 }
 
@@ -31,7 +30,7 @@ const FontRef FontPool::FindFont(const std::string& fontName) {
 
 	if (fontNameLower == "default") { return fallbackFont; }
 
-	for (auto& [font, name] : _fonts) {
+	for (auto const& [font, name] : _fonts) {
 
 		if (name == fontNameLower) {
 			return std::ref(font);
