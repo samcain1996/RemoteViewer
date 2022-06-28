@@ -28,6 +28,7 @@ public:
 };
 
 class WindowElement;
+using WindowElementRef = std::reference_wrapper<WindowElement>;
 using ElementList = std::vector<std::reference_wrapper<WindowElement>>;
 
 class WindowElement {
