@@ -1,14 +1,13 @@
 #pragma once
 #include "NetAgent.h"
 
-class Client : public NetAgent, public Messageable<PacketPriorityQueue*>, public Messageable<SDL_Event> {
+class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 private:
 	std::string _hostname;  // Hostname of computer to connect to
 
 	PacketGroupMap _packetGroups;
 
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
-	MessageReader<SDL_Event>*& eventReader = Messageable<SDL_Event>::msgReader;
 
 	/**
 	 * @brief Processes data from packets and stores them in the

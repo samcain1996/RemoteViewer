@@ -12,8 +12,8 @@
 
 //#define SDL_MAIN_HANDLED
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+//#include <SDL2/SDL.h>
+//#include <SDL2/SDL_ttf.h>
 #include <vector>
 #include <mutex>
 #include <queue>
@@ -22,6 +22,8 @@
 #include <memory>
 #include <functional>
 #include <optional>
+
+using Uint32 = std::uint32_t;
 
 constexpr const Uint32 ONE_BYTE    = 8;
 constexpr const Uint32 TWO_BYTES   = (ONE_BYTE + ONE_BYTE);
@@ -47,11 +49,6 @@ enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 
 constexpr const Ushort MillisInSecs = 1000;
-
-constexpr const SDL_Color WHITE = { 255, 255, 255 };
-constexpr const SDL_Color GREEN = { 0,255,0 };
-constexpr const SDL_Color PINK = { 255,0,255 };
-constexpr const SDL_Color BLACK = { 0,0,0 };
 
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;
