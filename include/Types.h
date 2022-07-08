@@ -10,25 +10,21 @@
 * 
 */
 
-//#define SDL_MAIN_HANDLED
-
-//#include <SDL2/SDL.h>
-//#include <SDL2/SDL_ttf.h>
 #include <vector>
 #include <mutex>
 #include <queue>
-#include <cstring>
 #include <atomic>
 #include <memory>
 #include <functional>
 #include <optional>
 
 using Uint32 = std::uint32_t;
+using string = std::string;
 
-constexpr const Uint32 ONE_BYTE    = 8;
-constexpr const Uint32 TWO_BYTES   = (ONE_BYTE + ONE_BYTE);
+constexpr const Uint32 ONE_BYTE = 8;
+constexpr const Uint32 TWO_BYTES = (ONE_BYTE + ONE_BYTE);
 constexpr const Uint32 THREE_BYTES = (TWO_BYTES + ONE_BYTE);
-constexpr const Uint32 FOUR_BYTES  = (TWO_BYTES + TWO_BYTES);
+constexpr const Uint32 FOUR_BYTES = (TWO_BYTES + TWO_BYTES);
 
 
 /*------------------TYPES--------------------*/
@@ -49,6 +45,7 @@ enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 
 constexpr const Ushort MillisInSecs = 1000;
+
 
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;

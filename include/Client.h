@@ -3,7 +3,7 @@
 
 class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 private:
-	std::string _hostname;  // Hostname of computer to connect to
+	string _hostname;  // Hostname of computer to connect to
 
 	PacketGroupMap _packetGroups;
 
@@ -31,7 +31,7 @@ public:
 	Client(const Client&)	= delete;
 	Client(Client&&)		= delete;
 
-	Client(const Ushort, const std::string&);
+	Client(const Ushort, const string&);
 
 	~Client();
 
@@ -45,7 +45,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	bool Connect(const std::string& hostname);
+	bool Connect(const string& hostname);
 
 	/**
 	 * @brief Receive data from server

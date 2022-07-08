@@ -1,10 +1,11 @@
 #include "Client.h"
 
-Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
+Client::Client(const Ushort port, const string& hostname) : NetAgent(port) {
     _hostname = hostname;
 }
 
 void Client::ProcessPacket(const Packet& packet) {
+	
     // Get packet group
     Uint32 group = packet.Header().group;
 
@@ -69,7 +70,7 @@ void Client::AsyncReceive()
    // }
 }
 
-bool Client::Connect(const std::string& serverPort) {
+bool Client::Connect(const string& serverPort) {
 
     // Find endpoint to connect to
     udp::resolver resolver(_io_context);

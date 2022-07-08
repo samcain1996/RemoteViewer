@@ -20,12 +20,12 @@
 //	}
 //}
 //
-//const FontRef FontPool::FindFont(const std::string& fontName) {
+//const FontRef FontPool::FindFont(const string& fontName) {
 //
 //	const FontRef fallbackFont = *_defaultFont;
 //
 //	// Good one copilot
-//	std::string fontNameLower(fontName);
+//	string fontNameLower(fontName);
 //	std::transform(fontNameLower.begin(), fontNameLower.end(), fontNameLower.begin(), ::tolower);
 //
 //	if (fontNameLower == "default") { return fallbackFont; }
@@ -39,9 +39,9 @@
 //
 //
 //	// WOW, suprised copilot got this
-//	std::string pureName = fontNameLower.substr(0, fontNameLower.find('.'));
+//	string pureName = fontNameLower.substr(0, fontNameLower.find('.'));
 //
-//	TTF_Font* font = TTF_OpenFont(std::string(pureName + ".ttf").c_str(), 54);
+//	TTF_Font* font = TTF_OpenFont(string(pureName + ".ttf").c_str(), 54);
 //
 //	if (font == nullptr) { return fallbackFont; }
 //
@@ -57,8 +57,8 @@
 //
 //FontPool WindowElement::_fontPool;
 //
-//WindowElement::WindowElement(const std::string& name, const SDL_Rect& rect, const std::string& fontName,
-//	const std::string& label, const SDL_Color& backColor, const SDL_Color& textColor) : 
+//WindowElement::WindowElement(const string& name, const SDL_Rect& rect, const string& fontName,
+//	const string& label, const SDL_Color& backColor, const SDL_Color& textColor) : 
 //	_elementId(GetNextId()), _name(name), _label(label), _font(_fontPool.FindFont(fontName)), _backColor(backColor), _textColor(textColor) {
 //
 //	_xPos = rect.x;
@@ -97,7 +97,7 @@
 //}
 //
 //const int WindowElement::Id() const { return _elementId; }
-//const std::string& WindowElement::Name() const { return _name; }
+//const string& WindowElement::Name() const { return _name; }
 //const SDL_Rect& WindowElement::Bounds() const { 
 //
 //	_bounds.x = _xPos;
@@ -115,11 +115,11 @@
 //
 //// Button
 //
-//Button::Button(const std::string& fontName, const SDL_Color& fontColor, const SDL_Color& backColor, const std::string& name, const SDL_Rect& bounds) :
+//Button::Button(const string& fontName, const SDL_Color& fontColor, const SDL_Color& backColor, const string& name, const SDL_Rect& bounds) :
 //	WindowElement(name, bounds, fontName, name, fontColor, backColor) {
 //}
 //
-//Button::Button(int x, int y, const std::string& name, const std::string& text) : Button("default", GREEN, PINK,
+//Button::Button(int x, int y, const string& name, const string& text) : Button("default", GREEN, PINK,
 //	name, SDL_Rect{ x, y, 300, 150 }) { 
 //	_label = text;
 //};
@@ -162,7 +162,7 @@
 //	SDL_RenderFillRect(renderer, &_cursorBarRect);
 //}
 //
-//TextBox::TextBox(const std::string& fontName, const std::string& name, const std::string& text, const SDL_Rect& bounds) :
+//TextBox::TextBox(const string& fontName, const string& name, const string& text, const SDL_Rect& bounds) :
 //	WindowElement(name, bounds, fontName, text) {
 //
 //	_cursorBarRect = Bounds();
@@ -170,10 +170,10 @@
 //	_cursorBarRect.x += ((_width / 2.0) - (_cursorBarRect.w / 2.0));
 //}
 //
-//TextBox::TextBox(int x, int y, const std::string& name, const std::string& text) :
+//TextBox::TextBox(int x, int y, const string& name, const string& text) :
 //	TextBox("default", name, text, SDL_Rect{x, y, 300, 100}) {}
 //
-//TextBox::TextBox(int x, int y, const std::string& name, const std::string& text, const Validator<const char>& validator) :
+//TextBox::TextBox(int x, int y, const string& name, const string& text, const Validator<const char>& validator) :
 //	TextBox("default", name, text, SDL_Rect{ x, y, 300, 100 }) {
 //	
 //	_inputValidators.push_back(validator);
@@ -220,7 +220,7 @@
 //	
 //}
 //
-//const std::string& TextBox::Text() const { return _label; }
+//const string& TextBox::Text() const { return _label; }
 //
 //void TextBox::AddValidator(const Validator<const char>& validator) {
 //
