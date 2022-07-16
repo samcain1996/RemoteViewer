@@ -1,5 +1,5 @@
 #pragma once
-#include "NetAgent.h"
+#include "Networking/NetAgent.h"
 
 class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 private:
