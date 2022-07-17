@@ -1,4 +1,4 @@
-#include "Packet.h"
+#include "Networking/Packet.h"
 
 bool operator<(const Packet& p1, const Packet& p2) {
 	// A packet that has a larger sequence number 

@@ -1,4 +1,4 @@
-#include "Client.h"
+#include "Networking/Client.h"
 
 Client::Client(const Ushort port, const string& hostname) : NetAgent(port) {
     _hostname = hostname;

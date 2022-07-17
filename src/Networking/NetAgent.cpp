@@ -1,4 +1,4 @@
-#include "NetAgent.h"
+#include "Networking/NetAgent.h"
 
 std::random_device NetAgent::rd{};
 
