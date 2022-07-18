@@ -3,9 +3,61 @@
 wxBEGIN_EVENT_TABLE(StartUpWindow, wxFrame)
 	EVT_BUTTON(10001, ClientButtonClick)
 	EVT_BUTTON(10002, ServerButtonClick)
+	EVT_CHAR_HOOK(OnChar)
 wxEND_EVENT_TABLE()
 
-StartUpWindow::StartUpWindow() : GenericWindow() {
+wxBEGIN_EVENT_TABLE(ClientInitWindow, wxFrame)
+	EVT_CHAR_HOOK(OnChar)
+wxEND_EVENT_TABLE()
+
+
+GenericWindow::GenericWindow(const std::string& name) : wxFrame(nullptr, wxID_ANY, name, wxPoint(50, 50), wxSize(1270, 720)),
+_windowId(-1) {
+
+}
+
+GenericWindow::~GenericWindow() {
+
+	_windowElements.clear();
+
+	std::for_each(_windowElements.begin(), _windowElements.end(), [](wxControl* element) {
+		delete element;
+		});
+
+}
+
+std::stack<WindowNames> GenericWindow::_prevWindows;
+
+void GenericWindow::OnChar(wxKeyEvent& keyEvent) {
+	int keycode = keyEvent.GetKeyCode();
+
+	if (keycode == WXK_BACK) {
+
+		if (_prevWindows.empty()) { wxExit(); return; }
+
+		GenericWindow* previousWindow;
+
+		switch (_prevWindows.top()) {
+			_prevWindows.pop();
+		case WindowNames::StartUp:
+			previousWindow = new StartUpWindow();
+			break;
+		case WindowNames::ClientInit:
+			previousWindow = new ClientInitWindow();
+			break;
+		default:
+			previousWindow = new StartUpWindow();
+		}
+
+		
+		previousWindow->Show();
+		Close(true);
+
+	}
+}
+
+
+StartUpWindow::StartUpWindow() : GenericWindow("Remote Viewer") {
 	
 	_windowElements.clear();
 	
@@ -15,28 +67,35 @@ StartUpWindow::StartUpWindow() : GenericWindow() {
 }
 
 StartUpWindow::~StartUpWindow() {
-	wxExit();
 }
 
 void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
-	_windowElements.at(0)->SetLabelText("I've been clicked!");
+
+	_prevWindows.emplace(WindowName());
+
+	ClientInitWindow* clientWindow = new ClientInitWindow();
+	clientWindow->Show();
+
+	Close(true);
 }
 
 void StartUpWindow::ServerButtonClick(wxCommandEvent& evt) {
 	_windowElements.at(1)->SetLabelText("I've been clicked!");
 }
 
-GenericWindow::GenericWindow() : wxFrame(nullptr, wxID_ANY, "Remote Viewer", wxPoint(50, 50), wxSize(1270, 720)),
-	_windowId(-1) {
+constexpr const WindowNames StartUpWindow::WindowName() {
+	return WindowNames::StartUp;
+}
+
+ClientInitWindow::ClientInitWindow() : GenericWindow("Client Initialization") {
+
+	_windowElements.emplace_back(new wxButton(this, 10003, "YOU DID IT NICE!", wxPoint(200, 600), wxSize(500, 500)));
 
 }
 
-GenericWindow::~GenericWindow() {
-	
-	_windowElements.clear();
+ClientInitWindow::~ClientInitWindow() {
+}
 
-	std::for_each(_windowElements.begin(), _windowElements.end(), [](wxControl* element) {
-		delete element;
-		});
-
+constexpr const WindowNames ClientInitWindow::WindowName() {
+	return WindowNames::ClientInit;
 }
