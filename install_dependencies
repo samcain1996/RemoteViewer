@@ -3,7 +3,9 @@
 # Read config file
 . installation_dirs.conf
 
-cd ${install_location}
+project_directory=`pwd`
+
+cd ${dependency_install_directory}
 
 # Install dependencies
 # Boost
