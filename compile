@@ -1,5 +1,7 @@
 #!/bin/sh
 
+project_directory=`pwd`
+
 . installation_dirs.conf
 
 wx_flags=`./wx-config --cxxflags --libs`

@@ -7,7 +7,8 @@ class GenericWindow : public wxFrame
 
 protected:
 	std::vector<wxControl*> _windowElements;
-	GenericWindow() : wxFrame(nullptr, wxID_ANY, "Remote Viewer", wxPoint(50, 50), wxSize(1270, 720)) {}
+	const int _windowId;
+	GenericWindow();
 
 	virtual ~GenericWindow();
 
@@ -18,4 +19,9 @@ class StartUpWindow : public GenericWindow {
 public:
 	StartUpWindow();
 	~StartUpWindow();
+
+	void ClientButtonClick(wxCommandEvent& evt);
+	void ServerButtonClick(wxCommandEvent& evt);
+
+	wxDECLARE_EVENT_TABLE();
 };
