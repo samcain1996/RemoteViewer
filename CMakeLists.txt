@@ -13,8 +13,8 @@ project (RemoteViewer)
 # Executable location
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(BOOST_DIR C:/boost_1_79_0)
-set(WX_DIR C:/Users/scain/source/repos/wxWidgets-3.1.7/)
+set(BOOST_DIR *INSERT BOOST DIR*)
+set(WX_DIR *INSERT WX DIR*)
 
 add_compile_definitions(_UNICODE)
 
