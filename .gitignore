@@ -1,6 +1,10 @@
 # Ignore everything
 *
 
+!compile
+!install_dependencies
+!*.conf
+
 # Do not ignore C/C++ header files
 !*.h
 
