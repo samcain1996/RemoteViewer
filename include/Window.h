@@ -13,7 +13,7 @@ enum class WindowNames {
 class GenericWindow : public wxFrame
 {
 public:
-	virtual void OnChar(wxKeyEvent& keyEvent);
+	virtual void BackSpace(wxKeyEvent& keyEvent);
 protected:
 	GenericWindow(const std::string& name);
 	virtual ~GenericWindow();

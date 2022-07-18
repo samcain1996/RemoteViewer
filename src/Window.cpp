@@ -3,11 +3,11 @@
 wxBEGIN_EVENT_TABLE(StartUpWindow, wxFrame)
 	EVT_BUTTON(10001, ClientButtonClick)
 	EVT_BUTTON(10002, ServerButtonClick)
-	EVT_CHAR_HOOK(OnChar)
+	EVT_CHAR_HOOK(BackSpace)
 wxEND_EVENT_TABLE()
 
 wxBEGIN_EVENT_TABLE(ClientInitWindow, wxFrame)
-	EVT_CHAR_HOOK(OnChar)
+	EVT_CHAR_HOOK(BackSpace)
 wxEND_EVENT_TABLE()
 
 
@@ -28,28 +28,27 @@ GenericWindow::~GenericWindow() {
 
 std::stack<WindowNames> GenericWindow::_prevWindows;
 
-void GenericWindow::OnChar(wxKeyEvent& keyEvent) {
-	int keycode = keyEvent.GetKeyCode();
-
-	if (keycode == WXK_BACK) {
+void GenericWindow::BackSpace(wxKeyEvent& keyEvent) {
+	
+	if (keyEvent.GetKeyCode() == WXK_BACK) {
 
 		if (_prevWindows.empty()) { wxExit(); return; }
 
 		GenericWindow* previousWindow;
 
 		switch (_prevWindows.top()) {
-			_prevWindows.pop();
-		case WindowNames::StartUp:
-			previousWindow = new StartUpWindow();
-			break;
-		case WindowNames::ClientInit:
-			previousWindow = new ClientInitWindow();
-			break;
-		default:
-			previousWindow = new StartUpWindow();
+
+			case WindowNames::StartUp:
+				previousWindow = new StartUpWindow();
+				break;
+			case WindowNames::ClientInit:
+				previousWindow = new ClientInitWindow();
+				break;
+			default:
+				previousWindow = new StartUpWindow();
 		}
 
-		
+		_prevWindows.pop();
 		previousWindow->Show();
 		Close(true);
 
