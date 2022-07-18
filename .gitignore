@@ -1,5 +1,5 @@
 # Ignore everything
-*.*
+*
 
 # Do not ignore C/C++ header files
 !*.h
@@ -10,5 +10,7 @@
 # Do not ignore C files
 !*.c
 
-# Do not ignore .txt files in etc
-!etc/*.txt
+!*.txt
+
+!*.json
+

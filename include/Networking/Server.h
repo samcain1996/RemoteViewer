@@ -1,5 +1,5 @@
 #pragma once
-#include "NetAgent.h"
+#include "Networking/NetAgent.h"
 #include "Capture.h"
 
 class Server : public NetAgent, public Messageable<ByteArray> {

@@ -1,4 +1,4 @@
-#include "Server.h"
+#include "Networking/Server.h"
 
 Server::Server(const Ushort listenPort) : NetAgent(listenPort), _screen(1920, 1080, 1920, 1080) {}
 

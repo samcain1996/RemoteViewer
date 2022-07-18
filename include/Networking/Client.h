@@ -1,14 +1,13 @@
 #pragma once
-#include "NetAgent.h"
+#include "Networking/NetAgent.h"
 
-class Client : public NetAgent, public Messageable<PacketPriorityQueue*>, public Messageable<SDL_Event> {
+class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 private:
-	std::string _hostname;  // Hostname of computer to connect to
+	string _hostname;  // Hostname of computer to connect to
 
 	PacketGroupMap _packetGroups;
 
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
-	MessageReader<SDL_Event>*& eventReader = Messageable<SDL_Event>::msgReader;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -32,7 +31,7 @@ public:
 	Client(const Client&)	= delete;
 	Client(Client&&)		= delete;
 
-	Client(const Ushort, const std::string&);
+	Client(const Ushort, const string&);
 
 	~Client();
 
@@ -46,7 +45,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	bool Connect(const std::string& hostname);
+	bool Connect(const string& hostname);
 
 	/**
 	 * @brief Receive data from server

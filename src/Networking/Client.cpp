@@ -1,10 +1,11 @@
-#include "Client.h"
+#include "Networking/Client.h"
 
-Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
+Client::Client(const Ushort port, const string& hostname) : NetAgent(port) {
     _hostname = hostname;
 }
 
 void Client::ProcessPacket(const Packet& packet) {
+	
     // Get packet group
     Uint32 group = packet.Header().group;
 
@@ -51,7 +52,7 @@ void Client::AsyncReceive()
                 // Copy buffer to dummy packet
                 ProcessPacket(Packet(packetData));
 
-                if (!eventReader->Empty()) {
+                /*if (!eventReader->Empty()) {
                     SDL_Event ev = eventReader->ReadMessage();
                     if (ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_QUIT) {
                         packetData[0] = '0';
@@ -61,7 +62,7 @@ void Client::AsyncReceive()
                     }
                     _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
                     return;
-                }
+                }*/
 
                 
             });
@@ -69,7 +70,7 @@ void Client::AsyncReceive()
    // }
 }
 
-bool Client::Connect(const std::string& serverPort) {
+bool Client::Connect(const string& serverPort) {
 
     // Find endpoint to connect to
     udp::resolver resolver(_io_context);
@@ -97,7 +98,7 @@ void Client::Receive() {
         // Receive packet
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
 
-        if (!eventReader->Empty()) {
+        /*if (!eventReader->Empty()) {
             SDL_Event ev = eventReader->ReadMessage();
             if (ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_QUIT) {
                 packetData[0] = '0';
@@ -107,7 +108,7 @@ void Client::Receive() {
             }
             _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
             break;
-        }
+        }*/
 
         _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
 
@@ -120,6 +121,6 @@ void Client::Receive() {
 
 Client::~Client() {
    // delete writer;
-    delete eventReader;
+    //delete eventReader;
 }
 

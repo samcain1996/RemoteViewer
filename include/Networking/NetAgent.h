@@ -2,7 +2,7 @@
 #include <boost/asio.hpp>
 #include <thread>
 #include <random>
-#include "Packet.h"
+#include "Networking/Packet.h"
 #include "Messages.h"
 
 using boost::asio::ip::udp;
