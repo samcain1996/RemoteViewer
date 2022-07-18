@@ -1,5 +1,5 @@
 # Ignore everything
-*.*
+*
 
 # Do not ignore C/C++ header files
 !*.h
