@@ -50,8 +50,6 @@ protected:
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
 
-	int focussedIdx = -1;
-
 	virtual constexpr const WindowNames WindowName() = 0;
 
 };
@@ -125,7 +123,7 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 
 private:
 	
-	//wxMemoryInputStream _stream;
+	wxMemoryInputStream _stream;
 	//wxImage _image;
 	std::thread clientThr;
 

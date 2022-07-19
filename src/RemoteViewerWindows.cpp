@@ -168,15 +168,27 @@ void ClientStreamWindow::Stream() {
 	
 	while (true) {
 		if (!groupReader->Empty()) {
-			groupReader->ReadMessage();
-			break;
+			PacketPriorityQueue* queue = groupReader->ReadMessage();
+			
+			ByteArray imgData = new Byte[MAX_PACKET_PAYLOAD_SIZE * queue->size()];
+			
+			for (int packetNo = 0; !queue->empty(); ++packetNo) {
+				Packet packet = queue->top();
+				queue->pop();
+				
+				std::memcpy(&imgData[packetNo * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), 
+					packet.Payload().size());
+			}
+
+			delete queue;
+
 		}
 	}
 	Close(true);
 }
 
 void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
-
+	
 }
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
