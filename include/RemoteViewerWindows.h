@@ -10,18 +10,30 @@ enum class WindowNames {
 	ClientStream
 };
 
+using WindowStack = std::stack<WindowNames>;
+using ElementList = std::vector<wxControl*>;
+
+using TextBox = wxTextCtrl;
+using Button = wxButton;
+
 class BaseWindow : public wxFrame
 {
 public:
-	virtual void BackSpace(wxKeyEvent& keyEvent);
+	virtual void HandleInput(wxKeyEvent& keyEvent);
+
+	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
+	wxTextValidator PORT_VALIDATOR = wxTextValidator(wxFILTER_DIGITS);
 protected:
+
+	static WindowStack _prevWindows;
+
 	BaseWindow(const std::string& name);
 	virtual ~BaseWindow();
 	
-	std::vector<wxControl*> _windowElements;
+	ElementList _windowElements;
 	const int _windowId;
 
-	static std::stack<WindowNames> _prevWindows;
+	bool _killProgramOnClose = true;
 
 	virtual constexpr const WindowNames WindowName() = 0;
 
@@ -29,6 +41,10 @@ protected:
 
 
 class StartUpWindow : public BaseWindow {
+private:
+	Button* clientButton;
+	Button* serverButton;
+	
 public:
 	StartUpWindow();
 	~StartUpWindow();
@@ -44,9 +60,14 @@ public:
 class ClientInitWindow : public BaseWindow {
 
 private:
-	wxTextCtrl* _portInput;
-	wxTextCtrl* _ipInput;
-	wxButton* _connectButton;
+
+	const int PORT_TB_ID = 20003;
+	const int IP_TB_IP = 20002;
+	
+
+	TextBox* _portInput;
+	TextBox* _ipInput;
+	Button* _connectButton;
 
 	//Constructor and destructor
 	public:
@@ -54,6 +75,8 @@ private:
 		~ClientInitWindow();
 
 		void ConnectButtonClick(wxCommandEvent& evt);
+
+		void HandleInput(wxKeyEvent& keyEvent) override;
 
 		constexpr const WindowNames WindowName() override;
 

@@ -1,5 +1,5 @@
 #pragma once 
-#include "Window.h"
+#include "RemoteViewerWindows.h"
 
 class Application : public wxApp  {
 public:
@@ -7,7 +7,7 @@ public:
 	~Application();
 
 private:
-	wxFrame* _window = new StartUpWindow();
+	BaseWindow* _window = new StartUpWindow();
 
 public:
 	virtual bool OnInit();

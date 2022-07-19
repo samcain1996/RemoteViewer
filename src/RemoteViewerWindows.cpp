@@ -3,19 +3,17 @@
 wxBEGIN_EVENT_TABLE(StartUpWindow, wxFrame)
 	EVT_BUTTON(10001, ClientButtonClick)
 	EVT_BUTTON(10002, ServerButtonClick)
-	EVT_CHAR_HOOK(BackSpace)
 wxEND_EVENT_TABLE()
 
 wxBEGIN_EVENT_TABLE(ClientInitWindow, wxFrame)
 	EVT_BUTTON(20001, ConnectButtonClick)
-	EVT_CHAR_HOOK(BackSpace)
 wxEND_EVENT_TABLE()
 
-std::stack<WindowNames> BaseWindow::_prevWindows;
+WindowStack BaseWindow::_prevWindows;
 
 BaseWindow::BaseWindow(const std::string& name) : wxFrame(nullptr, wxID_ANY, name, wxPoint(50, 50), wxSize(1270, 720)),
 _windowId(-1) {
-
+	IP_VALIDATOR.SetCharIncludes("0123456789.");
 }
 
 BaseWindow::~BaseWindow() {
@@ -26,9 +24,11 @@ BaseWindow::~BaseWindow() {
 		delete element;
 		});
 
+	if (_killProgramOnClose) { wxExit(); }
+
 }
 
-void BaseWindow::BackSpace(wxKeyEvent& keyEvent) {
+void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 	
 	if (keyEvent.GetKeyCode() == WXK_BACK) {
 
@@ -50,11 +50,12 @@ void BaseWindow::BackSpace(wxKeyEvent& keyEvent) {
 
 		_prevWindows.pop();
 		previousWindow->Show();
+
+		_killProgramOnClose = false;
 		Close(true);
 
 	}
 }
-
 
 StartUpWindow::StartUpWindow() : BaseWindow("Remote Viewer") {
 	
@@ -74,6 +75,7 @@ void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
 	ClientInitWindow* clientWindow = new ClientInitWindow();
 	clientWindow->Show();
 
+	_killProgramOnClose = false;
 	Close(true);
 }
 
@@ -89,8 +91,8 @@ constexpr const WindowNames StartUpWindow::WindowName() {
 
 ClientInitWindow::ClientInitWindow() : BaseWindow("Client Initialization") {
 
-	_portInput = new wxTextCtrl(this, 20002, "", wxPoint(100, 200), wxSize(500, 50));
-	_ipInput = new wxTextCtrl(this, 20003, "", wxPoint(100, 400), wxSize(200, 50));
+	_ipInput = new wxTextCtrl(this, IP_TB_IP, "", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_portInput = new wxTextCtrl(this, PORT_TB_ID, "", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
 	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
 
@@ -99,16 +101,28 @@ ClientInitWindow::ClientInitWindow() : BaseWindow("Client Initialization") {
 	_windowElements.emplace_back(_connectButton);
 }
 
-ClientInitWindow::~ClientInitWindow() {
+ClientInitWindow::~ClientInitWindow() {}
 
+void ClientInitWindow::HandleInput(wxKeyEvent& keyEvent) {
+
+	int keycode = keyEvent.GetKeyCode();
+	
+	if (_ipInput->HasFocus()) {
+		_ipInput->AppendText((char)keycode);
+	}
+	else if (_portInput->HasFocus()) {
+		_portInput->AppendText((char)keycode);
+	}
+	else {
+		BaseWindow::HandleInput(keyEvent);
+	}
 }
 
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
-
-	// TODO : Validate input
-
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
 	const std::string port = _portInput->GetValue().ToStdString();
+
+	// TODO: Connect
 }
 
 constexpr const WindowNames ClientInitWindow::WindowName() {
