@@ -140,7 +140,7 @@ public:
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
 	void OnPaint(wxPaintEvent& paintEvent);
-	void RetrieveImage();
+	void Stream();
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 

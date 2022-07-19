@@ -135,7 +135,7 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
 	const int localPort = std::stoi(_localPortInput->GetValue().ToStdString());
 	
-	ClientStreamWindow* streamWindow = new ClientStreamWindow(ipAddress, remotePort, localPort);
+	ClientStreamWindow* streamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort);
 	streamWindow->Show();
 
 	_killProgramOnClose = false;
@@ -156,7 +156,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int
 	clientThr = std::thread(&Client::Receive, &client);
 	clientThr.detach();  // <- Fix this
 
-	RetrieveImage();
+	Stream();
 	
 }
 
@@ -164,7 +164,7 @@ ClientStreamWindow::~ClientStreamWindow() {
 	//clientThr.join();
 }
 
-void ClientStreamWindow::RetrieveImage() {
+void ClientStreamWindow::Stream() {
 	
 	while (true) {
 		if (!groupReader->Empty()) {

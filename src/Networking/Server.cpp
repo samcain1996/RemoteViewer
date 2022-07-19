@@ -29,7 +29,6 @@ void Server::Send(ByteArray bytes, size_t len) {
 
     // Convert the message into a list of packets
     PacketList packets = ConvertToPackets(bytes, len);
-    Byte empty[4] = { '0','0','0','0' };
 
     // Loop through all the packets and send them
     for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
@@ -41,10 +40,6 @@ void Server::Send(ByteArray bytes, size_t len) {
         _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
         _socket.receive(boost::asio::buffer(dummyBuf, sizeof dummyBuf), 0, _errcode);
 
-        if (std::memcmp(dummyBuf, empty, 4) == 0) {
-            msgWriter->WriteMessage(empty);
-            return;
-        }
     }
     
 }
