@@ -10,13 +10,13 @@ enum class WindowNames {
 	ClientStream
 };
 
-class GenericWindow : public wxFrame
+class BaseWindow : public wxFrame
 {
 public:
 	virtual void BackSpace(wxKeyEvent& keyEvent);
 protected:
-	GenericWindow(const std::string& name);
-	virtual ~GenericWindow();
+	BaseWindow(const std::string& name);
+	virtual ~BaseWindow();
 	
 	std::vector<wxControl*> _windowElements;
 	const int _windowId;
@@ -28,7 +28,7 @@ protected:
 };
 
 
-class StartUpWindow : public GenericWindow {
+class StartUpWindow : public BaseWindow {
 public:
 	StartUpWindow();
 	~StartUpWindow();
@@ -41,19 +41,26 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-class ClientInitWindow : public GenericWindow {
+class ClientInitWindow : public BaseWindow {
+
+private:
+	wxTextCtrl* _portInput;
+	wxTextCtrl* _ipInput;
+	wxButton* _connectButton;
 
 	//Constructor and destructor
 	public:
 		ClientInitWindow();
 		~ClientInitWindow();
 
-		wxDECLARE_EVENT_TABLE();
+		void ConnectButtonClick(wxCommandEvent& evt);
 
 		constexpr const WindowNames WindowName() override;
+
+		wxDECLARE_EVENT_TABLE();
 };
 //
-//class ServerInitWindow : public GenericWindow {
+//class ServerInitWindow : public BaseWindow {
 //
 //	//Constructor and destructor
 //	public:
