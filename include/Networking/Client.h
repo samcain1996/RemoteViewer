@@ -7,6 +7,8 @@ private:
 
 	PacketGroupMap _packetGroups;
 
+	bool _connected = false;
+
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
 
 	/**

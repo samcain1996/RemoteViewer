@@ -120,3 +120,7 @@ public:
 //
 //template <class T, typename Message>
 //concept IsDerivedMsgHandler = IsMsgHandler<T, Message> && (!std::same_as<T, MessageHandler<Message>>);
+//
+//template <class T, class U, typename Message>
+//concept IsOppositeMsgHandler = IsDerivedMsgHandler<T, Message> && IsDerivedMsgHandler<U, Message> &&
+//(!std::same_as<T, U>);

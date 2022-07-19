@@ -20,8 +20,21 @@ BaseWindow::~BaseWindow() {
 }
 
 void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
+
+	int keycode = keyEvent.GetKeyCode();
 	
-	if (keyEvent.GetKeyCode() == WXK_BACK) {
+	//if (keycode == WXK_TAB) {
+	//	
+	//	for (int index = 0; index < _windowElements.size(); ++index) {
+	//		if (_windowElements[index]->HasFocus()) {
+	//			_windowElements[(index + 1) % _windowElements.size()]->SetFocus();  // Really good one copilot
+	//			break;
+	//		}
+	//	}
+	//	
+	//}
+
+	if (keycode == WXK_BACK) {
 
 		if (_prevWindows.empty()) { wxExit(); return; }
 
@@ -103,9 +116,9 @@ wxEND_EVENT_TABLE()
 
 ClientInitWindow::ClientInitWindow() : BaseWindow("Client Initialization") {
 
-	_ipInput = new wxTextCtrl(this, IP_TB_IP, "", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
-	_remotePortInput = new wxTextCtrl(this, PORT_TB_ID, "", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
-	_localPortInput = new wxTextCtrl(this, PORT_TB_ID+1, "", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_ipInput = new wxTextCtrl(this, IP_TB_ID, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_remotePortInput = new wxTextCtrl(this, PORT_TB_ID, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_localPortInput = new wxTextCtrl(this, PORT_TB_ID+1, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
 	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
 
@@ -116,24 +129,6 @@ ClientInitWindow::ClientInitWindow() : BaseWindow("Client Initialization") {
 }
 
 ClientInitWindow::~ClientInitWindow() {}
-
-void ClientInitWindow::HandleInput(wxKeyEvent& keyEvent) {
-
-	int keycode = keyEvent.GetKeyCode();
-	
-	if (_ipInput->HasFocus()) {
-		_ipInput->AppendText((char)keycode);
-	}
-	else if (_remotePortInput->HasFocus()) {
-		_remotePortInput->AppendText((char)keycode);
-	}
-	else if (_localPortInput->HasFocus()) {
-		_localPortInput->AppendText((char)keycode);
-	}
-	else {
-		BaseWindow::HandleInput(keyEvent);
-	}
-}
 
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
@@ -147,24 +142,47 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	Close(true);
 }
 
+wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
+	//EVT_PAINT(ClientStreamWindow::OnPaint)
+wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort) : BaseWindow("Remote Viewer - Master") {
 
 	Client client(localPort, ip);
 	client.Connect(std::to_string(remotePort));
 
+	ConnectMessageables(*this, client);
+	//clientThr = std::thread(&Client::Receive, &client);
+	client.Receive();
 }
 
-ClientStreamWindow::~ClientStreamWindow() {}
+ClientStreamWindow::~ClientStreamWindow() {
+	clientThr.join();
+}
 
+void ClientStreamWindow::RetrieveImage() {
+	
+	while (groupReader->Empty()) {
 
+	}
+
+	Close(true);
+
+}
+
+void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
+	wxPaintDC dc(this);
+
+	//wxBitmap bitmap(_image);
+	//dc.DrawBitmap(bitmap, wxPoint(0, 0));
+}
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 	EVT_BUTTON(30001, ServerInitWindow::ListenButtonClick)
 wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow() : BaseWindow("Server Initialization") {
-	_portTb = new TextBox(this, 30002, "", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
 	_listenButton = new Button(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
 }
@@ -182,9 +200,4 @@ void ServerInitWindow::ListenButtonClick(wxCommandEvent& evt) {
 	Close(true);
 }
 
-void ServerInitWindow::HandleInput(wxKeyEvent& keyEvent) {
-	
-	if (_portTb->HasFocus()) { _portTb->AppendText((char)keyEvent.GetKeyCode()); }
-	else { BaseWindow::HandleInput(keyEvent); }
-}
 

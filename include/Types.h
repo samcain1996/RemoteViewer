@@ -17,6 +17,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <thread>
 
 using Uint32 = std::uint32_t;
 using string = std::string;
@@ -59,7 +60,13 @@ class MessageWriter;
 
 template <typename Message>
 class Messageable {
-    friend class Application;
+    friend static void ConnectMessageables(Messageable<Message>& m1, Messageable<Message>& m2) {
+        m1.msgWriter = new MessageWriter<Message>;
+        m2.msgReader = new MessageReader<Message>(m1.msgWriter);
+
+        m2.msgWriter = new MessageWriter<Message>;
+        m1.msgReader = new MessageReader<Message>(m2.msgWriter);
+    }
 protected:
     MessageWriter<Message>* msgWriter = nullptr;
     MessageReader<Message>* msgReader = nullptr;

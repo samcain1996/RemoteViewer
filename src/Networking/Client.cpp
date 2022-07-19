@@ -20,6 +20,7 @@ void Client::ProcessPacket(const Packet& packet) {
     PacketPriorityQueue& packetGroupBucket = _incompletePackets[group];
     packetGroupBucket.push(packet);
 
+	// If the packet is the last in the group, process group
     if (_packetGroups[group] == packetGroupBucket.size()) {
         
         PacketPriorityQueue* completeGroup = new PacketPriorityQueue(std::move(_incompletePackets[group]));
@@ -83,16 +84,17 @@ bool Client::Connect(const string& serverPort) {
     _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), 0, _errcode);
     _socket.receive(boost::asio::buffer(handshakeBuf, HANDSHAKE_SIZE), 0, _errcode);
 
-    if (std::memcmp(handshakeBuf, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE)) { return false; }
+    _connected = std::memcmp(handshakeBuf, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
 
-    return true;
+
+    return _connected;
 }
 
 void Client::Receive() {
    
     PacketBuffer packetData;
 
-    while (true) {
+    while (_connected) {
 
         
         // Receive packet

@@ -1,9 +1,10 @@
 #pragma once
 #include "Types.h"
 #include <stack>
-#include "wx/wx.h"
+#include "wx/mstream.h"
 #include "Client.h"
 #include "Server.h"
+#include "WindowElements.h"
 
 enum class WindowNames {
 	StartUp,
@@ -15,7 +16,6 @@ enum class WindowNames {
 using WindowStack = std::stack<WindowNames>;
 using ElementList = std::vector<wxControl*>;
 
-using TextBox = wxTextCtrl;
 using Button = wxButton;
 
 //--------------Abstract Base Window Class-----------------------------//
@@ -36,6 +36,12 @@ protected:
 
 	BaseWindow(const std::string& name);
 	virtual ~BaseWindow();
+
+	// Delete copy and move constructors and assignment operators
+	BaseWindow(const BaseWindow&) = delete;
+	BaseWindow(BaseWindow&&) = delete;
+	BaseWindow& operator=(const BaseWindow&) = delete;
+	BaseWindow& operator=(BaseWindow&&) = delete;
 	
 	// All Window controls on the current window
 	ElementList _windowElements;
@@ -43,6 +49,8 @@ protected:
 
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
+
+	int focussedIdx = -1;
 
 	virtual constexpr const WindowNames WindowName() = 0;
 
@@ -60,6 +68,12 @@ public:
 	StartUpWindow();
 	~StartUpWindow();
 
+	// Delete copy and move constructors and assignment operators
+	StartUpWindow(const StartUpWindow&) = delete;
+	StartUpWindow(StartUpWindow&&) = delete;
+	StartUpWindow& operator=(const StartUpWindow&) = delete;
+	StartUpWindow& operator=(StartUpWindow&&) = delete;
+
 	void ClientButtonClick(wxCommandEvent& evt);
 	void ServerButtonClick(wxCommandEvent& evt);
 
@@ -76,25 +90,28 @@ class ClientInitWindow : public BaseWindow {
 private:
 
 	const int PORT_TB_ID = 20003;
-	const int IP_TB_IP = 20002;
+	const int IP_TB_ID = 20002;
 	
-	TextBox* _remotePortInput;
-	TextBox* _localPortInput;
-	TextBox* _ipInput;
+	wxTextCtrl* _remotePortInput;
+	wxTextCtrl* _localPortInput;
+	wxTextCtrl* _ipInput;
 	Button* _connectButton;
 
-	//Constructor and destructor
-	public:
-		ClientInitWindow();
-		~ClientInitWindow();
+public:
+	ClientInitWindow();
+	~ClientInitWindow();
 
-		void ConnectButtonClick(wxCommandEvent& evt);
+	// Delete copy and move constructors and assignment operators
+	ClientInitWindow(const ClientInitWindow&) = delete;
+	ClientInitWindow(ClientInitWindow&&) = delete;
+	ClientInitWindow& operator=(const ClientInitWindow&) = delete;
+	ClientInitWindow& operator=(ClientInitWindow&&) = delete;
 
-		void HandleInput(wxKeyEvent& kehgyEvent) override;
+	void ConnectButtonClick(wxCommandEvent& evt);
 
-		constexpr const WindowNames WindowName() override { return WindowNames::ClientInit; }
+	constexpr const WindowNames WindowName() override { return WindowNames::ClientInit; }
 
-		wxDECLARE_EVENT_TABLE();
+	wxDECLARE_EVENT_TABLE();
 };
 
 
@@ -102,12 +119,32 @@ private:
 // Receives a video stream from the server and sends 
 // back a stream of keyboard and mouse events
 
-class ClientStreamWindow : public BaseWindow {
+class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQueue*> {
+
+	MessageReader<PacketPriorityQueue*>*& groupReader = Messageable<PacketPriorityQueue*>::msgReader;
+
+private:
+	
+	//wxMemoryInputStream _stream;
+	//wxImage _image;
+	std::thread clientThr;
+
 public:
 	ClientStreamWindow(const std::string& ip, int localPort, int remotePort);
 	~ClientStreamWindow();
 
+	// Delete copy and move constructors and assignment operators
+	ClientStreamWindow(const ClientStreamWindow&) = delete;
+	ClientStreamWindow(ClientStreamWindow&&) = delete;
+	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
+	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
+
+	void OnPaint(wxPaintEvent& paintEvent);
+	void RetrieveImage();
+
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
+
+	wxDECLARE_EVENT_TABLE();
 };
 
 
@@ -116,18 +153,23 @@ public:
 class ServerInitWindow : public BaseWindow {
 
 private:
-	TextBox* _portTb;
+	wxTextCtrl* _portTb;
 	Button* _listenButton;
 
 	//Constructor and destructor
-	public:
-		ServerInitWindow();
-		~ServerInitWindow();
-		
-		void ListenButtonClick(wxCommandEvent& evt);
-		void HandleInput(wxKeyEvent& keyEvent) override;
-		
-		wxDECLARE_EVENT_TABLE();
+public:
+	ServerInitWindow();
+	~ServerInitWindow();
 
-		constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; };
+	// Delete copy and move constructors and assignment operators
+	ServerInitWindow(const ServerInitWindow&) = delete;
+	ServerInitWindow(ServerInitWindow&&) = delete;
+	ServerInitWindow& operator=(const ServerInitWindow&) = delete;
+	ServerInitWindow& operator=(ServerInitWindow&&) = delete;
+	
+	void ListenButtonClick(wxCommandEvent& evt);
+	
+	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
+
+	wxDECLARE_EVENT_TABLE();
 };
