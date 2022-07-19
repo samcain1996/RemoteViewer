@@ -42,8 +42,8 @@ protected:
 
 class StartUpWindow : public BaseWindow {
 private:
-	Button* clientButton;
-	Button* serverButton;
+	Button* _clientButton;
+	Button* _serverButton;
 	
 public:
 	StartUpWindow();
@@ -82,13 +82,22 @@ private:
 
 		wxDECLARE_EVENT_TABLE();
 };
-//
-//class ServerInitWindow : public BaseWindow {
-//
-//	//Constructor and destructor
-//	public:
-//		ServerInitWindow();
-//		~ServerInitWindow();
-//
-//		constexpr const WindowNames WindowName() override;
-//};
+
+class ServerInitWindow : public BaseWindow {
+
+private:
+	TextBox* _ipInput;
+	Button* _listenButton;
+
+	//Constructor and destructor
+	public:
+		ServerInitWindow();
+		~ServerInitWindow();
+		
+		void ListenButtonClick(wxCommandEvent& evt);
+		void HandleInput(wxKeyEvent& keyEvent) override;
+		
+		wxDECLARE_EVENT_TABLE();
+
+		constexpr const WindowNames WindowName() override;
+};
