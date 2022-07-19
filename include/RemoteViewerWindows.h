@@ -123,9 +123,11 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 
 private:
 	
-	wxMemoryInputStream _stream;
-	//wxImage _image;
+	wxImage _image;
 	std::thread clientThr;
+	std::thread imageAssembleThr;
+
+	bool _connected = false;
 
 public:
 	ClientStreamWindow(const std::string& ip, int localPort, int remotePort);
@@ -138,7 +140,7 @@ public:
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
 	void OnPaint(wxPaintEvent& paintEvent);
-	void Stream();
+	void AssembleImage();
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 

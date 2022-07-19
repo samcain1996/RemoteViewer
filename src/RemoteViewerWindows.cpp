@@ -134,12 +134,12 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
 	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
 	const int localPort = std::stoi(_localPortInput->GetValue().ToStdString());
-	
-	ClientStreamWindow* streamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort);
-	streamWindow->Show();
 
 	_killProgramOnClose = false;
 	Close(true);
+
+	ClientStreamWindow* streamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort);
+	streamWindow->Show();
 }
 
 wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
@@ -151,25 +151,27 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int
 	Client client(localPort, ip);
 	client.Connect(std::to_string(remotePort));
 	
-
+	_connected = true;
 	ConnectMessageables(*this, client);
 	clientThr = std::thread(&Client::Receive, &client);
 	clientThr.detach();  // <- Fix this
 
-	Stream();
+	imageAssembleThr = std::thread(&ClientStreamWindow::AssembleImage, this);
 	
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
-	//clientThr.join();
+	_connected = false;
+	imageAssembleThr.join();
 }
 
-void ClientStreamWindow::Stream() {
+void ClientStreamWindow::AssembleImage() {
 	
-	while (true) {
+	while (_connected) {
 		if (!groupReader->Empty()) {
 			PacketPriorityQueue* queue = groupReader->ReadMessage();
 			
+			int size = MAX_PACKET_PAYLOAD_SIZE * queue->size();
 			ByteArray imgData = new Byte[MAX_PACKET_PAYLOAD_SIZE * queue->size()];
 			
 			for (int packetNo = 0; !queue->empty(); ++packetNo) {
@@ -180,6 +182,13 @@ void ClientStreamWindow::Stream() {
 					packet.Payload().size());
 			}
 
+			wxMemoryInputStream stream(imgData, size);
+			_image = wxImage(stream);
+
+			Refresh();
+			
+			delete[] imgData;
+
 			delete queue;
 
 		}
@@ -188,7 +197,10 @@ void ClientStreamWindow::Stream() {
 }
 
 void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
-	
+	wxPaintDC dc(this);
+
+	wxBitmap bitmap(_image);
+	dc.DrawBitmap(bitmap, 0, 0);
 }
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
