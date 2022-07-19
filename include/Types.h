@@ -60,7 +60,7 @@ class MessageWriter;
 
 template <typename Message>
 class Messageable {
-    friend static void ConnectMessageables(Messageable<Message>& m1, Messageable<Message>& m2) {
+    friend void ConnectMessageables(Messageable<Message>& m1, Messageable<Message>& m2) {
         m1.msgWriter = new MessageWriter<Message>;
         m2.msgReader = new MessageReader<Message>(m1.msgWriter);
 

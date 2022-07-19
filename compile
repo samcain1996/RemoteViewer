@@ -9,4 +9,4 @@ wx_flags=`./wx-config --cxxflags --libs`
 include_dir=${project_directory}/include
 src_dir=${project_directory}/src
 
-clang++ -g -Wall ${wx_flags} -std=c++20 -I/${include_dir} ${src_dir}/*.cpp -o RemoteViewer
+clang++ -g -Wall ${wx_flags} -std=c++20 -I/${include_dir} -I/${include_dir}/Networking ${src_dir}/*.cpp ${src_dir}/Networking/*.cpp -o RemoteViewer

@@ -169,15 +169,14 @@ void ClientStreamWindow::RetrieveImage() {
 	while (true) {
 		if (!groupReader->Empty()) {
 			groupReader->ReadMessage();
-			Refresh();
+			break;
 		}
 	}
-
+	Close(true);
 }
 
 void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
-	int x = 0;
-	x += 1;
+
 }
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)

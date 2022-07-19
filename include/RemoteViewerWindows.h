@@ -1,10 +1,10 @@
 #pragma once
 #include "Types.h"
 #include <stack>
+#include "wx/wx.h"
 #include "wx/mstream.h"
 #include "Client.h"
 #include "Server.h"
-#include "WindowElements.h"
 
 enum class WindowNames {
 	StartUp,
