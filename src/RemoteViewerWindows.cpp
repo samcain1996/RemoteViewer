@@ -143,38 +143,41 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 }
 
 wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
-	//EVT_PAINT(ClientStreamWindow::OnPaint)
+	EVT_PAINT(ClientStreamWindow::OnPaint)
 wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort) : BaseWindow("Remote Viewer - Master") {
 
 	Client client(localPort, ip);
 	client.Connect(std::to_string(remotePort));
+	
 
 	ConnectMessageables(*this, client);
-	//clientThr = std::thread(&Client::Receive, &client);
-	client.Receive();
+	clientThr = std::thread(&Client::Receive, &client);
+	clientThr.detach();  // <- Fix this
+
+	RetrieveImage();
+	
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
-	clientThr.join();
+	//clientThr.join();
 }
 
 void ClientStreamWindow::RetrieveImage() {
 	
-	while (groupReader->Empty()) {
-
+	while (true) {
+		if (!groupReader->Empty()) {
+			groupReader->ReadMessage();
+			Refresh();
+		}
 	}
-
-	Close(true);
 
 }
 
 void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
-	wxPaintDC dc(this);
-
-	//wxBitmap bitmap(_image);
-	//dc.DrawBitmap(bitmap, wxPoint(0, 0));
+	int x = 0;
+	x += 1;
 }
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
@@ -195,6 +198,7 @@ void ServerInitWindow::ListenButtonClick(wxCommandEvent& evt) {
 
 	Server server(listenPort);
 	server.Listen();
+	server.Serve();
 
 	_killProgramOnClose = false;
 	Close(true);

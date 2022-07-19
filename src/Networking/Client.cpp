@@ -122,7 +122,5 @@ void Client::Receive() {
 }
 
 Client::~Client() {
-   // delete writer;
-    //delete eventReader;
 }
 
