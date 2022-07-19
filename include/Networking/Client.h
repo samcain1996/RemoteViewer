@@ -31,7 +31,7 @@ public:
 	Client(const Client&)	= delete;
 	Client(Client&&)		= delete;
 
-	Client(const Ushort, const string&);
+	Client(const Ushort port, const string& hostname);
 
 	~Client();
 

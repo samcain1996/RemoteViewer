@@ -1,18 +1,5 @@
 #include "RemoteViewerWindows.h"
 
-wxBEGIN_EVENT_TABLE(StartUpWindow, BaseWindow)
-	EVT_BUTTON(10001, ClientButtonClick)
-	EVT_BUTTON(10002, ServerButtonClick)
-wxEND_EVENT_TABLE()
-
-wxBEGIN_EVENT_TABLE(ClientInitWindow, BaseWindow)
-	EVT_BUTTON(20001, ConnectButtonClick)
-wxEND_EVENT_TABLE()
-
-wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
-	EVT_BUTTON(30001, ListenButtonClick)
-wxEND_EVENT_TABLE()
-
 WindowStack BaseWindow::_prevWindows;
 
 BaseWindow::BaseWindow(const std::string& name) : wxFrame(nullptr, wxID_ANY, name, wxPoint(50, 50), wxSize(1270, 720)),
@@ -64,6 +51,13 @@ void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 	}
 }
 
+
+
+wxBEGIN_EVENT_TABLE(StartUpWindow, BaseWindow)
+	EVT_BUTTON(10001, StartUpWindow::ClientButtonClick)
+	EVT_BUTTON(10002, StartUpWindow::ServerButtonClick)
+wxEND_EVENT_TABLE()
+
 StartUpWindow::StartUpWindow() : BaseWindow("Remote Viewer") {
 	
 	_windowElements.clear();
@@ -99,20 +93,24 @@ void StartUpWindow::ServerButtonClick(wxCommandEvent& evt) {
 	Close(true);
 }
 
-constexpr const WindowNames StartUpWindow::WindowName() {
-	return WindowNames::StartUp;
-}
 
+
+wxBEGIN_EVENT_TABLE(ClientInitWindow, BaseWindow)
+	EVT_BUTTON(20004, ClientInitWindow::ConnectButtonClick)
+	EVT_KEY_UP(ClientInitWindow::HandleInput)
+wxEND_EVENT_TABLE()
 
 
 ClientInitWindow::ClientInitWindow() : BaseWindow("Client Initialization") {
 
 	_ipInput = new wxTextCtrl(this, IP_TB_IP, "", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
-	_portInput = new wxTextCtrl(this, PORT_TB_ID, "", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_remotePortInput = new wxTextCtrl(this, PORT_TB_ID, "", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_localPortInput = new wxTextCtrl(this, PORT_TB_ID+1, "", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
 	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
 
-	_windowElements.emplace_back(_portInput);
+	_windowElements.emplace_back(_remotePortInput);
+	_windowElements.emplace_back(_localPortInput);
 	_windowElements.emplace_back(_ipInput);
 	_windowElements.emplace_back(_connectButton);
 }
@@ -126,9 +124,12 @@ void ClientInitWindow::HandleInput(wxKeyEvent& keyEvent) {
 	if (_ipInput->HasFocus()) {
 		_ipInput->AppendText((char)keycode);
 	}
-	//else if (_portInput->HasFocus()) {
-	//	_portInput->AppendText((char)keycode);
-	//}
+	else if (_remotePortInput->HasFocus()) {
+		_remotePortInput->AppendText((char)keycode);
+	}
+	else if (_localPortInput->HasFocus()) {
+		_localPortInput->AppendText((char)keycode);
+	}
 	else {
 		BaseWindow::HandleInput(keyEvent);
 	}
@@ -136,17 +137,34 @@ void ClientInitWindow::HandleInput(wxKeyEvent& keyEvent) {
 
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
-	const std::string port = _portInput->GetValue().ToStdString();
+	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
+	const int localPort = std::stoi(_localPortInput->GetValue().ToStdString());
+	
+	ClientStreamWindow* streamWindow = new ClientStreamWindow(ipAddress, remotePort, localPort);
+	streamWindow->Show();
 
-	// TODO: Connect
+	_killProgramOnClose = false;
+	Close(true);
 }
 
-constexpr const WindowNames ClientInitWindow::WindowName() {
-	return WindowNames::ClientInit;
+
+ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort) : BaseWindow("Remote Viewer - Master") {
+
+	Client client(localPort, ip);
+	client.Connect(std::to_string(remotePort));
+
 }
+
+ClientStreamWindow::~ClientStreamWindow() {}
+
+
+
+wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
+	EVT_BUTTON(30001, ServerInitWindow::ListenButtonClick)
+wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow() : BaseWindow("Server Initialization") {
-	_ipInput = new TextBox(this, 30002, "", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_portTb = new TextBox(this, 30002, "", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
 	_listenButton = new Button(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
 }
@@ -155,15 +173,18 @@ ServerInitWindow::~ServerInitWindow() {
 }
 
 void ServerInitWindow::ListenButtonClick(wxCommandEvent& evt) {
-	const std::string ipAddress = _ipInput->GetValue().ToStdString();
+	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
+
+	Server server(listenPort);
+	server.Listen();
+
+	_killProgramOnClose = false;
+	Close(true);
 }
 
 void ServerInitWindow::HandleInput(wxKeyEvent& keyEvent) {
 	
-	if (_ipInput->HasFocus()) { _ipInput->AppendText((char)keyEvent.GetKeyCode()); }
+	if (_portTb->HasFocus()) { _portTb->AppendText((char)keyEvent.GetKeyCode()); }
 	else { BaseWindow::HandleInput(keyEvent); }
 }
 
-constexpr const WindowNames ServerInitWindow::WindowName() {
-	return WindowNames::ServerInit;
-}
