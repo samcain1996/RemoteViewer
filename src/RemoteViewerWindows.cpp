@@ -143,6 +143,7 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 }
 
 wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
+	EVT_PAINT(ClientStreamWindow::OnPaint)
 	EVT_IDLE(ClientStreamWindow::OnIdle)
 wxEND_EVENT_TABLE()
 

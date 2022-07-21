@@ -120,7 +120,7 @@ public:
 
 class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQueue*> {
 
-	MessageReader<PacketPriorityQueue*>*& groupReader = Messageable<PacketPriorityQueue*>::msgReader;
+	MessageReader<PacketPriorityQueue*>*& groupReader = msgReader;
 
 private:
 	
