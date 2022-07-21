@@ -17,12 +17,14 @@ void Server::Listen() {
 
 void Server::Serve() {
 
-    _screen.CaptureScreen();
+    while (true) {
 
-    size_t captureSize = _screen.WholeDeal(_capture);
+        _screen.CaptureScreen();
 
-    Send(_capture, captureSize);
+        size_t captureSize = _screen.WholeDeal(_capture);
 
+        Send(_capture, captureSize);
+    }
 }
 
 void Server::Send(ByteArray bytes, size_t len) {

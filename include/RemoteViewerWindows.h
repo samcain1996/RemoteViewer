@@ -124,6 +124,7 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 private:
 	
 	wxImage _image;
+	Client* client;
 	std::thread clientThr;
 	std::thread imageAssembleThr;
 

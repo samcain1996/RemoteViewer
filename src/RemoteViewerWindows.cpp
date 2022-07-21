@@ -148,21 +148,23 @@ wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort) : BaseWindow("Remote Viewer - Master") {
 
-	Client client(localPort, ip);
-	client.Connect(std::to_string(remotePort));
+	client = new Client(localPort, ip);
+	_connected = client->Connect(std::to_string(remotePort));
 	
-	_connected = true;
-	ConnectMessageables(*this, client);
-	clientThr = std::thread(&Client::Receive, &client);
-	clientThr.detach();  // <- Fix this
-
-	imageAssembleThr = std::thread(&ClientStreamWindow::AssembleImage, this);
+	if (_connected) {
+		ConnectMessageables(*this, *client);
+		clientThr = std::thread(&Client::Receive, client);
+		imageAssembleThr = std::thread(&ClientStreamWindow::AssembleImage, this);
+	}
+	
 	
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
-	_connected = false;
-	imageAssembleThr.join();
+	if (_connected) {
+		clientThr.join();
+		imageAssembleThr.join();
+	}
 }
 
 void ClientStreamWindow::AssembleImage() {
@@ -185,7 +187,7 @@ void ClientStreamWindow::AssembleImage() {
 			wxMemoryInputStream stream(imgData, size);
 			_image = wxImage(stream);
 
-			Refresh();
+			Refresh(true);
 			
 			delete[] imgData;
 

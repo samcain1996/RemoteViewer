@@ -67,7 +67,7 @@ class Messageable {
         m2.msgWriter = new MessageWriter<Message>;
         m1.msgReader = new MessageReader<Message>(m2.msgWriter);
     }
-protected:
+public:
     MessageWriter<Message>* msgWriter = nullptr;
     MessageReader<Message>* msgReader = nullptr;
 

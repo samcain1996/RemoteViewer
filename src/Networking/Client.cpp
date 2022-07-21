@@ -100,18 +100,6 @@ void Client::Receive() {
         // Receive packet
         _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
 
-        /*if (!eventReader->Empty()) {
-            SDL_Event ev = eventReader->ReadMessage();
-            if (ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_QUIT) {
-                packetData[0] = '0';
-                packetData[1] = '0';
-                packetData[2] = '0';
-                packetData[3] = '0';
-            }
-            _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
-            break;
-        }*/
-
         _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
 
         // Copy buffer to dummy packet
