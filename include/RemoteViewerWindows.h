@@ -23,6 +23,7 @@ using Button = wxButton;
 class BaseWindow : public wxFrame
 {
 public:
+	virtual constexpr const WindowNames WindowName() = 0;
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
 
@@ -50,7 +51,7 @@ protected:
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
 
-	virtual constexpr const WindowNames WindowName() = 0;
+
 
 };
 
@@ -126,9 +127,9 @@ private:
 	wxImage _image;
 	Client* client;
 	std::thread clientThr;
-	std::thread imageAssembleThr;
 
 	bool _connected = false;
+	bool _skip = true;
 
 public:
 	ClientStreamWindow(const std::string& ip, int localPort, int remotePort);
@@ -141,7 +142,9 @@ public:
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
 	void OnPaint(wxPaintEvent& paintEvent);
-	void AssembleImage();
+	bool AssembleImage();
+	void PaintNow();
+	void OnIdle(wxIdleEvent& evt);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 

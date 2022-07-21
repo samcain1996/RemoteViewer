@@ -2,6 +2,7 @@
 
 wxIMPLEMENT_APP(Application);
 
+
 Application::Application() {
 
 	
@@ -16,3 +17,4 @@ bool Application::OnInit() {
 	_window->Show();
 	return true;
 }
+

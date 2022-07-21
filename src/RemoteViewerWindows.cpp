@@ -143,6 +143,7 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 }
 
 wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
+	EVT_IDLE(ClientStreamWindow::OnIdle)
 	EVT_PAINT(ClientStreamWindow::OnPaint)
 wxEND_EVENT_TABLE()
 
@@ -154,22 +155,18 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int
 	if (_connected) {
 		ConnectMessageables(*this, *client);
 		clientThr = std::thread(&Client::Receive, client);
-		imageAssembleThr = std::thread(&ClientStreamWindow::AssembleImage, this);
 	}
-	
-	
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
 	if (_connected) {
 		clientThr.join();
-		imageAssembleThr.join();
 	}
 }
 
-void ClientStreamWindow::AssembleImage() {
+bool ClientStreamWindow::AssembleImage() {
 	
-	while (_connected) {
+
 		if (!groupReader->Empty()) {
 			PacketPriorityQueue* queue = groupReader->ReadMessage();
 			
@@ -187,22 +184,35 @@ void ClientStreamWindow::AssembleImage() {
 			wxMemoryInputStream stream(imgData, size);
 			_image = wxImage(stream);
 
-			Refresh(true);
+			_skip = false;
 			
 			delete[] imgData;
 
 			delete queue;
-
+			return true;
 		}
-	}
-	Close(true);
+		return false;
 }
 
 void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
-	wxPaintDC dc(this);
+	//wxPaintDC dc(this);
+
+	if (!_skip)
+	PaintNow();
+}
+
+void ClientStreamWindow::PaintNow() {
+	wxClientDC dc(this);
 
 	wxBitmap bitmap(_image);
 	dc.DrawBitmap(bitmap, 0, 0);
+}
+
+void ClientStreamWindow::OnIdle(wxIdleEvent& evt) {
+	if (AssembleImage()) {
+		PaintNow();
+	}
+	evt.RequestMore();
 }
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
