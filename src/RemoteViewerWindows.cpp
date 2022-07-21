@@ -199,6 +199,12 @@ void ClientStreamWindow::PaintNow() {
 	dc.DrawBitmap(bitmap, 0, 0);
 }
 
+void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
+	if (!_skip) {
+		PaintNow();
+	}
+}
+
 void ClientStreamWindow::OnIdle(wxIdleEvent& evt) {
 	if (AssembleImage()) {
 		PaintNow();

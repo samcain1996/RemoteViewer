@@ -19,6 +19,7 @@ void Server::Serve() {
 
     while (true) {
 
+
         _screen.CaptureScreen();
 
         size_t captureSize = _screen.WholeDeal(_capture);

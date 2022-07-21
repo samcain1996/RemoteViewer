@@ -143,6 +143,7 @@ public:
 
 	bool AssembleImage();
 	void PaintNow();
+	void OnPaint(wxPaintEvent& evt);
 	void OnIdle(wxIdleEvent& evt);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
