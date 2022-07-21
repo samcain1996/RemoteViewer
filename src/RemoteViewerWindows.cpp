@@ -144,7 +144,6 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 
 wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
 	EVT_IDLE(ClientStreamWindow::OnIdle)
-	EVT_PAINT(ClientStreamWindow::OnPaint)
 wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort) : BaseWindow("Remote Viewer - Master") {
@@ -165,40 +164,32 @@ ClientStreamWindow::~ClientStreamWindow() {
 }
 
 bool ClientStreamWindow::AssembleImage() {
-	
 
-		if (!groupReader->Empty()) {
-			PacketPriorityQueue* queue = groupReader->ReadMessage();
+	if (!groupReader->Empty()) {
+		PacketPriorityQueue* queue = groupReader->ReadMessage();
+		
+		int size = MAX_PACKET_PAYLOAD_SIZE * queue->size();
+		ByteArray imgData = new Byte[MAX_PACKET_PAYLOAD_SIZE * queue->size()];
+		
+		for (int packetNo = 0; !queue->empty(); ++packetNo) {
+			Packet packet = queue->top();
+			queue->pop();
 			
-			int size = MAX_PACKET_PAYLOAD_SIZE * queue->size();
-			ByteArray imgData = new Byte[MAX_PACKET_PAYLOAD_SIZE * queue->size()];
-			
-			for (int packetNo = 0; !queue->empty(); ++packetNo) {
-				Packet packet = queue->top();
-				queue->pop();
-				
-				std::memcpy(&imgData[packetNo * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), 
-					packet.Payload().size());
-			}
-
-			wxMemoryInputStream stream(imgData, size);
-			_image = wxImage(stream);
-
-			_skip = false;
-			
-			delete[] imgData;
-
-			delete queue;
-			return true;
+			std::memcpy(&imgData[packetNo * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), 
+				packet.Payload().size());
 		}
-		return false;
-}
 
-void ClientStreamWindow::OnPaint(wxPaintEvent& paintEvent) {
-	//wxPaintDC dc(this);
+		wxMemoryInputStream stream(imgData, size);
+		_image = wxImage(stream);
 
-	if (!_skip)
-	PaintNow();
+		_skip = false;
+		
+		delete[] imgData;
+
+		delete queue;
+		return true;
+	}
+	return false;
 }
 
 void ClientStreamWindow::PaintNow() {

@@ -141,7 +141,6 @@ public:
 	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
-	void OnPaint(wxPaintEvent& paintEvent);
 	bool AssembleImage();
 	void PaintNow();
 	void OnIdle(wxIdleEvent& evt);
