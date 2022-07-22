@@ -7,9 +7,9 @@ public:
 	~Application();
 
 private:
-	BaseWindow* _window = new StartUpWindow();
+	BaseWindow* _window = nullptr;
 
 public:
-	virtual bool OnInit();
+	virtual bool OnInit() wxOVERRIDE;
 
 };

@@ -18,6 +18,7 @@
 #include <functional>
 #include <optional>
 #include <thread>
+#include <cstring>
 
 using Uint32 = std::uint32_t;
 using string = std::string;

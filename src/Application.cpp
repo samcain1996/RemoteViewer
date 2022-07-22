@@ -2,7 +2,6 @@
 
 wxIMPLEMENT_APP(Application);
 
-
 Application::Application() {
 
 	

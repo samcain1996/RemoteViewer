@@ -1,6 +1,5 @@
 #pragma once
 #include "Types.h"
-#include <concepts>
 
 /*---------------------------------------*/
 /*		Allows for threads to send		 */
