@@ -22,7 +22,7 @@ protected:
 	MessageHandler() : _ownsQueue(true), _mutex(new std::mutex), _queuePtr(new std::queue<Message>) {};
 
 	// If constructed from another MessageHandler, share its queue
-	MessageHandler(MessageHandler<Message>* const msgHandler) : _queuePtr(msgHandler->_queuePtr), _mutex(msgHandler->_mutex), _ownsQueue(false) {};
+	MessageHandler(MessageHandler<Message>* const msgHandler) : _ownsQueue(false), _mutex(msgHandler->_mutex), _queuePtr(msgHandler->_queuePtr) {};
 
 	MessageHandler(const MessageHandler&) = delete;
 	MessageHandler(MessageHandler&&) = delete;

@@ -111,23 +111,3 @@ constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber, const Endianes
 constexpr const Uint32 CalculateTheoreticalBMPSize(const Uint32 width, const Uint32 height) {
     return ((width * 32 + 31) / 32) * 4 * height;
 }
-
-
-static const Validator<const char> NUMERIC_VALIDATOR = [](const char c) {
-	return (c >= '0' && c <= '9');
-};
-
-static const Validator<const char> ALPHABETIC_VALIDAOTR = [](const char c) {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-};
-
-static const Validator<const char> ALPHANUMERIC_VALIDATOR = [](const char c) {
-	return NUMERIC_VALIDATOR(c) || ALPHABETIC_VALIDAOTR(c);
-};
-
-static const Validator<const char> IP_VALIDATOR = [](const char c) {
-	return (c >= '0' && c <= '9') || (c == '.');
-};
-
-template <typename T>
-using ValidatorList = std::vector<Validator<T>>;
