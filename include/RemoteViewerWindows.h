@@ -7,17 +7,17 @@
 #include "Server.h"
 #include "wx/popupwin.h"
 
+
 enum class WindowNames {
 	StartUp,
 	ClientInit,
 	ServerInit,
-	ClientStream
+	ClientStream,
+	UNDEFINED
 };
 
 using WindowStack = std::stack<WindowNames>;
 using ElementList = std::vector<wxControl*>;
-
-using Button = wxButton;
 
 //--------------Abstract Base Window Class-----------------------------//
 
@@ -25,6 +25,7 @@ class BaseWindow : public wxFrame
 {
 public:
 	virtual constexpr const WindowNames WindowName() = 0;
+
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
 
@@ -35,9 +36,11 @@ protected:
 
 	// Previous Windows
 	static WindowStack _prevWindows;
+	static inline const wxPoint DEFAULT_POS = wxPoint(100, 100);
+	static inline const wxSize DEFAULT_SIZE = wxSize(1280, 720);
 
-	BaseWindow(const std::string& name);
-	BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size);
+	BaseWindow(const std::string& name, const wxPoint& pos = DEFAULT_POS,
+		const wxSize& size = DEFAULT_SIZE);
 	virtual ~BaseWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -48,13 +51,10 @@ protected:
 	
 	// All Window controls on the current window
 	ElementList _windowElements;
-	const int _windowId;
+	const int _windowId = -1;
 
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
-	
-//private:
-//	wxDECLARE_ABSTRACT_CLASS(BaseWindow);
 
 };
 
@@ -63,11 +63,12 @@ protected:
 
 class StartUpWindow : public BaseWindow {
 private:
-	Button* _clientButton;
-	Button* _serverButton;
+	wxButton* _clientButton;
+	wxButton* _serverButton;
 	
+	const int _windowId = 1;
 public:
-	StartUpWindow();
+	StartUpWindow(const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~StartUpWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -97,10 +98,12 @@ private:
 	wxTextCtrl* _remotePortInput;
 	wxTextCtrl* _localPortInput;
 	wxTextCtrl* _ipInput;
-	Button* _connectButton;
+	wxButton* _connectButton;
+
+	const int _windowId = 2;
 
 public:
-	ClientInitWindow(const wxPoint& pos, const wxSize& size);
+	ClientInitWindow(const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientInitWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -123,19 +126,22 @@ public:
 
 class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQueue*> {
 
-	MessageReader<PacketPriorityQueue*>*& groupReader = msgReader;
+	MessageReader<PacketPriorityQueue*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
 
 private:
 	
-	wxImage _image;
+	ByteArray _imgData = nullptr;
+	int  _imgSize = 0;
 	Client* client;
 	std::thread clientThr;
 
 	bool _connected = false;
-	bool _skip = true;
+
+	const int _windowId = 3;
 
 public:
-	ClientStreamWindow(const std::string& ip, int localPort, int remotePort);
+	ClientStreamWindow(const std::string& ip, int localPort, int remotePort, 
+		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -161,8 +167,10 @@ class ServerInitWindow : public BaseWindow {
 
 private:
 	wxTextCtrl* _portTb;
-	Button* _listenButton;
+	wxButton* _listenButton;
 	std::thread broadcastThr;
+
+	const int _windowId = 4;
 
 	//Constructor and destructor
 public:
