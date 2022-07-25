@@ -170,7 +170,6 @@ class ServerInitWindow : public BaseWindow {
 private:
 	wxTextCtrl* _portTb;
 	wxButton* _listenButton;
-	std::thread broadcastThr;
 
 	const int _windowId = 4;
 

@@ -259,6 +259,7 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : Bas
 }
 
 ServerInitWindow::~ServerInitWindow() {
+	broadcastThr.join();
 }
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
@@ -269,9 +270,8 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	Server server(listenPort);
 	server.Handshake(tmpDummy);
 	
-	broadcastThr = std::thread(&Server::Serve, &server);
-	broadcastThr.detach();
-
+	server.Serve();
+	
 	_killProgramOnClose = false;
 	Close(true);
 }
