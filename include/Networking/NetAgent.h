@@ -40,9 +40,13 @@ protected:
 	udp::socket _socket;
 	boost::system::error_code _errcode;
 
+	PacketBuffer _tmpBuffer; // Temporary buffer for receiving/sending packets
+
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
 
+	virtual void Handshake(bool& connected) = 0;
+	
 	virtual void Receive() = 0;
 	virtual void Send(ByteArray const bytes, const size_t len) = 0;
 	virtual void ProcessPacket(const Packet&) = 0;

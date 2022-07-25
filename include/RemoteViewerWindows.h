@@ -5,6 +5,7 @@
 #include "wx/mstream.h"
 #include "Client.h"
 #include "Server.h"
+#include "wx/popupwin.h"
 
 enum class WindowNames {
 	StartUp,
@@ -36,6 +37,7 @@ protected:
 	static WindowStack _prevWindows;
 
 	BaseWindow(const std::string& name);
+	BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size);
 	virtual ~BaseWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -50,8 +52,9 @@ protected:
 
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
-
-
+	
+//private:
+//	wxDECLARE_ABSTRACT_CLASS(BaseWindow);
 
 };
 
@@ -97,7 +100,7 @@ private:
 	Button* _connectButton;
 
 public:
-	ClientInitWindow();
+	ClientInitWindow(const wxPoint& pos, const wxSize& size);
 	~ClientInitWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -159,10 +162,11 @@ class ServerInitWindow : public BaseWindow {
 private:
 	wxTextCtrl* _portTb;
 	Button* _listenButton;
+	std::thread broadcastThr;
 
 	//Constructor and destructor
 public:
-	ServerInitWindow();
+	ServerInitWindow(const wxPoint& pos, const wxSize& size);
 	~ServerInitWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -176,4 +180,15 @@ public:
 	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
 
 	wxDECLARE_EVENT_TABLE();
+};
+
+
+class PopUp : public wxPopupTransientWindow {
+public:
+	PopUp(BaseWindow* parent, const std::string& message) : wxPopupTransientWindow(parent) {
+	
+		wxStaticText* text = new wxStaticText(this, wxID_ANY, message);
+	
+	}
+	~PopUp() {};
 };

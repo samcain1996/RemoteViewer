@@ -33,8 +33,7 @@ public:
 	Server& operator=(const Server&) = delete;
 	Server& operator=(Server&&) = delete;
 
-	// Listen for connections
-	void Listen();
+	void Handshake(bool& connected) override;
 	// Serve content to client
 	void Serve();
 

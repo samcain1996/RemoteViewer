@@ -2,10 +2,13 @@
 
 WindowStack BaseWindow::_prevWindows;
 
-BaseWindow::BaseWindow(const std::string& name) : wxFrame(nullptr, wxID_ANY, name, wxPoint(50, 50), wxSize(1270, 720)),
-_windowId(-1) {
+BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size) : 
+	wxFrame(nullptr, wxID_ANY, name, pos, size), _windowId(-1) {
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
 }
+
+
+BaseWindow::BaseWindow(const std::string& name) : BaseWindow(name, wxPoint(50, 50), wxSize(1270, 720)) {}
 
 BaseWindow::~BaseWindow() {
 
@@ -46,10 +49,10 @@ void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 				previousWindow = new StartUpWindow();
 				break;
 			case WindowNames::ClientInit:
-				previousWindow = new ClientInitWindow();
+				previousWindow = new ClientInitWindow(GetPosition(), GetSize());
 				break;
 			case WindowNames::ServerInit:
-				previousWindow = new ServerInitWindow();
+				previousWindow = new ServerInitWindow(GetPosition(), GetSize());
 				break;
 			default:
 				previousWindow = new StartUpWindow();
@@ -89,7 +92,7 @@ void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
 
 	_prevWindows.emplace(WindowName());
 
-	ClientInitWindow* clientWindow = new ClientInitWindow();
+	ClientInitWindow* clientWindow = new ClientInitWindow(GetPosition(), GetSize());
 	clientWindow->Show();
 
 	_killProgramOnClose = false;
@@ -99,7 +102,7 @@ void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
 void StartUpWindow::ServerButtonClick(wxCommandEvent& evt) {
 	_prevWindows.emplace(WindowName());
 
-	ServerInitWindow* serverWindow = new ServerInitWindow();
+	ServerInitWindow* serverWindow = new ServerInitWindow(GetPosition(), GetSize());
 	serverWindow->Show();
 
 	_killProgramOnClose = false;
@@ -114,7 +117,7 @@ wxBEGIN_EVENT_TABLE(ClientInitWindow, BaseWindow)
 wxEND_EVENT_TABLE()
 
 
-ClientInitWindow::ClientInitWindow() : BaseWindow("Client Initialization") {
+ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
 	_ipInput = new wxTextCtrl(this, IP_TB_ID, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 	_remotePortInput = new wxTextCtrl(this, PORT_TB_ID, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
@@ -150,22 +153,25 @@ wxEND_EVENT_TABLE()
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort) : BaseWindow("Remote Viewer - Master") {
 
 	client = new Client(localPort, ip);
-	_connected = client->Connect(std::to_string(remotePort));
-	
-	if (_connected) {
-		ConnectMessageables(*this, *client);
-		clientThr = std::thread(&Client::Receive, client);
+	client->Connect(std::to_string(remotePort));
+
+	while (!_connected) {
+		client->Handshake(_connected);
+		client->_io_context.run();
 	}
+	ConnectMessageables(*this, *client);
+	clientThr = std::thread(&Client::Receive, client);
+	clientThr.detach();
+
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
-	if (_connected) {
-		clientThr.join();
-	}
+	//if (_connected) {
+	//	clientThr.join();
+	//}
 }
 
 bool ClientStreamWindow::AssembleImage() {
-
 	if (!groupReader->Empty()) {
 		PacketPriorityQueue* queue = groupReader->ReadMessage();
 		
@@ -207,6 +213,7 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 }
 
 void ClientStreamWindow::OnIdle(wxIdleEvent& evt) {
+	
 	if (AssembleImage()) {
 		PaintNow();
 	}
@@ -217,7 +224,7 @@ wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 	EVT_BUTTON(30001, ServerInitWindow::ListenButtonClick)
 wxEND_EVENT_TABLE()
 
-ServerInitWindow::ServerInitWindow() : BaseWindow("Server Initialization") {
+ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Server Initialization", pos, size) {
 	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
 	_listenButton = new Button(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
@@ -228,10 +235,14 @@ ServerInitWindow::~ServerInitWindow() {
 
 void ServerInitWindow::ListenButtonClick(wxCommandEvent& evt) {
 	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
+	
+	bool tmpDummy = false;
 
 	Server server(listenPort);
-	server.Listen();
-	server.Serve();
+	server.Handshake(tmpDummy);
+	
+	broadcastThr = std::thread(&Server::Serve, &server);
+	broadcastThr.detach();
 
 	_killProgramOnClose = false;
 	Close(true);

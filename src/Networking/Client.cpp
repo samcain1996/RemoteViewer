@@ -39,36 +39,29 @@ void Client::AsyncSend(ByteArray const bytes, const size_t len)
 {
 }
 
-void Client::AsyncReceive()
-{
+void Client::AsyncReceive() {
 
-    PacketBuffer packetData;
+    /* Broken right now */
+     
+    
+    //_io_context.restart();
+    //while (_connected) {
 
-    //for (;;) {
+    //    _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()), [&](const boost::system::error_code& ec,
+    //        std::size_t bytes_transferred)
+    //        {
+    //            if (!ec && bytes_transferred > 0) {
+    //                // Copy buffer to dummy packet
+    //                ProcessPacket(Packet(_tmpBuffer));
+    //                _socket.send(boost::asio::buffer(_tmpBuffer, 4), 0, _errcode);
+    //            }
 
-        _socket.async_receive(boost::asio::buffer(packetData, packetData.max_size()), [&](const boost::system::error_code& ec,
-            std::size_t bytes_transferred) 
-{
-				
-                // Copy buffer to dummy packet
-                ProcessPacket(Packet(packetData));
+    //        });
 
-                /*if (!eventReader->Empty()) {
-                    SDL_Event ev = eventReader->ReadMessage();
-                    if (ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_QUIT) {
-                        packetData[0] = '0';
-                        packetData[1] = '0';
-                        packetData[2] = '0';
-                        packetData[3] = '0';
-                    }
-                    _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
-                    return;
-                }*/
+    //    _io_context.run_one();
+		
+    //}
 
-                
-            });
-        _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
-   // }
 }
 
 bool Client::Connect(const string& serverPort) {
@@ -77,17 +70,26 @@ bool Client::Connect(const string& serverPort) {
     udp::resolver resolver(_io_context);
     _remoteEndpoint = *resolver.resolve(udp::v4(), _hostname, serverPort).begin();
 
-    // Handshake
-    Byte handshakeBuf[HANDSHAKE_SIZE];
+
     _socket.connect(_remoteEndpoint);
 
+    return true;
+
+}
+
+void Client::Handshake(bool& connected)
+{
+
     _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), 0, _errcode);
-    _socket.receive(boost::asio::buffer(handshakeBuf, HANDSHAKE_SIZE), 0, _errcode);
 
-    _connected = std::memcmp(handshakeBuf, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
+	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), 0, [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
+	{
+        if (ec.value() == 0 && bytes_transferred > 0) {
+            connected = _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
+        }
+	});
 
 
-    return _connected;
 }
 
 void Client::Receive() {

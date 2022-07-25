@@ -2,13 +2,11 @@
 
 Server::Server(const Ushort listenPort) : NetAgent(listenPort), _screen(640, 480, 640, 480) {}
 
-void Server::Listen() {
-    Byte connectionBuffer[PACKET_HEADER_ELEMENT_SIZE];  // Buffer to hold handshake message
-    
+void Server::Handshake(bool& connected) {
     // Loop until the handshake message is received
     do {
-        _socket.receive_from(boost::asio::buffer(connectionBuffer, sizeof connectionBuffer), _remoteEndpoint, 0, _errcode);
-    } while(std::memcmp(connectionBuffer, HANDSHAKE_MESSAGE, HANDSHAKE_SIZE));
+        _socket.receive_from(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()), _remoteEndpoint, 0, _errcode);
+    } while(std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE));
 
     // Send handshake back
     _socket.send_to(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), _remoteEndpoint, 0, _errcode);
@@ -18,7 +16,6 @@ void Server::Listen() {
 void Server::Serve() {
 
     while (true) {
-
 
         _screen.CaptureScreen();
 
