@@ -19,7 +19,7 @@ private:
 	 * @param const Packet		Packet to process
 	 * 
 	 */
-	void ProcessPacket(const Packet&) override;
+	void ProcessPacket(const Packet& packet) override;
 
 	void Send(ByteArray const bytes, const size_t len) override;
 

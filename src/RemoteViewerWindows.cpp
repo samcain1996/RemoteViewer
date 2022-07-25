@@ -248,7 +248,7 @@ void ClientStreamWindow::OnIdle(wxIdleEvent& evt) {
 /*----------------Server Initialization Window---------------------*/
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
-	EVT_BUTTON(30001, ServerInitWindow::ListenButtonClick)
+	EVT_BUTTON(30001, ServerInitWindow::StartServer)
 	EVT_KEY_UP(BaseWindow::HandleInput)
 wxEND_EVENT_TABLE()
 
@@ -261,7 +261,7 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : Bas
 ServerInitWindow::~ServerInitWindow() {
 }
 
-void ServerInitWindow::ListenButtonClick(wxCommandEvent& evt) {
+void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
 	
 	bool tmpDummy = false;

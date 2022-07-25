@@ -133,6 +133,7 @@ private:
 	
 	ByteArray _imgData = nullptr;
 	int _imgSize = 0;
+	
 	Client* _client;
 	std::thread _clientThr;
 
@@ -184,7 +185,7 @@ public:
 	ServerInitWindow& operator=(const ServerInitWindow&) = delete;
 	ServerInitWindow& operator=(ServerInitWindow&&) = delete;
 	
-	void ListenButtonClick(wxCommandEvent& evt);
+	void StartServer(wxCommandEvent& evt);
 	
 	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
 
