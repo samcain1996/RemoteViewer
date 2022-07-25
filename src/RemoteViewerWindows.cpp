@@ -162,24 +162,24 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int
 	const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size) {
 
 	// Initialize the client
-	client = new Client(localPort, ip);
-	client->Connect(std::to_string(remotePort));
+	_client = new Client(localPort, ip);
+	_client->Connect(std::to_string(remotePort));
 
 	// Repeatedly try to connect to server
 	while (!_connected) {
-		client->Handshake(_connected);
-		client->_io_context.run();
+		_client->Handshake(_connected);
+		_client->_io_context.run();
 	}
 	
 	// Receive packets on separate thread, connect thread to this window
-	ConnectMessageables(*this, *client);
-	clientThr = std::thread(&Client::Receive, client);
+	ConnectMessageables(*this, *_client);
+	_clientThr = std::thread(&Client::Receive, _client);
 
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
 	if (_connected) {
-		clientThr.join();
+		_clientThr.join();
 	}
 }
 
@@ -199,13 +199,15 @@ bool ClientStreamWindow::AssembleImage() {
 			_imgSize = imgSize;
 		}
 
-		// Build image from packets
+		// Assemble image from packets
+		int offset = 0;
 		for (int packetNo = 0; !queue->empty(); ++packetNo) {
 			Packet packet = queue->top();
 			queue->pop();
 			
-			std::memcpy(&_imgData[packetNo * MAX_PACKET_PAYLOAD_SIZE], packet.Payload().data(), 
+			std::memcpy(&_imgData[offset], packet.Payload().data(), 
 				packet.Payload().size());
+			offset += packet.Payload().size();
 		}
 		
 		delete queue;
@@ -247,6 +249,7 @@ void ClientStreamWindow::OnIdle(wxIdleEvent& evt) {
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 	EVT_BUTTON(30001, ServerInitWindow::ListenButtonClick)
+	EVT_KEY_UP(BaseWindow::HandleInput)
 wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Server Initialization", pos, size) {

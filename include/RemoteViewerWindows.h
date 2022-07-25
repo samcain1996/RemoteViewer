@@ -24,7 +24,6 @@ using ElementList = std::vector<wxControl*>;
 class BaseWindow : public wxFrame
 {
 public:
-	virtual constexpr const WindowNames WindowName() = 0;
 
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
@@ -55,6 +54,8 @@ protected:
 
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
+
+	virtual constexpr const WindowNames WindowName() = 0;
 
 };
 
@@ -131,9 +132,9 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 private:
 	
 	ByteArray _imgData = nullptr;
-	int  _imgSize = 0;
-	Client* client;
-	std::thread clientThr;
+	int _imgSize = 0;
+	Client* _client;
+	std::thread _clientThr;
 
 	bool _connected = false;
 
