@@ -258,9 +258,7 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : Bas
 	_listenButton = new wxButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
 }
 
-ServerInitWindow::~ServerInitWindow() {
-	broadcastThr.join();
-}
+ServerInitWindow::~ServerInitWindow() {}
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
