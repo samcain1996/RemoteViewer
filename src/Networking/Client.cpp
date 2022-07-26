@@ -77,7 +77,6 @@ bool Client::Connect(const string& serverPort) {
     udp::resolver resolver(_io_context);
     _remoteEndpoint = *resolver.resolve(udp::v4(), _hostname, serverPort).begin();
 
-
     _socket.connect(_remoteEndpoint);
 
     return true;

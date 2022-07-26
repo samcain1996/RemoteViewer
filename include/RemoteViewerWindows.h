@@ -56,6 +56,7 @@ protected:
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
 
+	virtual void BackgroundTask(wxIdleEvent& evt) {}
 	virtual constexpr const WindowNames WindowName() = 0;
 
 };
@@ -99,6 +100,11 @@ private:
 	wxTextCtrl* _ipInput;
 	wxButton* _connectButton;
 
+	PopUp* _popUp = nullptr;
+
+	Client* _client = nullptr;
+	bool _connected = false;
+
 	const int _windowId = 2;
 
 public:
@@ -112,6 +118,7 @@ public:
 	ClientInitWindow& operator=(ClientInitWindow&&) = delete;
 
 	void ConnectButtonClick(wxCommandEvent& evt);
+	void BackgroundTask(wxIdleEvent& evt) override;
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientInit; }
 
@@ -135,14 +142,10 @@ private:
 	Client* _client;
 	std::thread _clientThr;
 
-	PopUp* _connectingNotification;
-
-	bool _connected = false;
-
 	const int _windowId = 3;
 
 public:
-	ClientStreamWindow(const std::string& ip, int localPort, int remotePort, 
+	ClientStreamWindow(Client* client, 
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 
@@ -154,7 +157,6 @@ public:
 
 	const bool AssembleImage();  // Assemble image from packet queue, return true if successful
 	
-	bool Show(bool show = true) override;
 	void OnPaint(wxPaintEvent& evt);
 	
 	void PaintNow();
@@ -208,7 +210,7 @@ public:
 	PopUp& operator=(PopUp&&) = delete;
 
 	void OnButton(wxCommandEvent& evt);
-	void BackgroundTask(wxIdleEvent& evt);
+	//void BackgroundTask(wxIdleEvent& evt);
 
 private:
 
@@ -216,7 +218,7 @@ private:
 	wxStaticText* _text;
 	wxButton* _dismissButton;
 
-	std::function<void(wxIdleEvent& evt)> _backgroundTask;
+	//std::function<void(wxIdleEvent& evt)> _backgroundTask;
 
 	wxDECLARE_ABSTRACT_CLASS(PopUp);
 	wxDECLARE_EVENT_TABLE();

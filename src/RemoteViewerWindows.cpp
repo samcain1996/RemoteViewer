@@ -145,11 +145,33 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
 	const int localPort = std::stoi(_localPortInput->GetValue().ToStdString());
 
-	_killProgramOnClose = false;
-	Close(true);
+	_client = new Client(localPort, ipAddress);
+	_client->Connect(std::to_string(remotePort));
 
-	ClientStreamWindow* streamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort);
-	streamWindow->Show();
+	std::string message("Connecting to " + ipAddress + ":" + std::to_string(remotePort));
+	_popUp = new PopUp(this, message);
+
+	_popUp->Show(true);
+	_popUp->Popup();
+
+}
+
+void ClientInitWindow::BackgroundTask(wxIdleEvent& evt) {
+	
+	if (!_connected) {
+			_client->Handshake(_connected);
+			_client->_io_context.run();
+	}
+	else if (_popUp != nullptr) { 
+			ClientStreamWindow* streamWindow = new ClientStreamWindow(_client);
+			streamWindow->Show();
+
+			delete _popUp;
+
+			_killProgramOnClose = false;
+			Close(true); 
+	}
+	
 }
 
 
@@ -160,29 +182,13 @@ wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
 	EVT_IDLE(ClientStreamWindow::OnIdle)
 wxEND_EVENT_TABLE()
 
-ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int remotePort,
+ClientStreamWindow::ClientStreamWindow(Client* client,
 	const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size) {
 
 	// Initialize the client
-	_client = new Client(localPort, ip);
-	_client->Connect(std::to_string(remotePort));
+	_client = client;
 
-	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
-	_connectingNotification = new PopUp(this, message, [this](wxIdleEvent& evt) {
-
-		if (!_connected) {
-			_client->Handshake(_connected);
-			_client->_io_context.run();
-		}
-		else {
-			// Receive packets on separate thread, connect thread to this window
-			ConnectMessageables(*this, *_client);
-			_clientThr = std::thread(&Client::AsyncReceive, _client);
-
-			Close(true);
-		}
-
-	});
+	_clientThr = std::thread(&Client::AsyncReceive, _client);
 
 }
 
@@ -239,27 +245,17 @@ void ClientStreamWindow::PaintNow() {
 
 void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 	// Do not paint until connected because no data is sent until then.
-	if (_connected) {
-		PaintNow();
-	}
+	PaintNow();
 }
 
 void ClientStreamWindow::OnIdle(wxIdleEvent& evt) {
 
 	// If there is a complete image, render it
-	if (_connected && AssembleImage()) {
+	if (AssembleImage()) {
 		PaintNow();
 	}
 	evt.RequestMore();
 	
-}
-
-bool ClientStreamWindow::Show(bool show) {
-	bool ret = BaseWindow::Show(show);
-
-	if (!_connected) { _connectingNotification->Show(show); }
-
-	return ret;
 }
 
 /*----------------Server Initialization Window---------------------*/
@@ -298,16 +294,16 @@ wxIMPLEMENT_CLASS(PopUp, wxPopupTransientWindow);
 
 wxBEGIN_EVENT_TABLE(PopUp, wxPopupTransientWindow)
 	EVT_BUTTON(90, PopUp::OnButton)
-	EVT_IDLE(PopUp::BackgroundTask)
+//	EVT_IDLE(PopUp::BackgroundTask)
 wxEND_EVENT_TABLE()
 
 PopUp::PopUp(BaseWindow* parent, const std::string& message, std::function<void(wxIdleEvent&)> onIdle) : 
 	wxPopupTransientWindow(parent, wxBORDER_NONE | wxPU_CONTAINS_CONTROLS) {
 
-	_text = new wxStaticText(this, 101, message, wxPoint(100, 0));
+	_text = new wxStaticText(this, wxID_ANY, message, wxPoint(100, 0));
 	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(100, 100));
 
-	_backgroundTask = onIdle;
+	//_backgroundTask = onIdle;
 
 	SetClientSize(POPUP_SIZE);
 	SetPosition(wxPoint(parent->GetPosition().x / 2 + POPUP_SIZE.x / 2, parent->GetPosition().y / 2 + POPUP_SIZE.y / 2));
@@ -323,9 +319,9 @@ void PopUp::OnButton(wxCommandEvent& evt) {
 	Dismiss();
 }
 
-void PopUp::BackgroundTask(wxIdleEvent& evt) {
-	_backgroundTask(evt);
-}
+// void PopUp::BackgroundTask(wxIdleEvent& evt) {
+// 	_backgroundTask(evt);
+// }
 
 
 

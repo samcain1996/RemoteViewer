@@ -3,6 +3,7 @@
 
 class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 	friend class ClientStreamWindow;
+	friend class ClientInitWindow;
 private:
 	string _hostname;  // Hostname of computer to connect to
 
@@ -31,8 +32,8 @@ public:
 
 	// Constructors
 	Client()				= delete;
-	Client(const Client&)	= delete;
-	Client(Client&&)		= delete;
+	//Client(const Client&)	= delete;
+	//Client(Client&&)		= delete;
 
 	Client(const Ushort port, const string& hostname);
 
