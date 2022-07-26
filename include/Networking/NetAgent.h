@@ -61,5 +61,6 @@ protected:
 	virtual void SendDisconnect() { _socket.send(boost::asio::buffer(DISCONNECT_MESSAGE, DISCONNECT_SIZE), 0, _errcode); }
 
 public:
+	
 	virtual ~NetAgent();
 };

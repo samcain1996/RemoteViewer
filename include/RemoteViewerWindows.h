@@ -48,8 +48,6 @@ protected:
 	BaseWindow(BaseWindow&&) = delete;
 	BaseWindow& operator=(const BaseWindow&) = delete;
 	BaseWindow& operator=(BaseWindow&&) = delete;
-
-	PopUp* _popUp = nullptr;
 	
 	// All Window controls on the current window
 	ElementList _windowElements;
@@ -137,6 +135,8 @@ private:
 	Client* _client;
 	std::thread _clientThr;
 
+	PopUp* _connectingNotification;
+
 	bool _connected = false;
 
 	const int _windowId = 3;
@@ -154,6 +154,7 @@ public:
 
 	const bool AssembleImage();  // Assemble image from packet queue, return true if successful
 	
+	bool Show(bool show = true) override;
 	void OnPaint(wxPaintEvent& evt);
 	
 	void PaintNow();
@@ -196,7 +197,8 @@ public:
 
 class PopUp : public wxPopupTransientWindow {
 public:
-	PopUp(BaseWindow* parent, const std::string& message);
+	PopUp(BaseWindow* parent, const std::string& message, 
+		std::function<void(wxIdleEvent&)> onIdle = [](wxIdleEvent&) {});
 	~PopUp();
 
 	// Delete copy and move constructors and assignment operators
@@ -206,12 +208,15 @@ public:
 	PopUp& operator=(PopUp&&) = delete;
 
 	void OnButton(wxCommandEvent& evt);
+	void BackgroundTask(wxIdleEvent& evt);
 
 private:
 
 	const inline static wxSize POPUP_SIZE = wxSize(300, 200);
 	wxStaticText* _text;
 	wxButton* _dismissButton;
+
+	std::function<void(wxIdleEvent& evt)> _backgroundTask;
 
 	wxDECLARE_ABSTRACT_CLASS(PopUp);
 	wxDECLARE_EVENT_TABLE();
