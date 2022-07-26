@@ -14,18 +14,20 @@ void Server::Handshake(bool& connected) {
 }
 
 void Server::Serve() {
+	
+    size_t captureSize = 0;
 
-    while (true) {
+    do {
 
         _screen.CaptureScreen();
 
         size_t captureSize = _screen.WholeDeal(_capture);
 
-        Send(_capture, captureSize);
-    }
+        
+    } while (Send(_capture, captureSize));
 }
 
-void Server::Send(ByteArray bytes, size_t len) {
+bool Server::Send(ByteArray bytes, size_t len) {
 
     // Convert the message into a list of packets
     PacketList packets = ConvertToPackets(bytes, len);
@@ -34,14 +36,16 @@ void Server::Send(ByteArray bytes, size_t len) {
     for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
         Packet& packet = packets[packetNo];
 
-        Byte dummyBuf[4];
-
         // Send packet and then wait for acknowledgment
         _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
-        _socket.receive(boost::asio::buffer(dummyBuf, sizeof dummyBuf), 0, _errcode);
+        _socket.receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()), 0, _errcode);
 
+        if (IsDisconnectMsg()) {
+            return false;
+        }
+        
     }
-    
+    return true;
 }
 
 void Server::AsyncSend(ByteArray const bytes, const size_t len)

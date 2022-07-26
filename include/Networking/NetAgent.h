@@ -46,13 +46,16 @@ protected:
 	PacketGroupPriorityQueueMap _incompletePackets;
 
 	virtual void Handshake(bool& connected) = 0;
+	virtual const bool IsDisconnectMsg() const;
 	
 	virtual void Receive() = 0;
-	virtual void Send(ByteArray const bytes, const size_t len) = 0;
+	virtual bool Send(ByteArray const bytes, const size_t len) = 0;
 	virtual void ProcessPacket(const Packet&) = 0;
 
 	virtual void AsyncSend(ByteArray const bytes, const size_t len) = 0;
 	virtual void AsyncReceive() = 0;
+
+	virtual void SendDisconnect() { _socket.send(boost::asio::buffer(DISCONNECT_MESSAGE, DISCONNECT_SIZE), 0, _errcode); }
 
 public:
 	virtual ~NetAgent();

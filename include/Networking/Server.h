@@ -10,7 +10,7 @@ private:
 	PacketList ConvertToPackets(ByteArray& bytes, size_t len);
 
 	// Send a buffer of bytes to the client
-	void Send(ByteArray const bytes, const size_t len) override;
+	bool Send(ByteArray const bytes, const size_t len) override;
 
 	void AsyncSend(ByteArray const bytes, const size_t len) override;
 	void AsyncReceive() override;

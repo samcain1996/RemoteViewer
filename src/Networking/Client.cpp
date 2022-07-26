@@ -31,8 +31,9 @@ void Client::ProcessPacket(const Packet& packet) {
     }
 }
 
-void Client::Send(ByteArray const bytes, const size_t len) {
-
+bool Client::Send(ByteArray const bytes, const size_t len) {
+    SendDisconnect();
+    return true;
 }
 
 void Client::AsyncSend(ByteArray const bytes, const size_t len)
@@ -44,23 +45,29 @@ void Client::AsyncReceive() {
     /* Broken right now */
      
     
-    //_io_context.restart();
-    //while (_connected) {
+    while (_connected) {
 
-    //    _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()), [&](const boost::system::error_code& ec,
-    //        std::size_t bytes_transferred)
-    //        {
-    //            if (!ec && bytes_transferred > 0) {
-    //                // Copy buffer to dummy packet
-    //                ProcessPacket(Packet(_tmpBuffer));
-    //                _socket.send(boost::asio::buffer(_tmpBuffer, 4), 0, _errcode);
-    //            }
+        _io_context.restart();
+        _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()), [&](const boost::system::error_code& ec,
+            std::size_t bytes_transferred)
+            {
+                if (!ec && bytes_transferred > 0) {
 
-    //        });
+                    if (IsDisconnectMsg() || !_connected) {
+                        _connected = false;
+                        _io_context.stop();
+                        return;
+                    }
+                    // Copy buffer to dummy packet
+                    ProcessPacket(Packet(_tmpBuffer));
+                    _socket.send(boost::asio::buffer(_tmpBuffer, 4), 0, _errcode);
+                }
 
-    //    _io_context.run_one();
+            });
+
+        _io_context.run_one();
 		
-    //}
+    }
 
 }
 

@@ -92,9 +92,6 @@ public:
 class ClientInitWindow : public BaseWindow {
 
 private:
-
-	const int PORT_TB_ID = 20003;
-	const int IP_TB_ID = 20002;
 	
 	wxTextCtrl* _remotePortInput;
 	wxTextCtrl* _localPortInput;

@@ -7,6 +7,8 @@ WindowStack BaseWindow::_prevWindows;
 BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size) : 
 	wxFrame(nullptr, wxID_ANY, name, pos, size) {
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
+
+	_windowElements.clear();
 }
 
 BaseWindow::~BaseWindow() {
@@ -124,9 +126,9 @@ wxEND_EVENT_TABLE()
 
 ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
-	_ipInput = new wxTextCtrl(this, IP_TB_ID, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
-	_remotePortInput = new wxTextCtrl(this, PORT_TB_ID, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
-	_localPortInput = new wxTextCtrl(this, PORT_TB_ID+1, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_localPortInput = new wxTextCtrl(this, 20003, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
 	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
 
@@ -173,14 +175,13 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int
 	
 	// Receive packets on separate thread, connect thread to this window
 	ConnectMessageables(*this, *_client);
-	_clientThr = std::thread(&Client::Receive, _client);
+	_clientThr = std::thread(&Client::AsyncReceive, _client);
 
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
-	if (_connected) {
-		_clientThr.join();
-	}
+	_client->Send((ByteArray)NetAgent::DISCONNECT_MESSAGE, NetAgent::DISCONNECT_SIZE);
+	_clientThr.join();
 }
 
 bool ClientStreamWindow::AssembleImage() {

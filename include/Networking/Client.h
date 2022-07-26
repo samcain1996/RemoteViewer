@@ -21,7 +21,7 @@ private:
 	 */
 	void ProcessPacket(const Packet& packet) override;
 
-	void Send(ByteArray const bytes, const size_t len) override;
+	bool Send(ByteArray const bytes, const size_t len) override;
 
 	void AsyncSend(ByteArray const bytes, const size_t len) override;
 public:
