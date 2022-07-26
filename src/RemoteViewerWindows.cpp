@@ -167,11 +167,19 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, int localPort, int
 	_client = new Client(localPort, ip);
 	_client->Connect(std::to_string(remotePort));
 
+	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
+
+	_popUp = new PopUp(this, message);
+
 	// Repeatedly try to connect to server
 	while (!_connected) {
 		_client->Handshake(_connected);
 		_client->_io_context.run();
+		_popUp->Update();
 	}
+
+	_popUp->Dismiss();
+	delete _popUp;
 	
 	// Receive packets on separate thread, connect thread to this window
 	ConnectMessageables(*this, *_client);
@@ -184,7 +192,7 @@ ClientStreamWindow::~ClientStreamWindow() {
 	_clientThr.join();
 }
 
-bool ClientStreamWindow::AssembleImage() {
+const bool ClientStreamWindow::AssembleImage() {
 	
 	// Check  if there is a complete image
 	if (!groupReader->Empty()) {
@@ -256,7 +264,7 @@ wxEND_EVENT_TABLE()
 ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Server Initialization", pos, size) {
 	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
-	_listenButton = new wxButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
+	_startServerButton = new wxButton(this, 30001, "Listen for connections", wxPoint(400, 400), wxSize(200, 50));
 }
 
 ServerInitWindow::~ServerInitWindow() {}
@@ -271,8 +279,40 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	
 	server.Serve();
 	
-	_killProgramOnClose = false;
 	Close(true);
 }
+
+
+
+/*------------Pop Up------------*/
+
+wxIMPLEMENT_CLASS(PopUp, wxPopupTransientWindow);
+
+wxBEGIN_EVENT_TABLE(PopUp, wxPopupTransientWindow)
+	EVT_BUTTON(90, PopUp::OnButton)
+wxEND_EVENT_TABLE()
+
+PopUp::PopUp(BaseWindow* parent, const std::string& message) : 
+	wxPopupTransientWindow(parent, wxBORDER_NONE | wxPU_CONTAINS_CONTROLS) {
+
+	_text = new wxStaticText(this, 101, message, wxPoint(100, 0));
+	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(100, 100));
+
+	SetClientSize(POPUP_SIZE);
+	SetPosition(wxPoint(parent->GetPosition().x / 2 + POPUP_SIZE.x / 2, parent->GetPosition().y / 2 + POPUP_SIZE.y / 2));
+
+	Show(true);
+}
+
+PopUp::~PopUp() {
+	
+	delete _text;
+	delete _dismissButton;
+}
+
+void PopUp::OnButton(wxCommandEvent& evt) {
+	Dismiss();
+}
+
 
 

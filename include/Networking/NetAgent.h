@@ -45,6 +45,9 @@ protected:
 	// A map that maps packet groups to a priority queue
 	PacketGroupPriorityQueueMap _incompletePackets;
 
+	// Converts an arbitrarily long array of bytes
+	// into a group of packets
+	virtual PacketList ConvertToPackets(ByteArray& bytes, size_t len);
 	virtual void Handshake(bool& connected) = 0;
 	virtual const bool IsDisconnectMsg() const;
 	

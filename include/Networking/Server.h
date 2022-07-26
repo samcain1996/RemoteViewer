@@ -5,10 +5,6 @@
 class Server : public NetAgent, public Messageable<ByteArray> {
 private:
 
-	// Converts an arbitrarily long array of bytes
-	// into a group of packets
-	PacketList ConvertToPackets(ByteArray& bytes, size_t len);
-
 	// Send a buffer of bytes to the client
 	bool Send(ByteArray const bytes, const size_t len) override;
 

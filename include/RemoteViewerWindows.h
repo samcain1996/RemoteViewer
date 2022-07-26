@@ -7,6 +7,7 @@
 #include "Server.h"
 #include "wx/popupwin.h"
 
+class PopUp;
 
 enum class WindowNames {
 	StartUp,
@@ -47,6 +48,8 @@ protected:
 	BaseWindow(BaseWindow&&) = delete;
 	BaseWindow& operator=(const BaseWindow&) = delete;
 	BaseWindow& operator=(BaseWindow&&) = delete;
+
+	PopUp* _popUp = nullptr;
 	
 	// All Window controls on the current window
 	ElementList _windowElements;
@@ -149,9 +152,11 @@ public:
 	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
-	bool AssembleImage();
-	void PaintNow();
+	const bool AssembleImage();  // Assemble image from packet queue, return true if successful
+	
 	void OnPaint(wxPaintEvent& evt);
+	
+	void PaintNow();
 	void OnIdle(wxIdleEvent& evt);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
@@ -166,11 +171,11 @@ class ServerInitWindow : public BaseWindow {
 
 private:
 	wxTextCtrl* _portTb;
-	wxButton* _listenButton;
+	wxButton* _startServerButton;
 
 	const int _windowId = 4;
 
-	//Constructor and destructor
+	// Constructor and destructor
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);
 	~ServerInitWindow();
@@ -191,10 +196,23 @@ public:
 
 class PopUp : public wxPopupTransientWindow {
 public:
-	PopUp(BaseWindow* parent, const std::string& message) : wxPopupTransientWindow(parent) {
-	
-		wxStaticText* text = new wxStaticText(this, wxID_ANY, message);
-	
-	}
-	~PopUp() {};
+	PopUp(BaseWindow* parent, const std::string& message);
+	~PopUp();
+
+	// Delete copy and move constructors and assignment operators
+	PopUp(const PopUp&) = delete;
+	PopUp(PopUp&&) = delete;
+	PopUp& operator=(const PopUp&) = delete;
+	PopUp& operator=(PopUp&&) = delete;
+
+	void OnButton(wxCommandEvent& evt);
+
+private:
+
+	const inline static wxSize POPUP_SIZE = wxSize(300, 200);
+	wxStaticText* _text;
+	wxButton* _dismissButton;
+
+	wxDECLARE_ABSTRACT_CLASS(PopUp);
+	wxDECLARE_EVENT_TABLE();
 };
