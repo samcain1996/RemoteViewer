@@ -145,6 +145,8 @@ void ScreenCapture::ReInitialize(const Resolution& targetRes) {
     delete[](ByteArray)_previousCapture;
     _previousCapture = new Byte[_bitmapSize];
 
+    _header = ConstructBMPHeader(_targetResolution, _bitsPerPixel);
+
 #if defined(_WIN32)
 
     // Recreate bitmap with new dimensions

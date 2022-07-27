@@ -3,7 +3,7 @@
 
 int main() {
 
-    ScreenCapture screen(1920, 1080, 1920, 1080);
+    ScreenCapture screen(1920, 1080, 2560, 1369);
 
     screen.CaptureScreen();
 
