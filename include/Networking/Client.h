@@ -5,7 +5,7 @@ class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 	friend class ClientStreamWindow;
 	friend class ClientInitWindow;
 private:
-	string _hostname;  // Hostname of computer to connect to
+	std::string _hostname;  // Hostname of computer to connect to
 
 	PacketGroupMap _packetGroups;
 
@@ -37,7 +37,7 @@ public:
 	Client(const Client&)   = delete;
 	Client(Client&&)		= delete;
 
-	Client(const Ushort port, const string& hostname);
+	Client(const Ushort port, const std::string& hostname);
 
 	~Client();
 
@@ -51,7 +51,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	bool Connect(const string& serverPort);
+	bool Connect(const std::string& serverPort);
 
 	void Handshake(bool& connected) override;
 

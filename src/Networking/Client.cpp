@@ -1,6 +1,6 @@
 #include "Networking/Client.h"
 
-Client::Client(const Ushort port, const string& hostname) : NetAgent(port) {
+Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
     _hostname = hostname;
 }
 
@@ -70,7 +70,7 @@ void Client::AsyncReceive() {
 
 }
 
-bool Client::Connect(const string& serverPort) {
+bool Client::Connect(const std::string& serverPort) {
 
     _remotePort = std::stoi(serverPort);
 

@@ -22,7 +22,7 @@
 #include <array>
 
 using Uint32 = std::uint32_t;
-using string = std::string;
+using Ushort = std::uint16_t;
 
 constexpr const Uint32 ONE_BYTE = 8;
 constexpr const Uint32 TWO_BYTES = (ONE_BYTE + ONE_BYTE);
@@ -36,8 +36,6 @@ using BytePtr           = Byte*;
 
 using ByteEncodedUint32 = Byte[FOUR_BYTES];
 
-using Ushort			= std::uint16_t;
-
 using ThreadLock		= std::lock_guard<std::mutex>;
 
 
@@ -49,15 +47,8 @@ constexpr const Resolution RES_1080 = { 1920, 1080 };
 constexpr const Resolution RES_1440 = { 2560, 1440 };
 constexpr const Resolution RES_4K = { 3840, 2160 };
 
-
-template <typename T>
-using Validator = std::function<bool(T)>;
-
 enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
-
-constexpr const Ushort MillisInSecs = 1000;
-
 
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;
@@ -120,7 +111,8 @@ constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber, const Endianes
 }
 
 constexpr const Uint32 CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32) {
-    const Uint32 width = resolution.first;
-	const Uint32 height = resolution.second;
+    const Uint32& width  = resolution.first;
+	const Uint32& height = resolution.second;
+
     return ((width * bitsPerPixel + 31) / 32) * 4 * height;
 }

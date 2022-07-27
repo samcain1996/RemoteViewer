@@ -142,8 +142,6 @@ private:
 
 	const int _windowId = 3;
 
-	std::string _remotePort;
-
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
@@ -201,7 +199,9 @@ public:
 
 
 class PopUp : public wxPopupTransientWindow {
+
 public:
+
 	PopUp(BaseWindow* parent, const std::string& message);
 	~PopUp();
 
@@ -221,4 +221,5 @@ private:
 
 	wxDECLARE_ABSTRACT_CLASS(PopUp);
 	wxDECLARE_EVENT_TABLE();
+
 };

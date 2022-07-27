@@ -68,7 +68,6 @@ void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 		}
 
 		_prevWindows.pop();
-		previousWindow->Show();
 
 		_killProgramOnClose = false;
 		Close(true);
@@ -164,10 +163,9 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size) {
 
 	_client = new Client(localPort, ip);
-	_remotePort = std::to_string(remotePort);
-	_client->Connect(_remotePort);
+	_client->Connect(std::to_string(remotePort));
 
-	std::string message("Connecting to " + ip + ":" + _remotePort);
+	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
 	_popup->Popup();
 

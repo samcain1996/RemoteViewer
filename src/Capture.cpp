@@ -10,8 +10,9 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, cons
 
     XGetWindowAttributes(_display, _root, &_attributes);
 
-    _srcResolution.first = _attributes.width;
+    _srcResolution.first  = _attributes.width;
     _srcResolution.second = _attributes.height;
+    
 #endif
 
 #if defined(_WIN32)
@@ -100,9 +101,6 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRe
 	// Dimensions in pixels
     const Ushort width  = targetRes.first;
     const Ushort height = targetRes.second;
-
-    // Size of the data in bytes
-    const Uint32 bitmapDataSize = CalulcateBMPFileSize(targetRes, bitsPerPixel);
 
 	// Header components as aliases to header array
     const ByteArray bmpHeader = (ByteArray)&header.data()[0];

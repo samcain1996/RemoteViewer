@@ -25,19 +25,19 @@ Packet::Packet(PacketBuffer& packetData) {
 	ByteEncodedUint32 encoded;  // Temp variable to store encoded Uint32 values
 
 	// Retrieve encoded size
-	std::memmove(encoded, packetData.data(), sizeof encoded);
+	std::memcpy(encoded, packetData.data(), sizeof encoded);
 	_header.size = decode256(encoded);
 
 	// Retrieve encoded group
-	std::memmove(encoded, &(packetData.data())[PACKET_GROUP_OFFSET], sizeof encoded);
+	std::memcpy(encoded, &(packetData.data())[PACKET_GROUP_OFFSET], sizeof encoded);
 	_header.group = decode256(encoded);
 
 	// Retrieve encoded sequence
-	std::memmove(encoded, &(packetData.data())[PACKET_SEQUENCE_OFFSET], sizeof encoded);
+	std::memcpy(encoded, &(packetData.data())[PACKET_SEQUENCE_OFFSET], sizeof encoded);
 	_header.sequence = decode256(encoded);
 
 	// Retrieve payload
-	std::memmove(_payload.data(), &packetData[PACKET_PAYLOAD_OFFSET], _payload.size());
+	std::memcpy(_payload.data(), &packetData[PACKET_PAYLOAD_OFFSET], _payload.size());
 }
 
 Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
