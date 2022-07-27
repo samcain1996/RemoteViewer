@@ -22,7 +22,7 @@ void Server::Serve() {
 
         _screen.CaptureScreen();
 
-        size_t captureSize = _screen.WholeDeal(_capture);
+        captureSize = _screen.WholeDeal(_capture);
 
         
     } while (Send(_capture, captureSize));

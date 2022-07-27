@@ -253,7 +253,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 			_popup = nullptr;
 
 			ConnectMessageables(*this, *_client);
-			_client->_io_context.restart();
+			//_client->_io_context.restart();
 			
 			_clientThr = std::thread(&Client::AsyncReceive, _client);
 			

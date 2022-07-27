@@ -41,7 +41,7 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, cons
         8, _srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
 #endif
-
+    ReInitialize(_targetResolution);
 }
 
 #if defined(_WIN32)
@@ -87,6 +87,7 @@ ScreenCapture::~ScreenCapture() {
     if (_previousCapture) {
         delete[](ByteArray)_previousCapture;
     }
+
 
 }
 
