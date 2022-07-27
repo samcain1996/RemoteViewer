@@ -142,6 +142,8 @@ private:
 
 	const int _windowId = 3;
 
+	std::string _remotePort;
+
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);

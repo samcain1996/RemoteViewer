@@ -3,6 +3,7 @@
 Server::Server(const Ushort listenPort) : NetAgent(listenPort), _screen(640, 480, 640, 480) {}
 
 void Server::Handshake(bool& connected) {
+	
     // Loop until the handshake message is received
     do {
         _socket.receive_from(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()), _remoteEndpoint, 0, _errcode);

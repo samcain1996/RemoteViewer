@@ -164,9 +164,10 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size) {
 
 	_client = new Client(localPort, ip);
-	_client->Connect(std::to_string(remotePort));
+	_remotePort = std::to_string(remotePort);
+	_client->Connect(_remotePort);
 
-	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
+	std::string message("Connecting to " + ip + ":" + _remotePort);
 	_popup = new PopUp(this, message);
 	_popup->Popup();
 
@@ -226,21 +227,20 @@ void ClientStreamWindow::PaintNow() {
 void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 	
 	// Do not paint until connected because no data is sent until then.
-	if (!_connected) { return; }
+	if (!_connected) { evt.Skip(); }
 	PaintNow();
 }
 
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	// TODO: Limit connect attempts
-
-	// Try to connect if not connected
-	if (!_connected) {
+	//		Why is the window unresponsive beofer it connects?
+	//		Try to connect if not connected
+	if (std::memcmp(_client->_tmpBuffer.data(), _client->HANDSHAKE_MESSAGE, _client->HANDSHAKE_SIZE) != 0) {
 	
 		_client->Handshake(_connected);
 		
-		_client->_io_context.run();
-		_client->_io_context.restart();
+
 		
 	}
 
@@ -253,16 +253,19 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 			_popup = nullptr;
 
 			ConnectMessageables(*this, *_client);
+			_client->_io_context.restart();
+			
 			_clientThr = std::thread(&Client::AsyncReceive, _client);
 			
 		}
 
 		// If there is a complete image, render it
-		else if (AssembleImage()) { PaintNow(); }
+		else if (AssembleImage()) { 
+			PaintNow();
+			evt.RequestMore();
+		}
 
 	}
-
-	evt.RequestMore();
 	
 }
 

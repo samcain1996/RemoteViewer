@@ -42,8 +42,7 @@ void Client::AsyncSend(ByteArray const bytes, const size_t len)
 
 void Client::AsyncReceive() {
 
-    /* Broken right now */
-     
+    /* Broken right now ? TODO */
     
     while (_connected) {
 
@@ -93,7 +92,7 @@ void Client::Handshake(bool& connected)
 	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), 0, [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
 	{
         if (ec.value() == 0 && bytes_transferred > 0) {
-            connected = _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
+            //connected = _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
         }
 	});
 
@@ -102,7 +101,7 @@ void Client::Handshake(bool& connected)
 
 void Client::Receive() {
    
-    PacketBuffer packetData;
+    PacketBuffer& packetData = _tmpBuffer;
 
     while (_connected) {
 
