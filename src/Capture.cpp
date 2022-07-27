@@ -10,8 +10,8 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, cons
 
     XGetWindowAttributes(_display, _root, &_attributes);
 
-    _srcWidth = _attributes.width;
-    _srcHeight = _attributes.height;
+    _srcResolution.first = _attributes.width;
+    _srcResolution.second = _attributes.height;
 #endif
 
 #if defined(_WIN32)
@@ -205,12 +205,12 @@ void ScreenCapture::CaptureScreen() {
 #elif defined(__APPLE__)
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
-    CGContextDrawImage(_context, CGRectMake(0, 0, _srcWidth, _srcWidth), _image);
+    CGContextDrawImage(_context, CGRectMake(0, 0, srcWidth, srcWidth), _image);
     _currentCapture = _image;
 
 #elif defined(__linux__)
 
-    _img = XGetImage(_display, _root, 0, 0, _srcWidth, _srcHeight, AllPlanes, ZPixmap);
+    _img = XGetImage(_display, _root, 0, 0, srcWidth, srcHeight, AllPlanes, ZPixmap);
     _currentCapture = _img->data;
 
 #endif

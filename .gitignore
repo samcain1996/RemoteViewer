@@ -6,10 +6,12 @@
 !*.conf
 
 # Do not ignore C/C++ header files
-!*.h
+!include/*.h
+!include/Networking/*.h
 
 # Do not ignore C++ files
-!*.cpp
+!src/*.cpp
+!src/Networking/*.cpp
 
 # Do not ignore C files
 !*.c
