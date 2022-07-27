@@ -12,7 +12,7 @@ int main() {
 
     ImageData capture = screen.WholeDeal();
 
-    std::ofstream("img.bmp", std::ios_base::binary).write((char*)(&capture[0]), capture.size());
+    std::ofstream("img.bmp", std::ios_base::binary).write((char*)capture.data(), capture.size());
 
     return 0;
     
