@@ -1,7 +1,10 @@
 #include "Capture.h"
 
-ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
-    _srcResolution(srcWidth, srcHeight), _targetResolution(dstWidth, dstHeight) {
+ScreenCapture::ScreenCapture(const Resolution& srcRes, const Resolution& targetRes) : 
+    ScreenCapture(srcRes.first, srcRes.second, targetRes.first, targetRes.second) {}
+
+ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, 
+    const size_t targetWidth, const size_t targetHeight) : _srcResolution(srcWidth, srcHeight), _targetResolution(targetWidth, targetHeight) {
 
 #if defined(__linux__)
 
@@ -136,6 +139,10 @@ constexpr const size_t ScreenCapture::TotalSize() const {
 void ScreenCapture::ReInitialize(const Resolution& targetRes) {
 
     _targetResolution = targetRes;
+
+    // TODO: Deal with this
+    _srcResolution.first = std::min(_srcResolution.first, _targetResolution.first);
+    _srcResolution.second = std::min(_srcResolution.second, _targetResolution.second);
 	
     const Ushort& width = _targetResolution.first;
     const Ushort& height = _targetResolution.second;
@@ -178,6 +185,31 @@ const size_t ScreenCapture::WholeDeal(ByteArray& arr) const {
     return captureSize;
 }
 
+const ImageData ScreenCapture::WholeDeal() const {
+
+    ImageData fullImage(TotalSize());
+    std::copy(_header.begin(), _header.end(), fullImage.begin());
+    std::copy(_currentImage.begin(), _currentImage.end(), fullImage.begin() + BMP_HEADER_SIZE);
+
+    return fullImage;
+
+
+}
+
+const size_t ScreenCapture::GetImageData(ByteArray& arr) const {
+
+    if (arr == nullptr) { arr = new Byte[_bitmapSize]; }
+
+    std::memcpy(arr, _currentCapture, _bitmapSize);
+
+    return _bitmapSize;
+
+}
+
+const ImageData ScreenCapture::GetImageData() const {
+    return _currentImage;
+}
+
 void ScreenCapture::CaptureScreen() {
 
 	const Ushort& srcWidth  = _srcResolution.first;
@@ -205,7 +237,7 @@ void ScreenCapture::CaptureScreen() {
 #elif defined(__APPLE__)
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
-    CGContextDrawImage(_context, CGRectMake(0, 0, srcWidth, srcWidth), _image);
+    CGContextDrawImage(_context, CGRectMake(0, 0, targetWidth, targetHeight), _image);
     _currentCapture = _image;
 
 #elif defined(__linux__)

@@ -3,14 +3,14 @@
 
 int main() {
 
-    ScreenCapture screen(1920, 1080, 2560, 1369);
+    ScreenCapture screen(2560, 1600, 2560, 1600);
 
     screen.CaptureScreen();
 
     ByteArray capture = nullptr;
-    size_t imgSize = screen.WholeDeal(capture);
+    size_t imgSize = screen.GetImageData(capture);
 
-    std::ofstream("img.bmp", std::ios_base::binary).write((char*)capture, imgSize);
+    std::ofstream("img.dat", std::ios_base::binary).write((char*)capture, imgSize);
 
     return 0;
     

@@ -24,6 +24,8 @@ constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HE
 using PixelData = void*;
 using BmpFileHeader = std::array<Byte, BMP_HEADER_SIZE>;
 
+using ImageData = std::vector<Byte>;
+
 class ScreenCapture {
 	
 public:
@@ -37,6 +39,10 @@ private:
     Resolution _targetResolution;   // Target Resolution
 
     BmpFileHeader _header {};
+
+    ImageData _currentImage {};
+    ImageData _previousImage {};
+
     PixelData _currentCapture = nullptr;     // Buffer holding screen capture
     PixelData _previousCapture = nullptr;    // Buffer holding previous screen capture  
 
@@ -73,7 +79,10 @@ private:
 public:
 
     ScreenCapture();
-    ScreenCapture(const size_t, const size_t, const size_t, const size_t);
+    ScreenCapture(const size_t srcWidth, const size_t swrcHeight, 
+        const size_t targetWidth, const size_t targetHeight);
+
+    ScreenCapture(const Resolution& srcRes, const Resolution& targetRes);
 
     ScreenCapture(const ScreenCapture&) = delete;
     ScreenCapture(ScreenCapture&&) = delete;
@@ -86,6 +95,10 @@ public:
     constexpr const size_t TotalSize() const;  // Size of header and data
 
     const size_t WholeDeal(ByteArray& arr) const;
+    const ImageData WholeDeal() const;
+
+    const size_t GetImageData(ByteArray& arr) const;
+    const ImageData GetImageData() const;
 };
 
   

@@ -1,0 +1,15 @@
+Networking:
+	1. Allow the client to send a disconnect message
+	2. Convert to async
+		a.	Deal with the possibility of losing packets
+
+Screen Capture:
+	1. Get image capture working for mac
+	2. Fix image capture for linux
+
+Windowing:
+	1. Make monitor choice selectable
+
+General:
+	1. Fix endianess (is this an issue, do I need to account for this?)
+	2. Change ByteArray to std::array
