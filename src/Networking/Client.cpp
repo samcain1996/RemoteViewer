@@ -73,6 +73,8 @@ void Client::AsyncReceive() {
 
 bool Client::Connect(const string& serverPort) {
 
+    _remotePort = std::stoi(serverPort);
+
     // Find endpoint to connect to
     udp::resolver resolver(_io_context);
     _remoteEndpoint = *resolver.resolve(udp::v4(), _hostname, serverPort).begin();
@@ -117,6 +119,5 @@ void Client::Receive() {
 
 }
 
-Client::~Client() {
-}
+Client::~Client() {}
 

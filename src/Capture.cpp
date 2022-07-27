@@ -1,7 +1,7 @@
 #include "Capture.h"
 
 ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, const size_t dstWidth, const size_t dstHeight) :
-    _srcWidth(srcWidth), _srcHeight(srcHeight), _dstWidth(dstWidth), _dstHeight(dstHeight) {
+    _srcResolution(srcWidth, srcHeight), _targetResolution(dstWidth, dstHeight) {
 
 #if defined(__linux__)
 
@@ -20,7 +20,7 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, cons
     _memHDC = CreateCompatibleDC(_srcHDC);    // Creates a new device context from previous context
 
     // Create bitmap from the source using the destination's resolution
-    _hScreen = CreateCompatibleBitmap(_srcHDC, _dstWidth, _dstHeight);
+    _hScreen = CreateCompatibleBitmap(_srcHDC, _targetResolution.first, _targetResolution.second);
 
     SelectObject(_memHDC, _hScreen);  // Select bitmap into DC [2]
 
@@ -31,8 +31,6 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, cons
     _hDIB = NULL;
 
 #endif
-
-    InitializeBMPHeader();
 
     _previousCapture = new Byte[_bitmapSize];
 
@@ -92,62 +90,68 @@ ScreenCapture::~ScreenCapture() {
 
 }
 
-void ScreenCapture::InitializeBMPHeader() {
+const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRes,
+        const Ushort bitsPerPixel) {
 
-    _bitmapSize = ((_dstWidth * _bitsPerPixel + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
+    std::array<Byte, BMP_HEADER_SIZE> header {};  // TODO: See how to init all vals to 0
+    std::memset(header.data(), 0, header.size());
+	
+	// Dimensions in pixels
+    const Ushort width  = targetRes.first;
+    const Ushort height = targetRes.second;
 
-    ByteArray _bmpHeader = (ByteArray)&_header[0];
-    ByteArray _bmpInfo = (_bmpHeader + BMP_FILE_HEADER_SIZE);
+    // Size of the data in bytes
+    const Uint32 bitmapDataSize = CalulcateBMPFileSize(targetRes, bitsPerPixel);
 
-    std::memset(_bmpHeader, 0x00, BMP_HEADER_SIZE);
+	// Header components as aliases to header array
+    const ByteArray bmpHeader = (ByteArray)&header.data()[0];
+    const ByteArray bmpInfo = (bmpHeader + BMP_FILE_HEADER_SIZE);
 
-    _bmpHeader[0] = 0x42;
-    _bmpHeader[1] = 0x4D;
+    bmpHeader[0] = 0x42;
+    bmpHeader[1] = 0x4D;
 
-    //Byte temp[4];
-    encode256(&_bmpHeader[2],
-        _srcWidth * _srcHeight * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
+    encode256(&bmpHeader[2],
+        width * height * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
         Endianess::Big);
 
-    //std::memmove(&_bmpHeader[2], temp, 4);
+    bmpHeader[10] = 0x36;
 
-    _bmpHeader[10] = 0x36;
+    bmpInfo[0] = 0x28;
 
-    _bmpInfo[0] = 0x28;
+    encode256(&bmpInfo[4], width, Endianess::Big);
 
-    encode256(&_bmpInfo[4], _srcWidth, Endianess::Big);
-    //std::memmove(&_bmpInfo[4], temp, 4);
+    encode256(&bmpInfo[8], height, Endianess::Big);
 
-    encode256(&_bmpInfo[8], _srcHeight, Endianess::Big);
-    //std::memmove(&_bmpInfo[8], temp, 4);
+    bmpInfo[12] = 1;
 
-    _bmpInfo[12] = 1;
-
-    _bmpInfo[14] = _bitsPerPixel;
-
-    #if defined(_WIN32)
-
-    _hDIB = GlobalAlloc(GHND, _bitmapSize);
-    _currentCapture = GlobalLock(_hDIB);
-
-#endif
+    bmpInfo[14] = bitsPerPixel;
+	
+    return header;
+	
 }
 
-void ScreenCapture::RecalculateSize() {
+constexpr const size_t ScreenCapture::TotalSize() const {
+    return _bitmapSize + BMP_HEADER_SIZE;
+}
 
-    _bitmapSize = ((_dstWidth * _bitsPerPixel + 31) / 32) * 4 * _dstHeight; // WHY IS THIS THE FORMULA?
+void ScreenCapture::ReInitialize(const Resolution& targetRes) {
 
-    delete[] (ByteArray)_previousCapture;
+    _targetResolution = targetRes;
+	
+    const Ushort& width = _targetResolution.first;
+    const Ushort& height = _targetResolution.second;
+
+    _bitmapSize = CalulcateBMPFileSize(_targetResolution, _bitsPerPixel);
+
+    delete[](ByteArray)_previousCapture;
     _previousCapture = new Byte[_bitmapSize];
 
 #if defined(_WIN32)
 
     // Recreate bitmap with new dimensions
     DeleteObject(_hScreen);
-    _hScreen = CreateCompatibleBitmap(_srcHDC, _dstWidth, _dstHeight);
+    _hScreen = CreateCompatibleBitmap(_srcHDC, width, height);
     SelectObject(_memHDC, _hScreen);
-
-   // _differenceMap   = new Byte[_bitmapSize];
 
     // Free _hDIB and re-lock
     GlobalUnlock(_hDIB);
@@ -156,43 +160,40 @@ void ScreenCapture::RecalculateSize() {
     _hDIB = GlobalAlloc(GHND, _bitmapSize);
     _currentCapture = GlobalLock(_hDIB);
 
-    #endif
-
-    InitializeBMPHeader();
-}
-
-const size_t ScreenCapture::TotalSize() const {
-    return _bitmapSize + BMP_HEADER_SIZE;
-}
-
-void ScreenCapture::Resize(const Ushort width, const Ushort height) {
-    _dstWidth  = width;
-    _dstHeight = height;
-    RecalculateSize();
+#endif
+	
 }
 
 const size_t ScreenCapture::WholeDeal(ByteArray& arr) const {
 
-    if (arr == nullptr) { arr = new Byte[_bitmapSize + BMP_HEADER_SIZE]; }
+    const size_t captureSize = TotalSize();
+
+    if (arr == nullptr) { arr = new Byte[captureSize]; }
 
     std::memcpy(arr, &_header, BMP_HEADER_SIZE);
 
     std::memcpy(&arr[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
 
-    return _bitmapSize + BMP_HEADER_SIZE;
+    return captureSize;
 }
 
 void ScreenCapture::CaptureScreen() {
+
+	const Ushort& srcWidth  = _srcResolution.first;
+    const Ushort& srcHeight = _srcResolution.second;
+	
+	const Ushort& targetWidth  = _targetResolution.first;
+	const Ushort& targetHeight = _targetResolution.second;
 
     if (_currentCapture)
     std::memcpy(_previousCapture, _currentCapture, _bitmapSize);
 
 #if defined(_WIN32)
 
-    StretchBlt(_memHDC, 0, 0, _dstWidth, _dstHeight, _srcHDC, 0, 0, _srcWidth, _srcHeight, SRCCOPY);
+    StretchBlt(_memHDC, 0, 0, targetWidth, targetHeight,
+        _srcHDC, 0, 0, srcWidth, srcHeight, SRCCOPY);
 
     GetObject(_hScreen, sizeof BITMAP, &_screenBMP);
-
 
     // Should be legal because BITMAPINFO has no padding, all its data members are aligned.
     GetDIBits(_memHDC, _hScreen, 0,
@@ -212,8 +213,6 @@ void ScreenCapture::CaptureScreen() {
     _currentCapture = _img->data;
 
 #endif
-
-    //CalculateDifference();
 
 }
 

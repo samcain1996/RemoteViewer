@@ -11,6 +11,8 @@ private:
 
 	bool _connected = false;
 
+	int _remotePort = -1;
+
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
 
 	/**
@@ -32,8 +34,8 @@ public:
 
 	// Constructors
 	Client()				= delete;
-	//Client(const Client&)	= delete;
-	//Client(Client&&)		= delete;
+	Client(const Client&)   = delete;
+	Client(Client&&)		= delete;
 
 	Client(const Ushort port, const string& hostname);
 

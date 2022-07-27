@@ -19,6 +19,7 @@
 #include <optional>
 #include <thread>
 #include <cstring>
+#include <array>
 
 using Uint32 = std::uint32_t;
 using string = std::string;
@@ -27,7 +28,6 @@ constexpr const Uint32 ONE_BYTE = 8;
 constexpr const Uint32 TWO_BYTES = (ONE_BYTE + ONE_BYTE);
 constexpr const Uint32 THREE_BYTES = (TWO_BYTES + ONE_BYTE);
 constexpr const Uint32 FOUR_BYTES = (TWO_BYTES + TWO_BYTES);
-
 
 /*------------------TYPES--------------------*/
 using Byte				= unsigned char;
@@ -39,6 +39,16 @@ using ByteEncodedUint32 = Byte[FOUR_BYTES];
 using Ushort			= std::uint16_t;
 
 using ThreadLock		= std::lock_guard<std::mutex>;
+
+
+/*------------------RESOLUTIONS--------------------*/
+using Resolution = std::pair<Ushort, Ushort>;
+constexpr const Resolution RES_480 = { 640, 480 };
+constexpr const Resolution RES_720 = { 1280, 720 };
+constexpr const Resolution RES_1080 = { 1920, 1080 };
+constexpr const Resolution RES_1440 = { 2560, 1440 };
+constexpr const Resolution RES_4K = { 3840, 2160 };
+
 
 template <typename T>
 using Validator = std::function<bool(T)>;
@@ -109,6 +119,8 @@ constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber, const Endianes
     }
 }
 
-constexpr const Uint32 CalculateTheoreticalBMPSize(const Uint32 width, const Uint32 height) {
-    return ((width * 32 + 31) / 32) * 4 * height;
+constexpr const Uint32 CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32) {
+    const Uint32 width = resolution.first;
+	const Uint32 height = resolution.second;
+    return ((width * bitsPerPixel + 31) / 32) * 4 * height;
 }

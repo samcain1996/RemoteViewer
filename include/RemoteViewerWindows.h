@@ -40,7 +40,7 @@ protected:
 	static inline const wxSize DEFAULT_SIZE = wxSize(1280, 720);
 
 	BaseWindow(const std::string& name, const wxPoint& pos = DEFAULT_POS,
-		const wxSize& size = DEFAULT_SIZE);
+		const wxSize& size = DEFAULT_SIZE, const bool show = true);
 	virtual ~BaseWindow();
 
 	// Delete copy and move constructors and assignment operators
@@ -56,7 +56,9 @@ protected:
 	// Flag indicating whether the program whould quit on window close
 	bool _killProgramOnClose = true;
 
-	virtual void BackgroundTask(wxIdleEvent& evt) {}
+	PopUp* _popup = nullptr;
+
+	virtual void BackgroundTask(wxIdleEvent& evt) {};
 	virtual constexpr const WindowNames WindowName() = 0;
 
 };
@@ -100,11 +102,6 @@ private:
 	wxTextCtrl* _ipInput;
 	wxButton* _connectButton;
 
-	PopUp* _popUp = nullptr;
-
-	Client* _client = nullptr;
-	bool _connected = false;
-
 	const int _windowId = 2;
 
 public:
@@ -118,7 +115,6 @@ public:
 	ClientInitWindow& operator=(ClientInitWindow&&) = delete;
 
 	void ConnectButtonClick(wxCommandEvent& evt);
-	void BackgroundTask(wxIdleEvent& evt) override;
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientInit; }
 
@@ -139,13 +135,15 @@ private:
 	ByteArray _imgData = nullptr;
 	int _imgSize = 0;
 	
-	Client* _client;
+	Client* _client = nullptr;
 	std::thread _clientThr;
+
+	bool _connected = false;
 
 	const int _windowId = 3;
 
 public:
-	ClientStreamWindow(Client* client, 
+	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 
@@ -160,7 +158,7 @@ public:
 	void OnPaint(wxPaintEvent& evt);
 	
 	void PaintNow();
-	void OnIdle(wxIdleEvent& evt);
+	void BackgroundTask(wxIdleEvent& evt) override;
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 
@@ -176,6 +174,8 @@ private:
 	wxTextCtrl* _portTb;
 	wxButton* _startServerButton;
 
+	Server* _server = nullptr;
+	
 	const int _windowId = 4;
 
 	// Constructor and destructor
@@ -190,6 +190,7 @@ public:
 	ServerInitWindow& operator=(ServerInitWindow&&) = delete;
 	
 	void StartServer(wxCommandEvent& evt);
+	void BackgroundTask(wxIdleEvent& evt) override;
 	
 	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
 
@@ -199,8 +200,7 @@ public:
 
 class PopUp : public wxPopupTransientWindow {
 public:
-	PopUp(BaseWindow* parent, const std::string& message, 
-		std::function<void(wxIdleEvent&)> onIdle = [](wxIdleEvent&) {});
+	PopUp(BaseWindow* parent, const std::string& message);
 	~PopUp();
 
 	// Delete copy and move constructors and assignment operators
@@ -210,15 +210,12 @@ public:
 	PopUp& operator=(PopUp&&) = delete;
 
 	void OnButton(wxCommandEvent& evt);
-	//void BackgroundTask(wxIdleEvent& evt);
 
 private:
 
 	const inline static wxSize POPUP_SIZE = wxSize(300, 200);
 	wxStaticText* _text;
 	wxButton* _dismissButton;
-
-	//std::function<void(wxIdleEvent& evt)> _backgroundTask;
 
 	wxDECLARE_ABSTRACT_CLASS(PopUp);
 	wxDECLARE_EVENT_TABLE();
