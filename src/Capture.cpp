@@ -37,8 +37,8 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, cons
 #if defined(__APPLE__)
 
     _colorspace = CGColorSpaceCreateDeviceRGB();
-    _context = CGBitmapContextCreate(_currentCapture, _srcWidth, _srcHeight, 
-        8, _srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+    _context = CGBitmapContextCreate(_currentCapture, srcWidth, srcHeight, 
+        8, srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
 #endif
     ReInitialize(_targetResolution);
