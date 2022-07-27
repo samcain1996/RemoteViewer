@@ -40,9 +40,6 @@ private:
 
     BmpFileHeader _header {};
 
-    ImageData _currentImage {};
-    ImageData _previousImage {};
-
     PixelData _currentCapture = nullptr;     // Buffer holding screen capture
     PixelData _previousCapture = nullptr;    // Buffer holding previous screen capture  
 

@@ -189,7 +189,7 @@ const ImageData ScreenCapture::WholeDeal() const {
 
     ImageData fullImage(TotalSize());
     std::copy(_header.begin(), _header.end(), fullImage.begin());
-    std::copy(_currentImage.begin(), _currentImage.end(), fullImage.begin() + BMP_HEADER_SIZE);
+    std::memcpy(&fullImage[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
 
     return fullImage;
 
@@ -207,7 +207,8 @@ const size_t ScreenCapture::GetImageData(ByteArray& arr) const {
 }
 
 const ImageData ScreenCapture::GetImageData() const {
-    return _currentImage;
+    // return _currentImage;
+    return ImageData();
 }
 
 void ScreenCapture::CaptureScreen() {
