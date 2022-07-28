@@ -38,15 +38,6 @@ using ByteEncodedUint32 = Byte[FOUR_BYTES];
 
 using ThreadLock		= std::lock_guard<std::mutex>;
 
-
-/*------------------RESOLUTIONS--------------------*/
-using Resolution = std::pair<Ushort, Ushort>;
-constexpr const Resolution RES_480 = { 640, 480 };
-constexpr const Resolution RES_720 = { 1280, 720 };
-constexpr const Resolution RES_1080 = { 1920, 1080 };
-constexpr const Resolution RES_1440 = { 2560, 1440 };
-constexpr const Resolution RES_4K = { 3840, 2160 };
-
 enum class Endianess { Little, Big };
 constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
 
@@ -108,11 +99,4 @@ constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber, const Endianes
         return ((Uint32)encodedNumber[3] + ((Uint32)encodedNumber[2] << ONE_BYTE) +
             ((Uint32)encodedNumber[1] << TWO_BYTES) + ((Uint32)encodedNumber[0] << THREE_BYTES));
     }
-}
-
-constexpr const Uint32 CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32) {
-    const Uint32& width  = resolution.first;
-	const Uint32& height = resolution.second;
-
-    return ((width * bitsPerPixel + 31) / 32) * 4 * height;
 }

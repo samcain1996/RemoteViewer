@@ -1,10 +1,11 @@
 #include "Capture.h"
 
-ScreenCapture::ScreenCapture(const Resolution& srcRes, const Resolution& targetRes) : 
-    ScreenCapture(srcRes.first, srcRes.second, targetRes.first, targetRes.second) {}
+ScreenCapture::ScreenCapture(const Resolution& res) : ScreenCapture(res.width, res.height) {}
 
-ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight, 
-    const size_t targetWidth, const size_t targetHeight) : _srcResolution(srcWidth, srcHeight), _targetResolution(targetWidth, targetHeight) {
+ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
+
+    _resolution.width  = width;
+    _resolution.height = height;
 
 #if defined(__linux__)
 
@@ -13,8 +14,8 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight,
 
     XGetWindowAttributes(_display, _root, &_attributes);
 
-    _srcResolution.first  = _attributes.width;
-    _srcResolution.second = _attributes.height;
+    _resolution.width  = _attributes.width;
+    _resolution.height = _attributes.height;
     
 #endif
 
@@ -47,24 +48,9 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight,
 
 #endif
 
-    ReInitialize(_targetResolution);
+    ReInitialize(_resolution);
 
 }
-
-#if defined(_WIN32)
-
-ScreenCapture::ScreenCapture() : ScreenCapture(GetDeviceCaps(GetDC(NULL), HORZRES), GetDeviceCaps(GetDC(NULL), VERTRES), 1920, 1080) {}
-
-#elif defined(__APPLE__)
-
-ScreenCapture::ScreenCapture() : ScreenCapture(CGDisplayPixelsWide(CGMainDisplayID()), CGDisplayPixelsHigh(CGMainDisplayID()),
-1440, 900) {}
-
-#elif defined(__linux__) 
-
-ScreenCapture::ScreenCapture() : ScreenCapture(1366, 768, 1366, 768) {}
-
-#endif
 
 ScreenCapture::~ScreenCapture() {
 
@@ -79,6 +65,8 @@ ScreenCapture::~ScreenCapture() {
     DeleteObject(_memHDC);
 
 #elif defined(__APPLE__)
+
+    delete[](ByteArray) _currentCapture;    
 
     CGImageRelease(_image);
     CGContextRelease(_context);
@@ -114,28 +102,23 @@ constexpr const BmpFileHeader ScreenCapture::BaseHeader() {
     return baseHeader;
 }
 
-const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRes,
+const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
         const Ushort bitsPerPixel) {
 
     BmpFileHeader header = BaseHeader();
-	
-	// Dimensions in pixels
-    Ushort width  = targetRes.first;
-    Ushort height = targetRes.second;
 
-    encode256(&header[2],
-        width * height * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
-        Endianess::Big);
+    encode256(&header[2], resolution.width * resolution.height * 
+        BMP_CHANNELS + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE, Endianess::Big);
 
-    encode256(&header[4+BMP_FILE_HEADER_SIZE], width, Endianess::Big);
+    encode256(&header[4+BMP_FILE_HEADER_SIZE], resolution.width, Endianess::Big);
 
-    #if !defined(_WIN32)  // Window bitmaps are stored upside down
+#if !defined(_WIN32)  // Window bitmaps are stored upside down
 
-    height = -height;
+    resolution.height = -resolution.height;
 
 #endif
 
-    encode256(&header[8+BMP_FILE_HEADER_SIZE], height, Endianess::Big);
+    encode256(&header[8+BMP_FILE_HEADER_SIZE], resolution.height, Endianess::Big);
 
 #if !defined(_WIN32)  // Window bitmaps are stored upside down
 
@@ -154,18 +137,11 @@ constexpr const size_t ScreenCapture::TotalSize() const {
     return _bitmapSize + BMP_HEADER_SIZE;
 }
 
-void ScreenCapture::ReInitialize(const Resolution& targetRes) {
+void ScreenCapture::ReInitialize(const Resolution& resolution) {
 
-    _targetResolution = targetRes;
+    _resolution = resolution;
 
-    // TODO: Deal with this
-    _srcResolution.first = std::min(_srcResolution.first, _targetResolution.first);
-    _srcResolution.second = std::min(_srcResolution.second, _targetResolution.second);
-	
-    const Ushort& width = _targetResolution.first;
-    const Ushort& height = _targetResolution.second;
-
-    _bitmapSize = CalulcateBMPFileSize(_targetResolution, _bitsPerPixel);
+    _bitmapSize = CalulcateBMPFileSize(_resolution, _bitsPerPixel);
 
     #if defined(__APPLE__)
 
@@ -177,13 +153,13 @@ void ScreenCapture::ReInitialize(const Resolution& targetRes) {
     delete[](ByteArray)_previousCapture;
     _previousCapture = new Byte[_bitmapSize];
 
-    _header = ConstructBMPHeader(_targetResolution, _bitsPerPixel);
+    _header = ConstructBMPHeader(_resolution, _bitsPerPixel);
 
 #if defined(_WIN32)
 
     // Recreate bitmap with new dimensions
     DeleteObject(_hScreen);
-    _hScreen = CreateCompatibleBitmap(_srcHDC, width, height);
+    _hScreen = CreateCompatibleBitmap(_srcHDC, _resolution.width, _resolution.height);
     SelectObject(_memHDC, _hScreen);
 
     // Free _hDIB and re-lock
@@ -239,19 +215,13 @@ const ImageData ScreenCapture::GetImageData() const {
 
 void ScreenCapture::CaptureScreen() {
 
-	const Ushort& srcWidth  = _srcResolution.first;
-    const Ushort& srcHeight = _srcResolution.second;
-	
-	const Ushort& targetWidth  = _targetResolution.first;
-	const Ushort& targetHeight = _targetResolution.second;
-
     if (_currentCapture)
     std::memcpy(_previousCapture, _currentCapture, _bitmapSize);
 
 #if defined(_WIN32)
 
-    StretchBlt(_memHDC, 0, 0, targetWidth, targetHeight,
-        _srcHDC, 0, 0, srcWidth, srcHeight, SRCCOPY);
+    StretchBlt(_memHDC, 0, 0, _resolution.width, _resolution.height,
+        _srcHDC, 0, 0, _resolution.width, _resolution.height, SRCCOPY);
 
     GetObject(_hScreen, sizeof BITMAP, &_screenBMP);
 
@@ -264,14 +234,16 @@ void ScreenCapture::CaptureScreen() {
 #elif defined(__APPLE__)
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
-    CGContextDrawImage(_context, CGRectMake(0, 0, targetWidth, targetHeight), _image);
+    CGContextDrawImage(_context, CGRectMake(0, 0, _resolution.width, _resolution.height), _image);
 
 #elif defined(__linux__)
 
-    _img = XGetImage(_display, _root, 0, 0, srcWidth, srcHeight, AllPlanes, ZPixmap);
+    _img = XGetImage(_display, _root, 0, 0, _resolution.width, _resolution.height, AllPlanes, ZPixmap);
     _currentCapture = _img->data;
 
 #endif
 
 }
+
+const Resolution& ScreenCapture::ImageResolution() const { return _resolution; }
 
