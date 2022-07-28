@@ -102,8 +102,8 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRe
     std::memset(header.data(), 0, header.size());
 	
 	// Dimensions in pixels
-    const Ushort width  = targetRes.first;
-    const Ushort height = targetRes.second;
+    Ushort width  = targetRes.first;
+    Ushort height = targetRes.second;
 
     header[0] = 0x42;
     header[1] = 0x4D;
@@ -117,6 +117,12 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRe
     header[BMP_FILE_HEADER_SIZE] = 0x28;
 
     encode256(&header[4+BMP_FILE_HEADER_SIZE], width, Endianess::Big);
+
+    #if !defined(_WIN32)  // Window bitmaps are stored upside down
+
+    height = -height;
+
+#endif
 
     encode256(&header[8+BMP_FILE_HEADER_SIZE], height, Endianess::Big);
 
