@@ -73,6 +73,8 @@ private:
 
 #endif
 
+    constexpr static const BmpFileHeader BaseHeader();
+
 public:
 
     ScreenCapture();

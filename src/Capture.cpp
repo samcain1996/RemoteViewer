@@ -95,26 +95,34 @@ ScreenCapture::~ScreenCapture() {
 
 }
 
+constexpr const BmpFileHeader ScreenCapture::BaseHeader() {
+
+    BmpFileHeader baseHeader {};  // TODO: See how to init all vals to 0
+
+    baseHeader[0] = 0x42;
+    baseHeader[1] = 0x4D;
+
+    baseHeader[10] = 0x36;
+
+    baseHeader[BMP_FILE_HEADER_SIZE] = 0x28;
+
+    baseHeader[BMP_FILE_HEADER_SIZE+12] = 1;
+
+    return baseHeader;
+}
+
 const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRes,
         const Ushort bitsPerPixel) {
 
-    std::array<Byte, BMP_HEADER_SIZE> header {};  // TODO: See how to init all vals to 0
-    std::memset(header.data(), 0, header.size());
+    BmpFileHeader header = BaseHeader();
 	
 	// Dimensions in pixels
     Ushort width  = targetRes.first;
     Ushort height = targetRes.second;
 
-    header[0] = 0x42;
-    header[1] = 0x4D;
-
     encode256(&header[2],
         width * height * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
         Endianess::Big);
-
-    header[10] = 0x36;
-
-    header[BMP_FILE_HEADER_SIZE] = 0x28;
 
     encode256(&header[4+BMP_FILE_HEADER_SIZE], width, Endianess::Big);
 
@@ -132,8 +140,6 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRe
         [](Byte& b) { if (b == NULL) { b = 255; } });
 
 #endif
-
-    header[BMP_FILE_HEADER_SIZE+12] = 1;
 
     header[BMP_FILE_HEADER_SIZE+14] = bitsPerPixel;
 	
