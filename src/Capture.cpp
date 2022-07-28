@@ -40,12 +40,15 @@ ScreenCapture::ScreenCapture(const size_t srcWidth, const size_t srcHeight,
 
 #if defined(__APPLE__)
 
+    _currentCapture = new Byte[CalulcateBMPFileSize(srcWidth, srcHeight)];
     _colorspace = CGColorSpaceCreateDeviceRGB();
     _context = CGBitmapContextCreate(_currentCapture, srcWidth, srcHeight, 
         8, srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
 #endif
+
     ReInitialize(_targetResolution);
+
 }
 
 #if defined(_WIN32)
@@ -164,6 +167,13 @@ void ScreenCapture::ReInitialize(const Resolution& targetRes) {
 
     _bitmapSize = CalulcateBMPFileSize(_targetResolution, _bitsPerPixel);
 
+    #if defined(__APPLE__)
+
+    delete[](ByteArray)_currentCapture;
+    _currentCapture = new Byte[_bitmapSize];
+
+    #endif
+
     delete[](ByteArray)_previousCapture;
     _previousCapture = new Byte[_bitmapSize];
 
@@ -255,7 +265,6 @@ void ScreenCapture::CaptureScreen() {
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
     CGContextDrawImage(_context, CGRectMake(0, 0, targetWidth, targetHeight), _image);
-    _currentCapture = _image;
 
 #elif defined(__linux__)
 
