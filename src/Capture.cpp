@@ -105,28 +105,31 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(const Resolution& targetRe
     const Ushort width  = targetRes.first;
     const Ushort height = targetRes.second;
 
-	// Header components as aliases to header array
-    const ByteArray bmpHeader = (ByteArray)&header.data()[0];
-    const ByteArray bmpInfo = (bmpHeader + BMP_FILE_HEADER_SIZE);
+    header[0] = 0x42;
+    header[1] = 0x4D;
 
-    bmpHeader[0] = 0x42;
-    bmpHeader[1] = 0x4D;
-
-    encode256(&bmpHeader[2],
+    encode256(&header[2],
         width * height * 4 + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE,
         Endianess::Big);
 
-    bmpHeader[10] = 0x36;
+    header[10] = 0x36;
 
-    bmpInfo[0] = 0x28;
+    header[BMP_FILE_HEADER_SIZE] = 0x28;
 
-    encode256(&bmpInfo[4], width, Endianess::Big);
+    encode256(&header[4+BMP_FILE_HEADER_SIZE], width, Endianess::Big);
 
-    encode256(&bmpInfo[8], height, Endianess::Big);
+    encode256(&header[8+BMP_FILE_HEADER_SIZE], height, Endianess::Big);
 
-    bmpInfo[12] = 1;
+#if !defined(_WIN32)  // Window bitmaps are stored upside down
 
-    bmpInfo[14] = bitsPerPixel;
+    std::for_each( (header.begin() + BMP_FILE_HEADER_SIZE + 8), (header.begin() + BMP_FILE_HEADER_SIZE + 12), 
+        [](Byte& b) { if (b == NULL) { b = 255; } });
+
+#endif
+
+    header[BMP_FILE_HEADER_SIZE+12] = 1;
+
+    header[BMP_FILE_HEADER_SIZE+14] = bitsPerPixel;
 	
     return header;
 	
@@ -207,8 +210,9 @@ const size_t ScreenCapture::GetImageData(ByteArray& arr) const {
 }
 
 const ImageData ScreenCapture::GetImageData() const {
-    // return _currentImage;
-    return ImageData();
+    ImageData data (_bitmapSize);
+    std::memcpy(&data[0], _currentCapture, _bitmapSize);
+    return data;
 }
 
 void ScreenCapture::CaptureScreen() {
