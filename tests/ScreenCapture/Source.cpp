@@ -4,20 +4,20 @@
 
 int main() {
 
-    ScreenCapture screen(2544, 1353, 2544, 1353);
+    ScreenCapture screen(RES_1080);
 
     screen.CaptureScreen();
 
-    // ByteArray capture = nullptr;
-    // size_t imgSize = screen.GetImageData(capture);
+    screen.SaveToFile();
 
-    ImageData capture = screen.GetImageData();
-    BmpFileHeader header = screen.ConstructBMPHeader(Resolution(2544, 1353));
+    // ImageData capture = screen.WholeDeal();
+    // //BmpFileHeader header = ScreenCapture::ConstructBMPHeader(screen.ImageResolution());
 
-    std::ofstream output("imgNew.bmp", std::ios_base::binary);
-    output.write((char*)header.data(), header.size());
-    output.write((char*)capture.data(), capture.size());
+    // std::ofstream output("MomentOfTruth.bmp", std::ios::binary);
+    // //output.write((char*)header.data(), header.size());
+    // output.write((char*)capture.data(), capture.size());
 
+    // std::cout << screen.ImageResolution().height << "p\n";
 
     return 0;
     

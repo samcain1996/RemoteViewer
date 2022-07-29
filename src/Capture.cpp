@@ -20,9 +20,6 @@ ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
     _root = DefaultRootWindow(_display);
 
     XGetWindowAttributes(_display, _root, &_attributes);
-
-    _resolution.width  = _attributes.width;
-    _resolution.height = _attributes.height;
     
 #endif
 
@@ -144,8 +141,8 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
 
     _bitmapSize = CalulcateBMPFileSize(_resolution, _bitsPerPixel);
     
-    _imageData.clear();
-    _imageData.reserve(_bitmapSize);
+    // _imageData.clear();
+    // _imageData.reserve(_bitmapSize);
 
     #if defined(__APPLE__)
 
@@ -189,11 +186,9 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
 
 const ImageData ScreenCapture::WholeDeal() const {
 
-    ImageData wholeDeal(TotalSize());
-
-    std::copy(_header.begin(), _header.end(), std::back_inserter(wholeDeal));
-    std::copy(_imageData.begin(), _imageData.end(), std::back_inserter(wholeDeal));
-
+    ImageData wholeDeal(_header.begin(), _header.end());
+    std::copy(_currentCapture, _currentCapture + _bitmapSize, std::back_inserter(wholeDeal));
+    
     return wholeDeal;
 
 }
@@ -208,8 +203,8 @@ const ImageData ScreenCapture::WholeDeal() const {
 
 // }
 
-const ImageData& ScreenCapture::GetImageData() const {
-    return _imageData;
+const ImageData ScreenCapture::GetImageData() const {
+    return ImageData(_currentCapture, _currentCapture + _bitmapSize);
 }
 
 void ScreenCapture::CaptureScreen() {
@@ -227,20 +222,27 @@ void ScreenCapture::CaptureScreen() {
         _currentCapture,
         (BITMAPINFO*)(&_header[BMP_FILE_HEADER_SIZE]), DIB_RGB_COLORS);
 
-    _imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
+    // _imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
 
 #elif defined(__APPLE__)
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
     CGContextDrawImage(_context, CGRectMake(0, 0, _resolution.width, _resolution.height), _image);
-    _imageData = ImageData(&((ByteArray)_currentCapture)[0], (&((ByteArray)_currentCapture)[_bitmapSize]));
+    // _imageData = ImageData(&((ByteArray)_currentCapture)[0], (&((ByteArray)_currentCapture)[_bitmapSize]));
 
 #elif defined(__linux__)
 
     _image = XGetImage(_display, _root, 0, 0, _resolution.width, _resolution.height, AllPlanes, ZPixmap);
-    _imageData = ImageData(_image->data, (_image->data + _bitmapSize) );
+    _currentCapture = (PixelData)_image->data;
+    // _imageData = ImageData(_image->data, (_image->data + _bitmapSize) );
 
 #endif
+
+}
+
+void ScreenCapture::SaveToFile(const std::string& filename) const {
+
+    std::ofstream(filename, std::ios::binary).write((char*)WholeDeal().data(), _bitmapSize);
 
 }
 

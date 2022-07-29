@@ -20,6 +20,7 @@
 #include <thread>
 #include <cstring>
 #include <array>
+#include <fstream>
 
 using Uint32 = std::uint32_t;
 using Ushort = std::uint16_t;

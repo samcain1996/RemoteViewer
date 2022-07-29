@@ -22,7 +22,7 @@ constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
 constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE;
 constexpr const Ushort BMP_COLOR_CHANNELS   = 4;
 
-using PixelData = void*;
+using PixelData = Byte*;
 using BmpFileHeader = std::array<Byte, BMP_HEADER_SIZE>;
 
 using ImageData = std::vector<Byte>;
@@ -53,7 +53,7 @@ private:
 	
     Resolution _resolution;      
     BmpFileHeader _header {};
-    ImageData _imageData {};
+    //ImageData _imageData {};
 
     PixelData _currentCapture = nullptr;     // Buffer holding screen capture
 
@@ -114,9 +114,11 @@ public:
     const ImageData WholeDeal() const;
 
     // const size_t GetImageData(ByteArray& arr) const;
-    const ImageData& GetImageData() const;
+    const ImageData GetImageData() const;
 
     const Resolution& ImageResolution() const;
+
+    void SaveToFile(const std::string& filename = "screenshot.bmp") const;
 };
 
   
