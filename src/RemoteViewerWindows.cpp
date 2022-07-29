@@ -234,10 +234,10 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 	// TODO: Limit connect attempts
 	//		Why is the window unresponsive beofer it connects?
 	//		Try to connect if not connected
-	if (std::memcmp(_client->_tmpBuffer.data(), _client->HANDSHAKE_MESSAGE, _client->HANDSHAKE_SIZE) != 0) {
+	if (!_connected) {
 	
 		_client->Handshake(_connected);
-		
+		_connected = std::memcmp(_client->_tmpBuffer.data(), _client->HANDSHAKE_MESSAGE, _client->HANDSHAKE_SIZE) == 0;
 
 		
 	}
@@ -253,7 +253,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 			ConnectMessageables(*this, *_client);
 			//_client->_io_context.restart();
 			
-			_clientThr = std::thread(&Client::AsyncReceive, _client);
+			_clientThr = std::thread(&Client::Receive, _client);
 			
 		}
 

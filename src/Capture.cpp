@@ -32,7 +32,7 @@ ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
     _memHDC = CreateCompatibleDC(_srcHDC);    // Creates a new device context from previous context
 
     // Create bitmap from the source using the destination's resolution
-    _hScreen = CreateCompatibleBitmap(_srcHDC, _targetResolution.first, _targetResolution.second);
+    _hScreen = CreateCompatibleBitmap(_srcHDC, _resolution.width, _resolution.height);
 
     SelectObject(_memHDC, _hScreen);  // Select bitmap into DC [2]
 

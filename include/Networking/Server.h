@@ -15,7 +15,6 @@ private:
 	void ProcessPacket(const Packet&) override {};
 
 	ScreenCapture _screen;
-	ByteArray _capture = nullptr;
 
 public:
 

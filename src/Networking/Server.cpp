@@ -1,6 +1,6 @@
 #include "Networking/Server.h"
 
-Server::Server(const Ushort listenPort) : NetAgent(listenPort), _screen(640, 480, 640, 480) {}
+Server::Server(const Ushort listenPort) : NetAgent(listenPort), _screen(RES_1080) {}
 
 void Server::Handshake(bool& connected) {
 	
@@ -15,17 +15,12 @@ void Server::Handshake(bool& connected) {
 }
 
 void Server::Serve() {
-	
-    size_t captureSize = 0;
 
     do {
 
         _screen.CaptureScreen();
-
-        captureSize = _screen.WholeDeal(_capture);
-
-        
-    } while (Send(_capture, captureSize));
+     
+    } while ( Send((ByteArray)_screen.WholeDeal().data(), _screen.WholeDeal().size()));
 }
 
 bool Server::Send(ByteArray bytes, size_t len) {
@@ -58,5 +53,5 @@ void Server::AsyncReceive()
 }
 
 Server::~Server() {
-    delete _capture;
+    // delete _capture;
 }

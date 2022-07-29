@@ -32,6 +32,7 @@ public:
 	// Textbox validators used
 	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
 	wxTextValidator PORT_VALIDATOR = wxTextValidator(wxFILTER_DIGITS);
+	
 protected:
 
 	// Previous Windows
