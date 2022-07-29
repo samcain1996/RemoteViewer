@@ -48,7 +48,7 @@ ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
 
     _currentCapture = new Byte[CalulcateBMPFileSize(_resolution)];
     _colorspace = CGColorSpaceCreateDeviceRGB();
-    _context = CGBitmapContextCreate(&_imageData[0], _resolution.width, _resolution.height, 
+    _context = CGBitmapContextCreate(_currentCapture, _resolution.width, _resolution.height, 
         8, _resolution.width * BMP_COLOR_CHANNELS, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
 #endif
@@ -233,7 +233,7 @@ void ScreenCapture::CaptureScreen() {
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
     CGContextDrawImage(_context, CGRectMake(0, 0, _resolution.width, _resolution.height), _image);
-    _imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
+    _imageData = ImageData(&((ByteArray)_currentCapture)[0], (&((ByteArray)_currentCapture)[_bitmapSize]));
 
 #elif defined(__linux__)
 

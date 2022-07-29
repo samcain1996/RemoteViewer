@@ -55,7 +55,7 @@ private:
     BmpFileHeader _header {};
     ImageData _imageData {};
 
-    // PixelData _currentCapture = nullptr;     // Buffer holding screen capture
+    PixelData _currentCapture = nullptr;     // Buffer holding screen capture
 
     DWORD _bitmapSize = 0;
     DWORD _bitsPerPixel = 32;
