@@ -1,5 +1,12 @@
 #include "Capture.h"
 
+
+const Resolution& ScreenCapture::ImageResolution() const { return _resolution; }
+
+constexpr const Uint32 ScreenCapture::CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel) {
+    return ((resolution.width * bitsPerPixel + 31) / 32) * BMP_COLOR_CHANNELS * resolution.height;
+}
+
 ScreenCapture::ScreenCapture(const Resolution& res) : ScreenCapture(res.width, res.height) {}
 
 ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
@@ -37,14 +44,12 @@ ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
 
 #endif
 
-    _previousCapture = new Byte[_bitmapSize];
-
 #if defined(__APPLE__)
 
-    _currentCapture = new Byte[CalulcateBMPFileSize(srcWidth, srcHeight)];
+    // _currentCapture = new Byte[CalulcateBMPFileSize(_resolution)];
     _colorspace = CGColorSpaceCreateDeviceRGB();
-    _context = CGBitmapContextCreate(_currentCapture, srcWidth, srcHeight, 
-        8, srcWidth * 4, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+    _context = CGBitmapContextCreate(&_imageData[0], _resolution.width, _resolution.height, 
+        8, _resolution.width * BMP_COLOR_CHANNELS, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
 
 #endif
 
@@ -66,7 +71,7 @@ ScreenCapture::~ScreenCapture() {
 
 #elif defined(__APPLE__)
 
-    delete[](ByteArray) _currentCapture;    
+    // delete[](ByteArray) _currentCapture;    
 
     CGImageRelease(_image);
     CGContextRelease(_context);
@@ -74,14 +79,10 @@ ScreenCapture::~ScreenCapture() {
 
 #elif defined(__linux__)
 
-    XDestroyImage(_img);
+    XDestroyImage(_image);
     XCloseDisplay(_display);
 
 #endif
-
-    if (_previousCapture) {
-        delete[](ByteArray)_previousCapture;
-    }
 
 
 }
@@ -108,7 +109,7 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
     BmpFileHeader header = BaseHeader();
 
     encode256(&header[2], resolution.width * resolution.height * 
-        BMP_CHANNELS + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE, Endianess::Big);
+        BMP_COLOR_CHANNELS + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE, Endianess::Big);
 
     encode256(&header[4+BMP_FILE_HEADER_SIZE], resolution.width, Endianess::Big);
 
@@ -123,7 +124,7 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
 #if !defined(_WIN32)  // Window bitmaps are stored upside down
 
     std::for_each( (header.begin() + BMP_FILE_HEADER_SIZE + 8), (header.begin() + BMP_FILE_HEADER_SIZE + 12), 
-        [](Byte& b) { if (b == NULL) { b = 255; } });
+        [](Byte& b) { if ( b == '\0' ) { b = 255; } });
 
 #endif
 
@@ -142,16 +143,16 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
     _resolution = resolution;
 
     _bitmapSize = CalulcateBMPFileSize(_resolution, _bitsPerPixel);
+    
+    _imageData.clear();
+    _imageData.reserve(_bitmapSize);
 
     #if defined(__APPLE__)
 
-    delete[](ByteArray)_currentCapture;
-    _currentCapture = new Byte[_bitmapSize];
+    // delete[](ByteArray)_currentCapture;
+    // _currentCapture = new Byte[_bitmapSize];
 
     #endif
-
-    delete[](ByteArray)_previousCapture;
-    _previousCapture = new Byte[_bitmapSize];
 
     _header = ConstructBMPHeader(_resolution, _bitsPerPixel);
 
@@ -167,56 +168,53 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
     GlobalFree(_hDIB);
 
     _hDIB = GlobalAlloc(GHND, _bitmapSize);
-    _currentCapture = GlobalLock(_hDIB);
+    // _currentCapture = GlobalLock(_hDIB);
+    _currentCapture = ImageData(GlobaLock(_hDIB), GlobaLock(_hDIB) + _bitmapSize);
 
 #endif
 	
 }
 
-const size_t ScreenCapture::WholeDeal(ByteArray& arr) const {
+// const size_t ScreenCapture::WholeDeal(ByteArray& arr) const {
 
-    const size_t captureSize = TotalSize();
+//     const size_t captureSize = TotalSize();
 
-    if (arr == nullptr) { arr = new Byte[captureSize]; }
+//     if (arr == nullptr) { arr = new Byte[captureSize]; }
 
-    std::memcpy(arr, &_header, BMP_HEADER_SIZE);
+//     std::memcpy(arr, &_header, BMP_HEADER_SIZE);
 
-    std::memcpy(&arr[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
+//     std::memcpy(&arr[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
 
-    return captureSize;
-}
+//     return captureSize;
+// }
 
 const ImageData ScreenCapture::WholeDeal() const {
 
-    ImageData fullImage(TotalSize());
-    std::copy(_header.begin(), _header.end(), fullImage.begin());
-    std::memcpy(&fullImage[BMP_HEADER_SIZE], _currentCapture, _bitmapSize);
+    ImageData wholeDeal(TotalSize());
 
-    return fullImage;
+    std::copy(_header.begin(), _header.end(), std::back_inserter(wholeDeal));
+    std::copy(_imageData.begin(), _imageData.end(), std::back_inserter(wholeDeal));
 
+    return wholeDeal;
 
-}
-
-const size_t ScreenCapture::GetImageData(ByteArray& arr) const {
-
-    if (arr == nullptr) { arr = new Byte[_bitmapSize]; }
-
-    std::memcpy(arr, _currentCapture, _bitmapSize);
-
-    return _bitmapSize;
 
 }
 
-const ImageData ScreenCapture::GetImageData() const {
-    ImageData data (_bitmapSize);
-    std::memcpy(&data[0], _currentCapture, _bitmapSize);
-    return data;
+// const size_t ScreenCapture::GetImageData(ByteArray& arr) const {
+
+//     if (arr == nullptr) { arr = new Byte[_bitmapSize]; }
+
+//     std::memcpy(arr, _currentCapture, _bitmapSize);
+
+//     return _bitmapSize;
+
+// }
+
+const ImageData& ScreenCapture::GetImageData() const {
+    return _imageData;
 }
 
 void ScreenCapture::CaptureScreen() {
-
-    if (_currentCapture)
-    std::memcpy(_previousCapture, _currentCapture, _bitmapSize);
 
 #if defined(_WIN32)
 
@@ -228,7 +226,7 @@ void ScreenCapture::CaptureScreen() {
     // Should be legal because BITMAPINFO has no padding, all its data members are aligned.
     GetDIBits(_memHDC, _hScreen, 0,
         (UINT)_screenBMP.bmHeight,
-        _currentCapture,
+        &_imagData[0],
         (BITMAPINFO*)(&_header[BMP_FILE_HEADER_SIZE]), DIB_RGB_COLORS);
 
 #elif defined(__APPLE__)
@@ -238,12 +236,13 @@ void ScreenCapture::CaptureScreen() {
 
 #elif defined(__linux__)
 
-    _img = XGetImage(_display, _root, 0, 0, _resolution.width, _resolution.height, AllPlanes, ZPixmap);
-    _currentCapture = _img->data;
+    _image = XGetImage(_display, _root, 0, 0, _resolution.width, _resolution.height, AllPlanes, ZPixmap);
+    // _currentCapture = _img->data;
+    _imageData = ImageData(_image->data, (_image->data + _bitmapSize) );
 
 #endif
 
-}
+   //_imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
 
-const Resolution& ScreenCapture::ImageResolution() const { return _resolution; }
+}
 

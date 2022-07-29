@@ -20,7 +20,7 @@
 constexpr const Ushort BMP_FILE_HEADER_SIZE = 14;
 constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
 constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE;
-constexpr const Ushort BMP_CHANNELS         = 4;
+constexpr const Ushort BMP_COLOR_CHANNELS   = 4;
 
 using PixelData = void*;
 using BmpFileHeader = std::array<Byte, BMP_HEADER_SIZE>;
@@ -47,18 +47,15 @@ public:
     static const BmpFileHeader ConstructBMPHeader(Resolution resolution = RES_1080,
         const Ushort bitsPerPixel = 32);  // Initializes values for bitmap header
 
-    constexpr static const Uint32 CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32) {
-        return ((resolution.width * bitsPerPixel + 31) / 32) * 4 * resolution.height;
-    }
+    constexpr static const Uint32 CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32);
 
 private:
 	
     Resolution _resolution;      
-
     BmpFileHeader _header {};
+    ImageData _imageData {};
 
-    PixelData _currentCapture = nullptr;     // Buffer holding screen capture
-    PixelData _previousCapture = nullptr;    // Buffer holding previous screen capture  
+    // PixelData _currentCapture = nullptr;     // Buffer holding screen capture
 
     DWORD _bitmapSize = 0;
     DWORD _bitsPerPixel = 32;
@@ -86,7 +83,7 @@ private:
     Display* _display = nullptr;
     Window _root;
     XWindowAttributes _attributes = { 0 };
-    XImage* _img = nullptr;
+    XImage* _image = nullptr;
 
 #endif
 
@@ -94,26 +91,30 @@ private:
 
 public:
 
+    static inline Resolution DefaultResolution = RES_1080;
+
+public:
+
     
     ScreenCapture(const ScreenCapture&) = delete;
     ScreenCapture(ScreenCapture&&) = delete;
 
-    ScreenCapture(const Resolution& res = RES_1080);
+    ScreenCapture(const Resolution& res = DefaultResolution);
     ScreenCapture(const Ushort width = 1920, const Ushort height = 1080);
 
     ~ScreenCapture();
 
     void CaptureScreen();  // Capture the screen and store in _currentCapture
 
-    void ReInitialize(const Resolution& res = RES_1080);  // Resize the destination screen
+    void ReInitialize(const Resolution& res = DefaultResolution);  // Resize the destination screen
 
     constexpr const size_t TotalSize() const;  // Size of header and data
 
-    const size_t WholeDeal(ByteArray& arr) const;
+    // const size_t WholeDeal(ByteArray& arr) const;
     const ImageData WholeDeal() const;
 
-    const size_t GetImageData(ByteArray& arr) const;
-    const ImageData GetImageData() const;
+    // const size_t GetImageData(ByteArray& arr) const;
+    const ImageData& GetImageData() const;
 
     const Resolution& ImageResolution() const;
 };
