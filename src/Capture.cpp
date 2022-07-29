@@ -46,7 +46,7 @@ ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
 
 #if defined(__APPLE__)
 
-    // _currentCapture = new Byte[CalulcateBMPFileSize(_resolution)];
+    _currentCapture = new Byte[CalulcateBMPFileSize(_resolution)];
     _colorspace = CGColorSpaceCreateDeviceRGB();
     _context = CGBitmapContextCreate(&_imageData[0], _resolution.width, _resolution.height, 
         8, _resolution.width * BMP_COLOR_CHANNELS, _colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
@@ -71,7 +71,7 @@ ScreenCapture::~ScreenCapture() {
 
 #elif defined(__APPLE__)
 
-    // delete[](ByteArray) _currentCapture;    
+    delete[](ByteArray) _currentCapture;    
 
     CGImageRelease(_image);
     CGContextRelease(_context);
@@ -149,8 +149,8 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
 
     #if defined(__APPLE__)
 
-    // delete[](ByteArray)_currentCapture;
-    // _currentCapture = new Byte[_bitmapSize];
+    delete[](ByteArray)_currentCapture;
+    _currentCapture = new Byte[_bitmapSize];
 
     #endif
 
@@ -168,8 +168,7 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
     GlobalFree(_hDIB);
 
     _hDIB = GlobalAlloc(GHND, _bitmapSize);
-    // _currentCapture = GlobalLock(_hDIB);
-    _currentCapture = ImageData(GlobaLock(_hDIB), GlobaLock(_hDIB) + _bitmapSize);
+    _currentCapture = GlobalLock(_hDIB);
 
 #endif
 	
@@ -196,7 +195,6 @@ const ImageData ScreenCapture::WholeDeal() const {
     std::copy(_imageData.begin(), _imageData.end(), std::back_inserter(wholeDeal));
 
     return wholeDeal;
-
 
 }
 
@@ -226,23 +224,23 @@ void ScreenCapture::CaptureScreen() {
     // Should be legal because BITMAPINFO has no padding, all its data members are aligned.
     GetDIBits(_memHDC, _hScreen, 0,
         (UINT)_screenBMP.bmHeight,
-        &_imagData[0],
+        _currentCapture,
         (BITMAPINFO*)(&_header[BMP_FILE_HEADER_SIZE]), DIB_RGB_COLORS);
+
+    _imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
 
 #elif defined(__APPLE__)
 
     _image = CGDisplayCreateImage(CGMainDisplayID());
     CGContextDrawImage(_context, CGRectMake(0, 0, _resolution.width, _resolution.height), _image);
+    _imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
 
 #elif defined(__linux__)
 
     _image = XGetImage(_display, _root, 0, 0, _resolution.width, _resolution.height, AllPlanes, ZPixmap);
-    // _currentCapture = _img->data;
     _imageData = ImageData(_image->data, (_image->data + _bitmapSize) );
 
 #endif
-
-   //_imageData = ImageData((ByteArray)_currentCapture, (ByteArray)_currentCapture + _bitmapSize);
 
 }
 
