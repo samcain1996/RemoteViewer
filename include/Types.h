@@ -39,9 +39,6 @@ using ByteEncodedUint32 = Byte[FOUR_BYTES];
 
 using ThreadLock		= std::lock_guard<std::mutex>;
 
-enum class Endianess { Little, Big };
-constexpr const Endianess DEFAULT_ENDIANESS = Endianess::Little;
-
 #if defined(__APPLE__) || defined(__linux__)
 using DWORD = std::uint32_t;
 #endif
@@ -75,29 +72,19 @@ public:
 
 /*----------------FUNCTIONS--------------------*/
 
-constexpr void encode256(ByteEncodedUint32 encodedNumber, const Uint32 numberToEncode,
-    const Endianess endianess = DEFAULT_ENDIANESS) {
-    if (endianess == Endianess::Little) {
-        encodedNumber[0] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
-        encodedNumber[1] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
-        encodedNumber[2] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
-        encodedNumber[3] = (Byte)(numberToEncode) & 0xFF;
-    }
-    else {
+constexpr void encode256(ByteEncodedUint32 encodedNumber, const Uint32 numberToEncode) {
+
         encodedNumber[3] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
         encodedNumber[2] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
         encodedNumber[1] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
         encodedNumber[0] = (Byte)(numberToEncode) & 0xFF; 
-    }
+    
 }
 
-constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber, const Endianess endianess = DEFAULT_ENDIANESS) {
-    if (endianess == Endianess::Big) {
+constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber) {
+
         return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << ONE_BYTE) +
             ((Uint32)encodedNumber[2] << TWO_BYTES) + ((Uint32)encodedNumber[3] << THREE_BYTES));
-    }
-    else {
-        return ((Uint32)encodedNumber[3] + ((Uint32)encodedNumber[2] << ONE_BYTE) +
-            ((Uint32)encodedNumber[1] << TWO_BYTES) + ((Uint32)encodedNumber[0] << THREE_BYTES));
-    }
+    
+
 }

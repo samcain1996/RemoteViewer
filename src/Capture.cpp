@@ -106,9 +106,9 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
     BmpFileHeader header = BaseHeader();
 
     encode256(&header[2], resolution.width * resolution.height * 
-        BMP_COLOR_CHANNELS + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE, Endianess::Big);
+        BMP_COLOR_CHANNELS + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE);
 
-    encode256(&header[4+BMP_FILE_HEADER_SIZE], resolution.width, Endianess::Big);
+    encode256(&header[4+BMP_FILE_HEADER_SIZE], resolution.width);
 
 #if !defined(_WIN32)  // Window bitmaps are stored upside down
 
@@ -116,7 +116,7 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
 
 #endif
 
-    encode256(&header[8+BMP_FILE_HEADER_SIZE], resolution.height, Endianess::Big);
+    encode256(&header[8+BMP_FILE_HEADER_SIZE], resolution.height);
 
 #if !defined(_WIN32)  // Window bitmaps are stored upside down
 
@@ -240,7 +240,11 @@ void ScreenCapture::CaptureScreen() {
 
 }
 
-void ScreenCapture::SaveToFile(const std::string& filename) const {
+void ScreenCapture::SaveToFile(std::string filename) const {
+
+    if (filename.find(".bmp") == std::string::npos) {
+        filename += ".bmp";
+    }
 
     std::ofstream(filename, std::ios::binary).write((char*)WholeDeal().data(), _bitmapSize);
 

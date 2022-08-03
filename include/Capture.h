@@ -95,14 +95,16 @@ public:
 
 public:
 
-    
     ScreenCapture(const ScreenCapture&) = delete;
     ScreenCapture(ScreenCapture&&) = delete;
 
     ScreenCapture(const Resolution& res = DefaultResolution);
-    ScreenCapture(const Ushort width = 1920, const Ushort height = 1080);
+    ScreenCapture(const Ushort width, const Ushort height);
 
     ~ScreenCapture();
+
+    ScreenCapture& operator=(const ScreenCapture&) = delete;
+    ScreenCapture& operator=(ScreenCapture&&) = delete;
 
     void CaptureScreen();  // Capture the screen and store in _currentCapture
 
@@ -118,7 +120,7 @@ public:
 
     const Resolution& ImageResolution() const;
 
-    void SaveToFile(const std::string& filename = "screenshot.bmp") const;
+    void SaveToFile(std::string filename = "screenshot.bmp") const;
 };
 
   
