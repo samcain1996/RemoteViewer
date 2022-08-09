@@ -1,4 +1,6 @@
 #pragma once
+
+#include <fstream>
 #include "Types.h"
 
 #if defined(_WIN32)
@@ -22,12 +24,13 @@ constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
 constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE;
 constexpr const Ushort BMP_COLOR_CHANNELS   = 4;
 
-using PixelData = Byte*;
 using BmpFileHeader = std::array<Byte, BMP_HEADER_SIZE>;
 
+using PixelData = Byte*;
 using ImageData = std::vector<Byte>;
 
 /*------------------RESOLUTIONS--------------------*/
+
 struct Resolution {
     Ushort width;
     Ushort height;
@@ -53,7 +56,7 @@ private:
 	
     Resolution _resolution;      
     BmpFileHeader _header {};
-    //ImageData _imageData {};
+    ImageData _imageData {};
 
     PixelData _currentCapture = nullptr;     // Buffer holding screen capture
 

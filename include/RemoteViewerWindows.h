@@ -1,11 +1,13 @@
 #pragma once
-#include "Types.h"
+
 #include <stack>
+
 #include "wx/wx.h"
 #include "wx/mstream.h"
+#include "wx/popupwin.h"
+
 #include "Client.h"
 #include "Server.h"
-#include "wx/popupwin.h"
 
 class PopUp;
 

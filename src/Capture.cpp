@@ -165,7 +165,7 @@ void ScreenCapture::ReInitialize(const Resolution& resolution) {
     GlobalFree(_hDIB);
 
     _hDIB = GlobalAlloc(GHND, _bitmapSize);
-    _currentCapture = GlobalLock(_hDIB);
+    _currentCapture = (PixelData)GlobalLock(_hDIB);
 
 #endif
 	
@@ -242,11 +242,13 @@ void ScreenCapture::CaptureScreen() {
 
 void ScreenCapture::SaveToFile(std::string filename) const {
 
+    // Add file extension if not present
     if (filename.find(".bmp") == std::string::npos) {
         filename += ".bmp";
     }
 
-    std::ofstream(filename, std::ios::binary).write((char*)WholeDeal().data(), _bitmapSize);
+	// Save image to disk
+    std::ofstream(filename, std::ios::binary).write((char*)WholeDeal().data(), TotalSize());
 
 }
 

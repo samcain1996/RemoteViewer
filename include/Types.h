@@ -20,7 +20,6 @@
 #include <thread>
 #include <cstring>
 #include <array>
-#include <fstream>
 
 using Uint32 = std::uint32_t;
 using Ushort = std::uint16_t;
@@ -74,17 +73,16 @@ public:
 
 constexpr void encode256(ByteEncodedUint32 encodedNumber, const Uint32 numberToEncode) {
 
-        encodedNumber[3] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
-        encodedNumber[2] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
-        encodedNumber[1] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
-        encodedNumber[0] = (Byte)(numberToEncode) & 0xFF; 
+    encodedNumber[3] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
+    encodedNumber[2] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
+    encodedNumber[1] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
+    encodedNumber[0] = (Byte)(numberToEncode) & 0xFF; 
     
 }
 
 constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber) {
 
-        return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << ONE_BYTE) +
-            ((Uint32)encodedNumber[2] << TWO_BYTES) + ((Uint32)encodedNumber[3] << THREE_BYTES));
-    
+    return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << ONE_BYTE) +
+        ((Uint32)encodedNumber[2] << TWO_BYTES) + ((Uint32)encodedNumber[3] << THREE_BYTES));
 
 }
