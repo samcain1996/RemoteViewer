@@ -9,6 +9,8 @@
 #include "Client.h"
 #include "Server.h"
 
+#include "Capture.h"
+
 class PopUp;
 
 enum class WindowNames {
@@ -135,8 +137,9 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 
 private:
 	
-	ByteArray _imgData = nullptr;
-	int _imgSize = 0;
+	ImageData _imageData;
+	/*ByteArray _imgData = nullptr;
+	size_t size = ScreenCapture::CalculateBMPFileSize(RES_1080) + BMP_HEADER_SIZE;*/
 	
 	Client* _client = nullptr;
 	std::thread _clientThr;

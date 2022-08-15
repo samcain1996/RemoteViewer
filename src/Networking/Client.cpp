@@ -36,8 +36,8 @@ bool Client::Send(ByteArray const bytes, const size_t len) {
     return true;
 }
 
-void Client::AsyncSend(ByteArray const bytes, const size_t len)
-{
+void Client::AsyncSend(ByteArray const bytes, const size_t len) {
+    // TODO
 }
 
 void Client::AsyncReceive() {

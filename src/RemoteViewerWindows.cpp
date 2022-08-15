@@ -184,23 +184,15 @@ const bool ClientStreamWindow::AssembleImage() {
 		// Get the packets to construct the image
 		PacketPriorityQueue* queue = groupReader->ReadMessage();
 		
-		// Allocate memory for the image if needed
-		const int imgSize = MAX_PACKET_PAYLOAD_SIZE * queue->size();
-		if (imgSize != _imgSize) {
-			if (_imgData != nullptr) { delete[] _imgData; }
-			_imgData = new Byte[imgSize];
-			_imgSize = imgSize;
-		}
-
 		// Assemble image from packets
 		int offset = 0;
 		for (int packetNo = 0; !queue->empty(); ++packetNo) {
-			Packet packet = queue->top();
-			queue->pop();
+			const PacketPayload& payload = queue->top().Payload();
 			
-			std::memcpy(&_imgData[offset], packet.Payload().data(), 
-				packet.Payload().size());
-			offset += packet.Payload().size();
+			std::copy(payload.begin(), payload.end(), &_imageData[offset]);
+			
+			offset += payload.size();
+			queue->pop();
 		}
 		
 		delete queue;
@@ -214,9 +206,9 @@ const bool ClientStreamWindow::AssembleImage() {
 void ClientStreamWindow::PaintNow() {
 	wxClientDC dc(this);
 
-	if (_imgData == nullptr) { return; }
-
-	wxMemoryInputStream istream(_imgData, _imgSize);
+	if (_imageData.empty()) { _imageData = ImageData(ScreenCapture::CalculateBMPFileSize(RES_1080) + BMP_HEADER_SIZE, '\0'); return; }
+	
+	wxMemoryInputStream istream(_imageData.data(), _imageData.size());
 	wxImage image(istream);
 	wxBitmap bitmap(image);
 	dc.DrawBitmap(bitmap, 0, 0);
@@ -260,10 +252,11 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 		// If there is a complete image, render it
 		else if (AssembleImage()) { 
 			PaintNow();
-			evt.RequestMore();
 		}
 
-	}
+		evt.RequestMore();
+
+	}	
 	
 }
 
