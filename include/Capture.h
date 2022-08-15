@@ -19,15 +19,29 @@
 
 #endif
 
+using Ushort = std::uint16_t;
+using Uint32 = std::uint32_t;
+
+constexpr void EncodeAsByte(char encodedNumber[4], const Uint32 numberToEncode) {
+
+    encodedNumber[3] = (char)(numberToEncode >> 24) & 0xFF;
+    encodedNumber[2] = (char)(numberToEncode >> 16) & 0xFF;
+    encodedNumber[1] = (char)(numberToEncode >> 8) & 0xFF;
+    encodedNumber[0] = (char)(numberToEncode) & 0xFF;
+
+}
+
+// BMP Constants
 constexpr const Ushort BMP_FILE_HEADER_SIZE = 14;
 constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
 constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE;
 constexpr const Ushort BMP_COLOR_CHANNELS   = 4;
 
-using BmpFileHeader = std::array<Byte, BMP_HEADER_SIZE>;
+// Types
+using BmpFileHeader = std::array<char, BMP_HEADER_SIZE>;
 
-using PixelData = Byte*;
-using ImageData = std::vector<Byte>;
+using PixelData = char*;
+using ImageData = std::vector<char>;
 
 /*------------------RESOLUTIONS--------------------*/
 
@@ -42,6 +56,7 @@ constexpr const Resolution RES_1080 = { 1920, 1080 };
 constexpr const Resolution RES_1440 = { 2560, 1440 };
 constexpr const Resolution RES_4K = { 3840, 2160 };
 
+/*--------------------------------------------------*/
 
 class ScreenCapture {
 	
@@ -50,23 +65,25 @@ public:
     static const BmpFileHeader ConstructBMPHeader(Resolution resolution = RES_1080,
         const Ushort bitsPerPixel = 32);  // Initializes values for bitmap header
 
-    constexpr static const Uint32 CalulcateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32);
+    constexpr static const Uint32 CalculateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32);
 
 private:
 	
-    Resolution _resolution;      
-    BmpFileHeader _header {};
-    ImageData _imageData {};
+    Resolution _resolution = DefaultResolution;  
+    BmpFileHeader _header{};
 
-    PixelData _currentCapture = nullptr;     // Buffer holding screen capture
+    // Buffer holding screen capture 
+    ImageData _pixelData{}; 
 
-    DWORD _bitmapSize = 0;
-    DWORD _bitsPerPixel = 32;
+    Uint32 _bitmapSize   = 0;
+    Uint32 _bitsPerPixel = 32;
 
 #if defined(_WIN32)
 
-    HDC _srcHDC;                   // Device context of source
-    HDC _memHDC;                   // Device context of destination
+    RECT rcClient;
+
+    HDC _srcHDC; // Device context of source
+    HDC _memHDC; // Device context of destination
 
     // Bitmap data
     HBITMAP _hScreen;
@@ -84,7 +101,7 @@ private:
 #elif defined (__linux__) 
 
     Display* _display = nullptr;
-    Window _root;
+    Window _root {};
     XWindowAttributes _attributes = { 0 };
     XImage* _image = nullptr;
 
@@ -96,9 +113,13 @@ public:
 
     static inline Resolution DefaultResolution = RES_1080;
 
+private:
+
+    void ReInitialize(const Resolution& res = DefaultResolution);
+
 public:
 
-    ScreenCapture(const ScreenCapture&) = delete;
+    ScreenCapture(const ScreenCapture&);
     ScreenCapture(ScreenCapture&&) = delete;
 
     ScreenCapture(const Resolution& res = DefaultResolution);
@@ -109,17 +130,13 @@ public:
     ScreenCapture& operator=(const ScreenCapture&) = delete;
     ScreenCapture& operator=(ScreenCapture&&) = delete;
 
-    void CaptureScreen();  // Capture the screen and store in _currentCapture
 
-    void ReInitialize(const Resolution& res = DefaultResolution);  // Resize the destination screen
+    void ReSize(const Resolution& res = DefaultResolution);
 
-    constexpr const size_t TotalSize() const;  // Size of header and data
-
-    // const size_t WholeDeal(ByteArray& arr) const;
+    const ImageData CaptureScreen(); 
+    
     const ImageData WholeDeal() const;
-
-    // const size_t GetImageData(ByteArray& arr) const;
-    const ImageData GetImageData() const;
+    constexpr const size_t TotalSize() const;
 
     const Resolution& ImageResolution() const;
 
