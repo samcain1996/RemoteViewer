@@ -2,7 +2,7 @@
 
 const Resolution& ScreenCapture::ImageResolution() const { return _resolution; }
 
-constexpr const Uint32 ScreenCapture::CalculateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel) {
+const Uint32 ScreenCapture::CalculateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel) {
     return ((resolution.width * bitsPerPixel + 31) / 32) * BMP_COLOR_CHANNELS * resolution.height;
 }
 

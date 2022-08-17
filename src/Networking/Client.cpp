@@ -33,41 +33,8 @@ void Client::ProcessPacket(const Packet& packet) {
 
 bool Client::Send(ByteArray const bytes, const size_t len) {
     SendDisconnect();
+    _connected = false;
     return true;
-}
-
-void Client::AsyncSend(ByteArray const bytes, const size_t len) {
-    // TODO
-}
-
-void Client::AsyncReceive() {
-
-    /* Broken right now ? TODO */
-    _connected = true;
-    while (_connected) {
-
-        _io_context.restart();
-        _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()),
-            [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
-            {
-                if (ec.value() == 0 && bytes_transferred > 0) {
-                    
-                    if (IsDisconnectMsg() || !_connected) {
-                        _connected = false;
-                        _io_context.stop();
-                        return;
-                    }
-                    // Copy buffer to dummy packet
-                    ProcessPacket(Packet(_tmpBuffer));
-                    _socket.send(boost::asio::buffer(_tmpBuffer, DISCONNECT_SIZE), 0, _errcode);
-                }
-
-            });
-
-        _io_context.run();
-		
-    }
-
 }
 
 bool Client::Connect(const std::string& serverPort) {
@@ -84,15 +51,16 @@ bool Client::Connect(const std::string& serverPort) {
 
 }
 
-void Client::Handshake(bool& connected)
+void Client::Handshake()
 {
 
     _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), 0, _errcode);
-
-	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), 0, [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
+	
+	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), 
+        [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
 	{
         if (ec.value() == 0 && bytes_transferred > 0) {
-            //connected = _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
+            _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
         }
 	});
 
@@ -101,19 +69,30 @@ void Client::Handshake(bool& connected)
 
 void Client::Receive() {
    
-    PacketBuffer& packetData = _tmpBuffer;
-
-    _connected = true;
+    /* Broken right now ? TODO */
     while (_connected) {
 
-        
-        // Receive packet
-        _socket.receive(boost::asio::buffer(packetData, packetData.max_size()), 0, _errcode);
+        _io_context.restart();
 
-        _socket.send(boost::asio::buffer(packetData, 4), 0, _errcode);
+        _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()),
+            [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
+            {
+                if (ec.value() == 0 && bytes_transferred > 0) {
 
-        // Copy buffer to dummy packet
-        ProcessPacket(Packet(packetData));
+                    if (IsDisconnectMsg() || !_connected) {
+                        _connected = false;
+                        _io_context.stop();
+                        return;
+                    }
+
+                    // Copy buffer to dummy packet
+                    ProcessPacket(Packet(_tmpBuffer));
+                    _socket.send(boost::asio::buffer(_tmpBuffer, DISCONNECT_SIZE), 0, _errcode);
+                }
+
+            });
+
+        _io_context.run_one();
 
     }
 

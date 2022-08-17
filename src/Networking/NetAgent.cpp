@@ -17,6 +17,12 @@ const bool NetAgent::IsDisconnectMsg() const {
 
 }
 
+bool NetAgent::SendDisconnect() {
+    _connected = false; 
+    _socket.send(boost::asio::buffer(DISCONNECT_MESSAGE, DISCONNECT_SIZE), 0, _errcode); 
+    return _errcode.value() == 0; 
+}
+
 PacketList NetAgent::ConvertToPackets(ByteArray& bytes, size_t len)
 {
     PacketList packets;  // List to hold all packets needed to create message

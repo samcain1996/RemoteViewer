@@ -9,8 +9,6 @@ private:
 
 	PacketGroupMap _packetGroups;
 
-	bool _connected = false;
-
 	int _remotePort = -1;
 
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
@@ -25,10 +23,6 @@ private:
 	void ProcessPacket(const Packet& packet) override;
 
 	bool Send(ByteArray const bytes, const size_t len) override;
-
-	void AsyncSend(ByteArray const bytes, const size_t len) override;
-public:
-	void AsyncReceive() override;
 
 public:
 
@@ -53,7 +47,7 @@ public:
 	 */
 	bool Connect(const std::string& serverPort);
 
-	void Handshake(bool& connected) override;
+	void Handshake() override;
 
 	/**
 	 * @brief Receive data from server

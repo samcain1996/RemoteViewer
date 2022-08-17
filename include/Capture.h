@@ -65,7 +65,7 @@ public:
     static const BmpFileHeader ConstructBMPHeader(Resolution resolution = RES_1080,
         const Ushort bitsPerPixel = 32);  // Initializes values for bitmap header
 
-    constexpr static const Uint32 CalculateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32);
+    static const Uint32 CalculateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32);
 
 private:
 	

@@ -28,6 +28,11 @@ using ElementList = std::vector<wxControl*>;
 
 class BaseWindow : public wxFrame
 {
+
+protected:
+
+	bool _init = false;
+	
 public:
 
 	// Handle events shared across all windows such as going back to the previous window
@@ -62,6 +67,8 @@ protected:
 	bool _killProgramOnClose = true;
 
 	PopUp* _popup = nullptr;
+
+	void GoBack();
 
 	virtual void BackgroundTask(wxIdleEvent& evt) {};
 	virtual constexpr const WindowNames WindowName() = 0;
@@ -138,13 +145,9 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 private:
 	
 	ImageData _imageData;
-	/*ByteArray _imgData = nullptr;
-	size_t size = ScreenCapture::CalculateBMPFileSize(RES_1080) + BMP_HEADER_SIZE;*/
 	
 	Client* _client = nullptr;
 	std::thread _clientThr;
-
-	bool _connected = false;
 
 	const int _windowId = 3;
 

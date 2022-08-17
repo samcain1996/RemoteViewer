@@ -25,6 +25,37 @@ BaseWindow::~BaseWindow() {
 
 }
 
+void BaseWindow::GoBack() {
+
+	// Return to the previous window if backspace is pressed
+	// MEMORY LEAK?? I don't see how this wouldn't cause one...
+	
+	if (_prevWindows.empty()) { wxExit(); return; }
+
+	BaseWindow* previousWindow = nullptr;
+
+	switch (_prevWindows.top()) {
+
+	case WindowNames::StartUp:
+		previousWindow = new StartUpWindow(GetPosition(), GetSize());
+		break;
+	case WindowNames::ClientInit:
+		previousWindow = new ClientInitWindow(GetPosition(), GetSize());
+		break;
+	case WindowNames::ServerInit:
+		previousWindow = new ServerInitWindow(GetPosition(), GetSize());
+		break;
+	case WindowNames::UNDEFINED:
+	default:
+		previousWindow = new StartUpWindow(GetPosition(), GetSize());
+	}
+
+	_prevWindows.pop();
+
+	_killProgramOnClose = false;
+	Close(true);
+}
+
 void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 
 	int keycode = keyEvent.GetKeyCode();
@@ -42,37 +73,7 @@ void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 	//	
 	//}
 
-	// Return to the previous window if backspace is pressed
-	// MEMORY LEAK?? I don't see how this wouldn't cause one...
-
-	if (keycode == WXK_BACK) {
-
-		if (_prevWindows.empty()) { wxExit(); return; }
-
-		BaseWindow* previousWindow = nullptr;
-
-		switch (_prevWindows.top()) {
-
-			case WindowNames::StartUp:
-				previousWindow = new StartUpWindow(GetPosition(), GetSize());
-				break;
-			case WindowNames::ClientInit:
-				previousWindow = new ClientInitWindow(GetPosition(), GetSize());
-				break;
-			case WindowNames::ServerInit:
-				previousWindow = new ServerInitWindow(GetPosition(), GetSize());
-				break;
-			case WindowNames::UNDEFINED:
-			default:
-				previousWindow = new StartUpWindow(GetPosition(), GetSize());
-		}
-
-		_prevWindows.pop();
-
-		_killProgramOnClose = false;
-		Close(true);
-
-	}
+	if (keycode == WXK_BACK) { GoBack(); }
 }
 
 //-----------------------Start Up Window-----------------------//
@@ -169,10 +170,15 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	_popup = new PopUp(this, message);
 	_popup->Popup();
 
+	_init = true;
+
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
-	_client->Send((ByteArray)Client::DISCONNECT_MESSAGE, Client::DISCONNECT_SIZE);
+	if (_client->Connected()) {
+		_client->SendDisconnect();
+		while (_client->Connected()) {}
+	}
 	_clientThr.join();
 }
 
@@ -217,21 +223,26 @@ void ClientStreamWindow::PaintNow() {
 void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 	
 	// Do not paint until connected because no data is sent until then.
-	if (!_connected) { evt.Skip(); }
+	if (!_client->Connected()) { evt.Skip(); }
 	PaintNow();
 }
 
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	// TODO: Limit connect attempts
-	//		Why is the window unresponsive beofer it connects?
-	//		Try to connect if not connected
-	if (!_connected) {
-	
-		_client->Handshake(_connected);
-		_connected = std::memcmp(_client->_tmpBuffer.data(), _client->HANDSHAKE_MESSAGE, _client->HANDSHAKE_SIZE) == 0;
+	if (!_init) { return; }
 
-		
+	// TODO: Switch to timer/wakeup?
+	if (!_client->Connected()) {
+	
+
+		_client->Handshake();
+		wxSleep(4); // TODO: Make non blocking 
+		_client->_io_context.run();
+
+		if (!_client->Connected()) {
+			GoBack();
+		}
+
 	}
 
 	else {
@@ -243,7 +254,6 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 			_popup = nullptr;
 
 			ConnectMessageables(*this, *_client);
-			//_client->_io_context.restart();
 			
 			_clientThr = std::thread(&Client::Receive, _client);
 			
@@ -274,27 +284,47 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : Bas
 	_startServerButton = new wxButton(this, 30001, "Listen for connections", wxPoint(400, 400), wxSize(200, 50));
 }
 
-ServerInitWindow::~ServerInitWindow() {}
+ServerInitWindow::~ServerInitWindow() {
+	delete _server;
+}
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
 	
-	_server = new Server(listenPort);
+	_server = new Server(listenPort, std::chrono::seconds(10));
 
-	_killProgramOnClose = false;
+	std::string message("Listening on port " + std::to_string(listenPort));
+	_popup = new PopUp(this, message);
+	_popup->Popup();
+
+	_init = true;
+
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
-
-	if (_server == nullptr) { return; }
-
-	bool dummy = false;
-
-	// TODO: Make Server non-blocking	
-	_server->Handshake(dummy);
-
-	_server->Serve();
+	if (!_init) { return; }
 	
+	if (!_server->Connected()) {
+
+		_server->Listen();
+
+		if (!_server->Connected()) {
+			GoBack();
+		}
+		
+		else {
+
+			delete _popup;
+		}
+	}
+
+	else {
+
+
+		while (_server->Serve()) {
+			evt.RequestMore();
+		}
+	}
 }
 
 /*------------Pop Up------------*/

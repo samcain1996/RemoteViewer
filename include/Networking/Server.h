@@ -3,16 +3,18 @@
 #include "Capture.h"
 
 class Server : public NetAgent, public Messageable<ByteArray> {
+	friend class ServerInitWindow;
 private:
+
+	std::chrono::seconds _timeout;
 
 	// Send a buffer of bytes to the client
 	bool Send(ByteArray const bytes, const size_t len) override;
 
-	void AsyncSend(ByteArray const bytes, const size_t len) override;
-	void AsyncReceive() override;
-
 	void Receive() override {};
 	void ProcessPacket(const Packet&) override {};
+
+	void Handshake() override;
 
 	ScreenCapture _screen;
 
@@ -23,16 +25,14 @@ public:
 	Server(const Server&) = delete;
 	Server(Server&&) 	  = delete;
 	
-	Server(const Ushort listenPort);
+	Server(const Ushort listenPort, const std::chrono::seconds timeout = std::chrono::seconds(30));
 
 	Server& operator=(const Server&) = delete;
 	Server& operator=(Server&&) = delete;
 
-	void Handshake(bool& connected) override;
 	// Serve content to client
-	void Serve();
-
-	//MsgWriterPtr<ByteArray> eventWriter = nullptr;
+	bool Serve();
+	bool Listen();
 
 	~Server();
 };
