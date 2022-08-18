@@ -1,7 +1,7 @@
 #include "Networking/Server.h"
 
 Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) : 
-    NetAgent(listenPort), _screen(RES_1080), _timeout(timeout) {}
+    NetAgent(listenPort), _screen(), _timeout(timeout) {}
 
 void Server::Handshake() {
    
@@ -33,13 +33,13 @@ bool Server::Serve() {
 
     _screen.CaptureScreen();
 	
-    return Send((ByteArray)_screen.WholeDeal().data(), _screen.TotalSize());
+    return Send(_screen.WholeDeal());
 }
 
-bool Server::Send(ByteArray bytes, size_t len) {
+bool Server::Send(const ByteVec& data) {
 
     // Convert the message into a list of packets
-    PacketList packets = ConvertToPackets(bytes, len);
+    PacketList packets = ConvertToPackets(data);
 
     // Loop through all the packets and send them
     for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
@@ -57,6 +57,4 @@ bool Server::Send(ByteArray bytes, size_t len) {
     return true;
 }
 
-Server::~Server() {
-    // delete _capture;
-}
+Server::~Server() {}

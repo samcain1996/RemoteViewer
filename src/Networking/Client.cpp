@@ -31,12 +31,6 @@ void Client::ProcessPacket(const Packet& packet) {
     }
 }
 
-bool Client::Send(ByteArray const bytes, const size_t len) {
-    SendDisconnect();
-    _connected = false;
-    return true;
-}
-
 bool Client::Connect(const std::string& serverPort) {
 
     _remotePort = std::stoi(serverPort);
@@ -62,9 +56,11 @@ void Client::Handshake()
         if (ec.value() == 0 && bytes_transferred > 0) {
             _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
         }
-	});
-
-
+    });
+	
+    Sleep(2000);  // TODO: Change, this is MS specific
+    _io_context.run_one();
+    _io_context.restart();
 }
 
 void Client::Receive() {

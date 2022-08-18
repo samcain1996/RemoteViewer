@@ -70,7 +70,6 @@ protected:
 
 	void GoBack();
 
-	virtual void BackgroundTask(wxIdleEvent& evt) {};
 	virtual constexpr const WindowNames WindowName() = 0;
 
 };
@@ -167,7 +166,7 @@ public:
 	void OnPaint(wxPaintEvent& evt);
 	
 	void PaintNow();
-	void BackgroundTask(wxIdleEvent& evt) override;
+	void BackgroundTask(wxIdleEvent& evt) ;
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 
@@ -199,8 +198,7 @@ public:
 	ServerInitWindow& operator=(ServerInitWindow&&) = delete;
 	
 	void StartServer(wxCommandEvent& evt);
-	void BackgroundTask(wxIdleEvent& evt) override;
-	
+	void BackgroundTask(wxIdleEvent& evt);	
 	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
 
 	wxDECLARE_EVENT_TABLE();

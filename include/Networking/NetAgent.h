@@ -49,17 +49,17 @@ protected:
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	virtual PacketList ConvertToPackets(ByteArray& bytes, size_t len);
+	virtual PacketList ConvertToPackets(const ByteVec& data);
 	virtual void Handshake() = 0;
 	virtual const bool IsDisconnectMsg() const;
 	
 	virtual void Receive() = 0;
-	virtual bool Send(ByteArray const bytes, const size_t len) = 0;
+	virtual bool Send(const ByteVec& data);
 	virtual void ProcessPacket(const Packet&) = 0;
 
-	virtual bool SendDisconnect();
-
 public:
+
+	virtual bool Disconnect();
 
 	const bool Connected() const { return _connected; }
 	

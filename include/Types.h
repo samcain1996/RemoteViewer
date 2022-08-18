@@ -31,7 +31,7 @@ constexpr const Uint32 FOUR_BYTES = (TWO_BYTES + TWO_BYTES);
 
 /*------------------TYPES--------------------*/
 using Byte				= unsigned char;
-using ByteArray         = Byte*;
+using ByteVec           = std::vector<Byte>;
 using BytePtr           = Byte*;
 
 using ByteEncodedUint32 = Byte[FOUR_BYTES];
@@ -71,16 +71,16 @@ public:
 
 /*----------------FUNCTIONS--------------------*/
 
-constexpr void encode256(ByteEncodedUint32 encodedNumber, const Uint32 numberToEncode) {
+constexpr void EncodeAsByte(Byte encodedNumber[4], const Uint32 numberToEncode) {
 
-    encodedNumber[3] = (Byte)(numberToEncode >> THREE_BYTES) & 0xFF;
-    encodedNumber[2] = (Byte)(numberToEncode >> TWO_BYTES) & 0xFF;
-    encodedNumber[1] = (Byte)(numberToEncode >> ONE_BYTE) & 0xFF;
-    encodedNumber[0] = (Byte)(numberToEncode) & 0xFF; 
-    
+    encodedNumber[3] = (Byte)(numberToEncode >> 24) & 0xFF;
+    encodedNumber[2] = (Byte)(numberToEncode >> 16) & 0xFF;
+    encodedNumber[1] = (Byte)(numberToEncode >> 8) & 0xFF;
+    encodedNumber[0] = (Byte)(numberToEncode) & 0xFF;
+
 }
 
-constexpr Uint32 decode256(const ByteEncodedUint32 encodedNumber) {
+constexpr Uint32 DecodeAsByte(Byte encodedNumber[4]) {
 
     return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << ONE_BYTE) +
         ((Uint32)encodedNumber[2] << TWO_BYTES) + ((Uint32)encodedNumber[3] << THREE_BYTES));

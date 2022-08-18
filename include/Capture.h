@@ -22,15 +22,6 @@
 using Ushort = std::uint16_t;
 using Uint32 = std::uint32_t;
 
-constexpr void EncodeAsByte(char encodedNumber[4], const Uint32 numberToEncode) {
-
-    encodedNumber[3] = (char)(numberToEncode >> 24) & 0xFF;
-    encodedNumber[2] = (char)(numberToEncode >> 16) & 0xFF;
-    encodedNumber[1] = (char)(numberToEncode >> 8) & 0xFF;
-    encodedNumber[0] = (char)(numberToEncode) & 0xFF;
-
-}
-
 // BMP Constants
 constexpr const Ushort BMP_FILE_HEADER_SIZE = 14;
 constexpr const Ushort BMP_INFO_HEADER_SIZE = 40;
@@ -38,10 +29,10 @@ constexpr const Ushort BMP_HEADER_SIZE      = BMP_FILE_HEADER_SIZE + BMP_INFO_HE
 constexpr const Ushort BMP_COLOR_CHANNELS   = 4;
 
 // Types
-using BmpFileHeader = std::array<char, BMP_HEADER_SIZE>;
+using BmpFileHeader = std::array<Byte, BMP_HEADER_SIZE>;
 
-using PixelData = char*;
-using ImageData = std::vector<char>;
+using PixelData = Byte*;
+using ImageData = std::vector<Byte>;
 
 /*------------------RESOLUTIONS--------------------*/
 
@@ -111,7 +102,7 @@ private:
 
 public:
 
-    static inline Resolution DefaultResolution = RES_1080;
+    static inline Resolution DefaultResolution = RES_480;
 
 private:
 

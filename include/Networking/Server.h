@@ -2,14 +2,14 @@
 #include "Networking/NetAgent.h"
 #include "Capture.h"
 
-class Server : public NetAgent, public Messageable<ByteArray> {
+class Server : public NetAgent {
 	friend class ServerInitWindow;
 private:
 
 	std::chrono::seconds _timeout;
 
 	// Send a buffer of bytes to the client
-	bool Send(ByteArray const bytes, const size_t len) override;
+	bool Send(const ByteVec& data) override;
 
 	void Receive() override {};
 	void ProcessPacket(const Packet&) override {};

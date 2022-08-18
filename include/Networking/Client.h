@@ -2,8 +2,6 @@
 #include "Networking/NetAgent.h"
 
 class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
-	friend class ClientStreamWindow;
-	friend class ClientInitWindow;
 private:
 	std::string _hostname;  // Hostname of computer to connect to
 
@@ -21,8 +19,6 @@ private:
 	 * 
 	 */
 	void ProcessPacket(const Packet& packet) override;
-
-	bool Send(ByteArray const bytes, const size_t len) override;
 
 public:
 

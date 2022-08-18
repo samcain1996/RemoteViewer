@@ -31,7 +31,7 @@ void BaseWindow::GoBack() {
 	// MEMORY LEAK?? I don't see how this wouldn't cause one...
 	
 	if (_prevWindows.empty()) { wxExit(); return; }
-
+	 
 	BaseWindow* previousWindow = nullptr;
 
 	switch (_prevWindows.top()) {
@@ -147,7 +147,7 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
 	const int localPort  = std::stoi(_localPortInput->GetValue().ToStdString());
 
-	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort);
+	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort, GetPosition(), GetSize());
 	
 	_killProgramOnClose = false;
 	Close(true);
@@ -176,7 +176,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 
 ClientStreamWindow::~ClientStreamWindow() {
 	if (_client->Connected()) {
-		_client->SendDisconnect();
+		_client->Disconnect();
 		while (_client->Connected()) {}
 	}
 	_clientThr.join();
@@ -232,12 +232,11 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 	if (!_init) { return; }
 
 	// TODO: Switch to timer/wakeup?
+	//		 Make non blocking
 	if (!_client->Connected()) {
 	
 
 		_client->Handshake();
-		wxSleep(4); // TODO: Make non blocking 
-		_client->_io_context.run();
 
 		if (!_client->Connected()) {
 			GoBack();
@@ -302,6 +301,7 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
+	
 	if (!_init) { return; }
 	
 	if (!_server->Connected()) {
@@ -342,7 +342,10 @@ PopUp::PopUp(BaseWindow* parent, const std::string& message) :
 	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(100, 100));
 
 	SetClientSize(POPUP_SIZE);
-	SetPosition(wxPoint(parent->GetPosition().x / 2 + POPUP_SIZE.x / 2, parent->GetPosition().y / 2 + POPUP_SIZE.y / 2));
+
+	const wxPoint centerOfParent = parent->GetPosition() + wxPoint(parent->GetSize().GetWidth() / 2, parent->GetSize().GetHeight() / 2);
+	SetPosition(centerOfParent - wxPoint(GetSize().GetWidth() / 2, GetSize().GetHeight() / 2));
+	
 }
 
 PopUp::~PopUp() {

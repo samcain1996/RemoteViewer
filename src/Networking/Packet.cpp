@@ -26,15 +26,15 @@ Packet::Packet(PacketBuffer& packetData) {
 
 	// Retrieve encoded size
 	std::memcpy(encoded, packetData.data(), sizeof encoded);
-	_header.size = decode256(encoded);
+	_header.size = DecodeAsByte(encoded);
 
 	// Retrieve encoded group
 	std::memcpy(encoded, &(packetData.data())[PACKET_GROUP_OFFSET], sizeof encoded);
-	_header.group = decode256(encoded);
+	_header.group = DecodeAsByte(encoded);
 
 	// Retrieve encoded sequence
 	std::memcpy(encoded, &(packetData.data())[PACKET_SEQUENCE_OFFSET], sizeof encoded);
-	_header.sequence = decode256(encoded);
+	_header.sequence = DecodeAsByte(encoded);
 
 	// Retrieve payload
 	std::memcpy(_payload.data(), &packetData[PACKET_PAYLOAD_OFFSET], _payload.size());
@@ -70,15 +70,15 @@ const PacketBuffer Packet::RawData() const {
 	std::array<Byte, PACKET_HEADER_ELEMENT_SIZE> encoded;  // Encoded header vars
 
 	// Encode size into data
-	encode256(encoded.data(), _header.size);
+	EncodeAsByte(encoded.data(), _header.size);
 	std::copy(encoded.begin(), encoded.end(), data.begin());
 
 	// Encode group into data
-	encode256(encoded.data(), _header.group);
+	EncodeAsByte(encoded.data(), _header.group);
 	std::copy(encoded.begin(), encoded.end(), (data.begin() + PACKET_GROUP_OFFSET));
 
 	// Encode sequence into data
-	encode256(encoded.data(), _header.sequence);
+	EncodeAsByte(encoded.data(), _header.sequence);
 	std::copy(encoded.begin(), encoded.end(), (data.begin() + PACKET_SEQUENCE_OFFSET));
 
 	// Append the payload

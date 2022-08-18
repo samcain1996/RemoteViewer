@@ -221,7 +221,7 @@ void ScreenCapture::SaveToFile(std::string filename) const {
     }
 
 	// Save image to disk
-    std::ofstream(filename, std::ios::binary).write(WholeDeal().data(), TotalSize());
+    std::ofstream(filename, std::ios::binary).write((char*)WholeDeal().data(), TotalSize());
 
 }
 
