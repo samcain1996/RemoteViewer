@@ -63,9 +63,6 @@ protected:
 	ElementList _windowElements;
 	const int _windowId = -1;
 
-	// Flag indicating whether the program whould quit on window close
-	bool _killProgramOnClose = true;
-
 	PopUp* _popup = nullptr;
 
 	void GoBack();
@@ -143,7 +140,7 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQ
 
 private:
 	
-	ImageData _imageData;
+	ImageData _imageData{};
 	
 	Client* _client = nullptr;
 	std::thread _clientThr;

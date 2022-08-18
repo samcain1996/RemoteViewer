@@ -53,10 +53,10 @@ class ScreenCapture {
 	
 public:
 	
-    static const BmpFileHeader ConstructBMPHeader(Resolution resolution = RES_1080,
+    static const BmpFileHeader ConstructBMPHeader(Resolution resolution = DefaultResolution,
         const Ushort bitsPerPixel = 32);  // Initializes values for bitmap header
 
-    static const Uint32 CalculateBMPFileSize(const Resolution& resolution, const Ushort bitsPerPixel = 32);
+    static const Uint32 CalculateBMPFileSize(const Resolution& resolution = DefaultResolution, const Ushort bitsPerPixel = 32);
 
 private:
 	
@@ -102,7 +102,7 @@ private:
 
 public:
 
-    static inline Resolution DefaultResolution = RES_480;
+    static inline Resolution DefaultResolution = RES_720;
 
 private:
 

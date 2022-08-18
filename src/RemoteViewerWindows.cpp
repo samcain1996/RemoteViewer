@@ -21,13 +21,11 @@ BaseWindow::~BaseWindow() {
 		delete element;
 		});
 
-	if (_killProgramOnClose) { wxExit(); }
-
 }
 
 void BaseWindow::GoBack() {
 
-	// Return to the previous window if backspace is pressed
+	// Return to the previous window
 	// MEMORY LEAK?? I don't see how this wouldn't cause one...
 	
 	if (_prevWindows.empty()) { wxExit(); return; }
@@ -52,7 +50,6 @@ void BaseWindow::GoBack() {
 
 	_prevWindows.pop();
 
-	_killProgramOnClose = false;
 	Close(true);
 }
 
@@ -81,6 +78,7 @@ void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 wxBEGIN_EVENT_TABLE(StartUpWindow, BaseWindow)
 	EVT_BUTTON(10001, StartUpWindow::ClientButtonClick)
 	EVT_BUTTON(10002, StartUpWindow::ServerButtonClick)
+	EVT_KEY_UP(StartUpWindow::HandleInput)
 wxEND_EVENT_TABLE()
 
 StartUpWindow::StartUpWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer", pos, size) {
@@ -102,7 +100,6 @@ void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
 
 	ClientInitWindow* clientWindow = new ClientInitWindow(GetPosition(), GetSize());
 
-	_killProgramOnClose = false;
 	Close(true);
 }
 
@@ -111,7 +108,6 @@ void StartUpWindow::ServerButtonClick(wxCommandEvent& evt) {
 
 	ServerInitWindow* serverWindow = new ServerInitWindow(GetPosition(), GetSize());
 
-	_killProgramOnClose = false;
 	Close(true);
 }
 
@@ -149,7 +145,6 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 
 	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort, GetPosition(), GetSize());
 	
-	_killProgramOnClose = false;
 	Close(true);
 }
 
@@ -160,8 +155,9 @@ wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
 	EVT_IDLE(ClientStreamWindow::BackgroundTask)
 wxEND_EVENT_TABLE()
 
-ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
-	const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size) {
+ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort, 
+	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : 
+	BaseWindow("Remote Viewer - Master", pos, size), _imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE) {
 
 	_client = new Client(localPort, ip);
 	_client->Connect(std::to_string(remotePort));
@@ -191,8 +187,8 @@ const bool ClientStreamWindow::AssembleImage() {
 		PacketPriorityQueue* queue = groupReader->ReadMessage();
 		
 		// Assemble image from packets
-		int offset = 0;
-		for (int packetNo = 0; !queue->empty(); ++packetNo) {
+		Uint32 offset = 0;
+		for (Uint32 packetNo = 0; !queue->empty(); ++packetNo) {
 			const PacketPayload& payload = queue->top().Payload();
 			
 			std::copy(payload.begin(), payload.end(), &_imageData[offset]);
@@ -210,9 +206,15 @@ const bool ClientStreamWindow::AssembleImage() {
 }
 
 void ClientStreamWindow::PaintNow() {
-	wxClientDC dc(this);
 
-	if (_imageData.empty()) { _imageData = ImageData(ScreenCapture::CalculateBMPFileSize(RES_1080) + BMP_HEADER_SIZE, '\0'); return; }
+	if (!_client->Connected()) { return; }
+	else if (_imageData.empty()) {
+		const BmpFileHeader header = ScreenCapture::ConstructBMPHeader();
+
+		std::copy(header.begin(), header.end(), _imageData.begin());
+	}
+	
+	wxClientDC dc(this);
 	
 	wxMemoryInputStream istream(_imageData.data(), _imageData.size());
 	wxImage image(istream);
@@ -274,13 +276,14 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 	EVT_BUTTON(30001, ServerInitWindow::StartServer)
 	EVT_IDLE(ServerInitWindow::BackgroundTask)
-	EVT_KEY_UP(BaseWindow::HandleInput)
+	EVT_KEY_UP(ServerInitWindow::HandleInput)
 wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Server Initialization", pos, size) {
 	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
 	_startServerButton = new wxButton(this, 30001, "Listen for connections", wxPoint(400, 400), wxSize(200, 50));
+
 }
 
 ServerInitWindow::~ServerInitWindow() {
@@ -312,18 +315,19 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 			GoBack();
 		}
 		
-		else {
-
-			delete _popup;
-		}
 	}
 
 	else {
 
+		delete _popup;
+		Hide();
 
 		while (_server->Serve()) {
 			evt.RequestMore();
 		}
+
+		GoBack();
+		
 	}
 }
 
@@ -357,7 +361,5 @@ PopUp::~PopUp() {
 void PopUp::OnButton(wxCommandEvent& evt) {
 	Dismiss();
 }
-
-
 
 

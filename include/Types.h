@@ -34,8 +34,6 @@ using Byte				= unsigned char;
 using ByteVec           = std::vector<Byte>;
 using BytePtr           = Byte*;
 
-using ByteEncodedUint32 = Byte[FOUR_BYTES];
-
 using ThreadLock		= std::lock_guard<std::mutex>;
 
 #if defined(__APPLE__) || defined(__linux__)

@@ -31,7 +31,7 @@ void Client::ProcessPacket(const Packet& packet) {
     }
 }
 
-bool Client::Connect(const std::string& serverPort) {
+const bool Client::Connect(const std::string& serverPort) {
 
     _remotePort = std::stoi(serverPort);
 

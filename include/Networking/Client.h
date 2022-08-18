@@ -41,7 +41,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	bool Connect(const std::string& serverPort);
+	const bool Connect(const std::string& serverPort);
 
 	void Handshake() override;
 

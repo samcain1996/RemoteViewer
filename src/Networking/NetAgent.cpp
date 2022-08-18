@@ -7,9 +7,7 @@ std::mt19937 NetAgent::randomGenerator(rd());
 NetAgent::NetAgent(const Ushort localPort) : _localPort(localPort), _localEndpoint(udp::v4(), _localPort),
 	_socket(_io_context, _localEndpoint){}
 
-NetAgent::~NetAgent()
-{
-}
+NetAgent::~NetAgent() { }
 
 const bool NetAgent::IsDisconnectMsg() const {
 
