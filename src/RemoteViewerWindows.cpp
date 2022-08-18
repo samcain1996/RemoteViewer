@@ -28,7 +28,7 @@ void BaseWindow::GoBack() {
 	// Return to the previous window
 	// MEMORY LEAK?? I don't see how this wouldn't cause one...
 	
-	if (_prevWindows.empty()) { wxExit(); }
+	if (_prevWindows.empty()) { wxExit(); return; }
 	 
 	BaseWindow* previousWindow = nullptr;
 
@@ -38,6 +38,7 @@ void BaseWindow::GoBack() {
 		previousWindow = new StartUpWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::ClientInit:
+	case WindowNames::ClientStream:
 		previousWindow = new ClientInitWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::ServerInit:
@@ -293,13 +294,16 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) :
 }
 
 ServerInitWindow::~ServerInitWindow() {
+	if (_server->Connected()) {
+		_server->Disconnect();
+	}
 	delete _server;
 }
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
 	
-	_server = new Server(listenPort, std::chrono::seconds(10));
+	_server = new Server(listenPort, std::chrono::seconds(4));
 
 	std::string message("Listening on port " + std::to_string(listenPort));
 	_popup = new PopUp(this, message);
@@ -333,7 +337,7 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 	else {
 
 		if (!_server->Serve()) { 
-			GoBack(); 
+			Show();
 		}
 		
 	}
