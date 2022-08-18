@@ -55,10 +55,11 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
         Ushort totalSize = payloadSize + PACKET_HEADER_SIZE;  // Size of the entire packet
 
         // Assemble packet
-        PacketPayload payload = PacketPayload();  // Ensure payload is empty
+        PacketPayload payload(payloadSize); // Ensure payload is empty
 
         header.size = totalSize;     // Packet length in bytes
         header.sequence = iteration + 1; // Packet sequence in group
+
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
 
         packets.push_back(Packet(header, payload));

@@ -15,7 +15,7 @@ ScreenCapture::ScreenCapture(const Ushort width, const Ushort height) {
 
     _bitmapSize = CalculateBMPFileSize(_resolution, _bitsPerPixel);
 
-    _pixelData.reserve(_bitmapSize); // TODO: Does this compound?
+    _pixelData.reserve(_bitmapSize);
 
 #if defined(__linux__)
 
@@ -83,7 +83,7 @@ ScreenCapture::ScreenCapture(const ScreenCapture& other) : ScreenCapture(other.I
 
 constexpr const BmpFileHeader ScreenCapture::BaseHeader() {
 
-    BmpFileHeader baseHeader {};  // TODO: See how to init all vals to 0
+    BmpFileHeader baseHeader {};
 
     // Identifies file as bmp
     baseHeader[0] = 0x42;
@@ -209,7 +209,7 @@ const ImageData ScreenCapture::CaptureScreen() {
 
 #endif
 
-    return _pixelData;
+    return ImageData(_pixelData.data(), _pixelData.data() + _bitmapSize);
 
 }
 

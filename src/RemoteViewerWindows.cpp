@@ -15,11 +15,11 @@ BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize
 
 BaseWindow::~BaseWindow() {
 
-	_windowElements.clear();
-
 	std::for_each(_windowElements.begin(), _windowElements.end(), [](wxControl* element) {
 		delete element;
 		});
+
+	_windowElements.clear();
 
 }
 
@@ -28,7 +28,7 @@ void BaseWindow::GoBack() {
 	// Return to the previous window
 	// MEMORY LEAK?? I don't see how this wouldn't cause one...
 	
-	if (_prevWindows.empty()) { wxExit(); return; }
+	if (_prevWindows.empty()) { wxExit(); }
 	 
 	BaseWindow* previousWindow = nullptr;
 
@@ -153,12 +153,19 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 wxBEGIN_EVENT_TABLE(ClientStreamWindow, BaseWindow)
 	EVT_PAINT(ClientStreamWindow::OnPaint)
 	EVT_IDLE(ClientStreamWindow::BackgroundTask)
+	EVT_KEY_UP(ClientStreamWindow::HandleInput)
+	EVT_TIMER(1234, ClientStreamWindow::OnTick)
 wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort, 
-	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : 
-	BaseWindow("Remote Viewer - Master", pos, size), _imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE) {
+	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size), 
+	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE),
+	_timer(this, 1234) {
 
+	const BmpFileHeader header = ScreenCapture::ConstructBMPHeader();
+
+	std::copy(header.begin(), header.end(), _imageData.begin());
+	
 	_client = new Client(localPort, ip);
 	_client->Connect(std::to_string(remotePort));
 
@@ -171,11 +178,13 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
+
 	if (_client->Connected()) {
 		_client->Disconnect();
-		while (_client->Connected()) {}
+		_clientThr.join();
 	}
-	_clientThr.join();
+
+	delete _client;
 }
 
 const bool ClientStreamWindow::AssembleImage() {
@@ -187,11 +196,11 @@ const bool ClientStreamWindow::AssembleImage() {
 		PacketPriorityQueue* queue = groupReader->ReadMessage();
 		
 		// Assemble image from packets
-		Uint32 offset = 0;
+		Uint32 offset = BMP_HEADER_SIZE;
 		for (Uint32 packetNo = 0; !queue->empty(); ++packetNo) {
 			const PacketPayload& payload = queue->top().Payload();
 			
-			std::copy(payload.begin(), payload.end(), &_imageData[offset]);
+			std::copy(payload.begin(), payload.end(), (_imageData.begin() + offset));
 			
 			offset += payload.size();
 			queue->pop();
@@ -205,14 +214,14 @@ const bool ClientStreamWindow::AssembleImage() {
 	return false;
 }
 
+void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
+	wxWakeUpIdle();
+	_timer.Start(1000 / _targetFPS);
+}
+
 void ClientStreamWindow::PaintNow() {
 
 	if (!_client->Connected()) { return; }
-	else if (_imageData.empty()) {
-		const BmpFileHeader header = ScreenCapture::ConstructBMPHeader();
-
-		std::copy(header.begin(), header.end(), _imageData.begin());
-	}
 	
 	wxClientDC dc(this);
 	
@@ -226,17 +235,15 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 	
 	// Do not paint until connected because no data is sent until then.
 	if (!_client->Connected()) { evt.Skip(); }
-	PaintNow();
+	else { PaintNow(); }
 }
 
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_init) { return; }
 
-	// TODO: Switch to timer/wakeup?
-	//		 Make non blocking
+	//	TODO: Make non blocking
 	if (!_client->Connected()) {
-	
 
 		_client->Handshake();
 
@@ -257,15 +264,12 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 			ConnectMessageables(*this, *_client);
 			
 			_clientThr = std::thread(&Client::Receive, _client);
-			
+			_timer.Start(1000 / _targetFPS);
 		}
 
-		// If there is a complete image, render it
-		else if (AssembleImage()) { 
+		else if (AssembleImage()) {
 			PaintNow();
 		}
-
-		evt.RequestMore();
 
 	}	
 	
@@ -277,9 +281,11 @@ wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 	EVT_BUTTON(30001, ServerInitWindow::StartServer)
 	EVT_IDLE(ServerInitWindow::BackgroundTask)
 	EVT_KEY_UP(ServerInitWindow::HandleInput)
+	EVT_TIMER(2345, ServerInitWindow::OnTick)
 wxEND_EVENT_TABLE()
 
-ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Server Initialization", pos, size) {
+ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : 
+	BaseWindow("Server Initialization", pos, size), _timer(this, 2345) {
 	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
 	_startServerButton = new wxButton(this, 30001, "Listen for connections", wxPoint(400, 400), wxSize(200, 50));
@@ -314,21 +320,28 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 		if (!_server->Connected()) {
 			GoBack();
 		}
+
+		else {
+			delete _popup;
+			Hide();
+
+			_timer.Start(1000 / _targetFPS);
+		}
 		
 	}
 
 	else {
 
-		delete _popup;
-		Hide();
-
-		while (_server->Serve()) {
-			evt.RequestMore();
+		if (!_server->Serve()) { 
+			GoBack(); 
 		}
-
-		GoBack();
 		
 	}
+}
+
+void ServerInitWindow::OnTick(wxTimerEvent& timerEvent) {
+	wxWakeUpIdle();
+	_timer.Start(1000 / _targetFPS);
 }
 
 /*------------Pop Up------------*/

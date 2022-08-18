@@ -47,8 +47,8 @@ protected:
 	// Previous Windows
 	static WindowStack _prevWindows;
 	static inline const wxPoint DEFAULT_POS = wxPoint(100, 100);
-	static inline const wxSize DEFAULT_SIZE = wxSize(1280, 720);
-
+	static inline const wxSize DEFAULT_SIZE = wxSize(ScreenCapture::DefaultResolution.width, ScreenCapture::DefaultResolution.height);
+	
 	BaseWindow(const std::string& name, const wxPoint& pos = DEFAULT_POS,
 		const wxSize& size = DEFAULT_SIZE, const bool show = true);
 	virtual ~BaseWindow();
@@ -147,6 +147,11 @@ private:
 
 	const int _windowId = 3;
 
+	const int _targetFPS = 30;
+	int _timeSinceLastFrame = 0;
+
+	wxTimer _timer;
+
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
@@ -163,7 +168,9 @@ public:
 	void OnPaint(wxPaintEvent& evt);
 	
 	void PaintNow();
-	void BackgroundTask(wxIdleEvent& evt) ;
+	void BackgroundTask(wxIdleEvent& evt);
+
+	void OnTick(wxTimerEvent& timerEvent);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 
@@ -181,9 +188,11 @@ private:
 
 	Server* _server = nullptr;
 	
+	wxTimer _timer;
+	const int _targetFPS = 30;
+
 	const int _windowId = 4;
 
-	// Constructor and destructor
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);
 	~ServerInitWindow();
@@ -196,6 +205,9 @@ public:
 	
 	void StartServer(wxCommandEvent& evt);
 	void BackgroundTask(wxIdleEvent& evt);	
+
+	void OnTick(wxTimerEvent& timerEvent);
+	
 	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
 
 	wxDECLARE_EVENT_TABLE();

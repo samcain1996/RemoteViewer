@@ -121,7 +121,6 @@ public:
     ScreenCapture& operator=(const ScreenCapture&) = delete;
     ScreenCapture& operator=(ScreenCapture&&) = delete;
 
-
     void ReSize(const Resolution& res = DefaultResolution);
 
     const ImageData CaptureScreen(); 

@@ -3,7 +3,6 @@
 #include "Capture.h"
 
 class Server : public NetAgent {
-	friend class ServerInitWindow;
 private:
 
 	std::chrono::seconds _timeout;

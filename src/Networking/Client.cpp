@@ -65,7 +65,6 @@ void Client::Handshake()
 
 void Client::Receive() {
    
-    /* Broken right now ? TODO */
     while (_connected) {
 
         _io_context.restart();
@@ -77,7 +76,6 @@ void Client::Receive() {
 
                     if (IsDisconnectMsg() || !_connected) {
                         _connected = false;
-                        _io_context.stop();
                         return;
                     }
 

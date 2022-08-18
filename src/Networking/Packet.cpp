@@ -37,7 +37,8 @@ Packet::Packet(PacketBuffer& packetData) {
 	_header.sequence = DecodeAsByte(encoded);
 
 	// Retrieve payload
-	std::memcpy(_payload.data(), &packetData[PACKET_PAYLOAD_OFFSET], _payload.size());
+	std::copy(packetData.begin() + PACKET_PAYLOAD_OFFSET,
+		packetData.begin() + _header.size, std::back_inserter(_payload));
 }
 
 Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
@@ -48,7 +49,7 @@ Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
 	_header.sequence = header.sequence;
 
 	// Copy payload
-	std::copy(payload.begin(), payload.end(), _payload.begin());
+	_payload = payload;
 }
 
 Packet& Packet::operator=(const Packet& other) {

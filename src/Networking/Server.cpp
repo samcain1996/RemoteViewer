@@ -30,10 +30,8 @@ bool Server::Listen() {
 }
 
 bool Server::Serve() {
-
-    _screen.CaptureScreen();
 	
-    return Send(_screen.WholeDeal());
+    return Send(_screen.CaptureScreen());
 }
 
 bool Server::Send(const ByteVec& data) {
@@ -46,7 +44,7 @@ bool Server::Send(const ByteVec& data) {
         Packet& packet = packets[packetNo];
 
         // Send packet and then wait for acknowledgment
-        _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
+        _socket.send_to(boost::asio::buffer(packet.RawData(), packet.Header().size), _remoteEndpoint, 0, _errcode);
         _socket.receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()), 0, _errcode);
 
         if (IsDisconnectMsg()|| !_connected) {

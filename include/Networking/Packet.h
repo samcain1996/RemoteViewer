@@ -1,6 +1,6 @@
 #pragma once
-#include <array>
 #include <unordered_map>
+#include <boost/container/static_vector.hpp>
 #include "Types.h"
 
 // Defines related to packets
@@ -19,10 +19,8 @@ constexpr const Uint32 PACKET_SEQUENCE_OFFSET			= (PACKET_HEADER_ELEMENT_SIZE * 
 constexpr const Uint32 PACKET_PAYLOAD_OFFSET			= PACKET_HEADER_SIZE;
 
 using PacketGroup   = Uint32;
-using PacketPayload = std::array<Byte, MAX_PACKET_PAYLOAD_SIZE>;
+using PacketPayload = boost::container::static_vector<Byte, MAX_PACKET_PAYLOAD_SIZE>;
 using PacketBuffer  = std::array<Byte, MAX_PACKET_SIZE>;
-
-enum class PacketType { IMG, INP, RES };
 
 // Holds metadata about a packet
 struct PacketHeader {
