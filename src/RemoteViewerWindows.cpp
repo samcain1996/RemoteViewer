@@ -208,6 +208,7 @@ const bool ClientStreamWindow::AssembleImage() {
 		}
 		
 		delete queue;
+		ready = true;
 		return true;
 	}
 	
@@ -222,7 +223,7 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 
 void ClientStreamWindow::PaintNow() {
 
-	if (!_client->Connected()) { return; }
+	if (!_client->Connected() || !ready) { return; }
 	
 	wxClientDC dc(this);
 	

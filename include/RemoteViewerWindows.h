@@ -150,6 +150,8 @@ private:
 	const int _targetFPS = 30;
 	int _timeSinceLastFrame = 0;
 
+	bool ready = false;
+
 	wxTimer _timer;
 
 public:

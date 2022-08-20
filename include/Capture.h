@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <algorithm>
 #include "Types.h"
 
 #if defined(_WIN32)
@@ -104,7 +105,7 @@ private:
 
 public:
 
-    static inline Resolution DefaultResolution = RES_480;
+    static inline Resolution DefaultResolution = RES_720;
 
 private:
 
