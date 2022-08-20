@@ -58,7 +58,11 @@ void Client::Handshake()
         }
     });
 	
-    Sleep(2000);  // TODO: Change, this is MS specific
+#if defined(_WIN32)
+    Sleep(2000);  // TODO: Don't sleep
+#else
+    sleep(2);
+#endif
     _io_context.run_one();
     _io_context.restart();
 }

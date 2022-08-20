@@ -31,7 +31,7 @@ public:
 
 	// Serve content to client
 	bool Serve();
-	bool Listen();
+	void Listen();
 
 	~Server();
 };

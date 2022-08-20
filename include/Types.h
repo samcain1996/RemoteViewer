@@ -13,10 +13,8 @@
 #include <vector>
 #include <mutex>
 #include <queue>
-#include <atomic>
 #include <memory>
 #include <functional>
-#include <optional>
 #include <thread>
 #include <cstring>
 #include <array>

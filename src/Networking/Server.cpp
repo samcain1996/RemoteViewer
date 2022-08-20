@@ -9,7 +9,7 @@ void Server::Handshake() {
 
 }
 
-bool Server::Listen() {
+void Server::Listen() {
 
     _socket.async_receive_from(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), _remoteEndpoint,
         [&](const boost::system::error_code& ec, std::size_t bytes_transferred) {
@@ -23,9 +23,8 @@ bool Server::Listen() {
             }
         });
 
-    _io_context.run_one_until(std::chrono::steady_clock::now() + _timeout);
-
-    return _connected;
+    _io_context.run_one();
+    _io_context.restart();
 
 }
 

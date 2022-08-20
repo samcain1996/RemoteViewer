@@ -10,10 +10,12 @@
 
 #elif defined(__APPLE__)
 
+#include <unistd.h>
 #include <ApplicationServices/ApplicationServices.h>
 
 #elif defined(__linux__)
 
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
@@ -61,10 +63,10 @@ public:
 private:
 	
     Resolution _resolution = DefaultResolution;  
-    BmpFileHeader _header{};
+    BmpFileHeader _header {};
 
     // Buffer holding screen capture 
-    ImageData _pixelData{}; 
+    ImageData _pixelData {}; 
 
     Uint32 _bitmapSize   = 0;
     Uint32 _bitsPerPixel = 32;
@@ -102,7 +104,7 @@ private:
 
 public:
 
-    static inline Resolution DefaultResolution = RES_1080;
+    static inline Resolution DefaultResolution = RES_480;
 
 private:
 
