@@ -123,8 +123,8 @@ const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
 
 #if !defined(_WIN32)  // Window bitmaps are stored upside down
 
-    std::for_each( (header.begin() + BMP_FILE_HEADER_SIZE + 8), (header.begin() + BMP_FILE_HEADER_SIZE + 12), 
-        [](Byte& b) { if ( b == '\0' ) { b = (Byte)255; } });
+    std::transform( (header.begin() + BMP_FILE_HEADER_SIZE + 8), (header.begin() + BMP_FILE_HEADER_SIZE + 12), 
+        (header.begin() + BMP_FILE_HEADER_SIZE + 8), [](Byte& b) { return b == '\0' ? (Byte)255 : b; });
 
 #endif
 
