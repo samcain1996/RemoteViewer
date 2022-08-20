@@ -123,7 +123,7 @@ wxEND_EVENT_TABLE()
 
 ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
-	_ipInput = new wxTextCtrl(this, 20001, "127.0.0.1", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	_localPortInput = new wxTextCtrl(this, 20003, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
@@ -167,8 +167,8 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 
 	std::copy(header.begin(), header.end(), _imageData.begin());
 	
-	_client = new Client(localPort, ip);
-	_client->Connect(std::to_string(remotePort));
+	_client = new Client(ip);
+	_ioThr = std::thread(&Client::Connect, _client, remotePort);
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -182,7 +182,7 @@ ClientStreamWindow::~ClientStreamWindow() {
 
 	if (_client->Connected()) {
 		_client->Disconnect();
-		_clientThr.join();
+		_ioThr.join();
 	}
 
 	delete _client;
@@ -243,18 +243,8 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_init) { return; }
 
-	//	TODO: Make non blocking
-	if (!_client->Connected()) {
 
-		_client->Handshake();
-
-		if (!_client->Connected()) {
-			GoBack();
-		}
-
-	}
-
-	else {
+	if (_client->Connected()) {
 
 		// Delete popup on connect
 		if (_popup != nullptr) {
@@ -262,9 +252,11 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 			delete _popup;
 			_popup = nullptr;
 
+			_ioThr.join();
+
 			ConnectMessageables(*this, *_client);
 			
-			_clientThr = std::thread(&Client::Receive, _client);
+			_ioThr = std::thread(&Client::Receive, _client);
 			_timer.Start(1000 / _targetFPS);
 		}
 
@@ -311,35 +303,31 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
 	_init = true;
 
+	_ioThr = std::thread(&Server::Listen, _server);
+
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 	
 	if (!_init) { return; }
-	
-	if (!_server->Connected()) {
 
-		_server->Listen();
+	if (_server->Connected()) {
 
-		if (!_server->Connected()) {
-			GoBack();
-		}
+		if (_ioThr.joinable()) {
 
-		else {
+			_ioThr.join();
+
 			delete _popup;
-			Hide();
+			//Hide();
 
 			_timer.Start(1000 / _targetFPS);
-		}
-		
-	}
 
-	else {
-
-		if (!_server->Serve()) { 
-			Show();
 		}
-		
+
+		else if (!_server->Serve()) {
+			//Show();
+		}
+
 	}
 }
 

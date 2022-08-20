@@ -4,20 +4,19 @@ std::random_device NetAgent::rd{};
 
 std::mt19937 NetAgent::randomGenerator(rd());
 
-NetAgent::NetAgent(const Ushort localPort) : _localPort(localPort), _localEndpoint(udp::v4(), _localPort),
-	_socket(_io_context, _localEndpoint){}
+NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), _timeout(timeout) {}
 
 NetAgent::~NetAgent() { }
 
 const bool NetAgent::IsDisconnectMsg() const {
 
-	return std::memcmp(_tmpBuffer.data(), DISCONNECT_MESSAGE, DISCONNECT_SIZE) == 0;
+	return std::memcmp(_tmpBuffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;
 
 }
 
 bool NetAgent::Disconnect() {
     _connected = false; 
-    _socket.send(boost::asio::buffer(DISCONNECT_MESSAGE, DISCONNECT_SIZE), 0, _errcode); 
+    _socket.send(boost::asio::buffer(DISCONNECT_MESSAGE), 0, _errcode);
     return _errcode.value() == 0; 
 }
 
@@ -79,7 +78,7 @@ bool NetAgent::Send(const ByteVec& data) {
 
 		const Packet& packet = packets[packetIdx];
 		
-        _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
+        // _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
     }
 	
 	return _errcode.value() == 0;

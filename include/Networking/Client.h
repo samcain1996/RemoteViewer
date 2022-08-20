@@ -7,8 +7,6 @@ private:
 
 	PacketGroupMap _packetGroups;
 
-	int _remotePort = -1;
-
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
 
 	/**
@@ -20,6 +18,8 @@ private:
 	 */
 	void ProcessPacket(const Packet& packet) override;
 
+	void Handshake() override;
+
 public:
 
 	// Constructors
@@ -27,7 +27,7 @@ public:
 	Client(const Client&)   = delete;
 	Client(Client&&)		= delete;
 
-	Client(const Ushort port, const std::string& hostname);
+	Client(const std::string& hostname, const std::chrono::seconds& timeout = std::chrono::seconds(5));
 
 	~Client();
 
@@ -41,9 +41,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	const bool Connect(const std::string& serverPort);
-
-	void Handshake() override;
+	const bool Connect(const Ushort port);
 
 	/**
 	 * @brief Receive data from server

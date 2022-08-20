@@ -143,7 +143,7 @@ private:
 	ImageData _imageData{};
 	
 	Client* _client = nullptr;
-	std::thread _clientThr;
+	std::thread _ioThr;
 
 	const int _windowId = 3;
 
@@ -187,6 +187,7 @@ private:
 	wxButton* _startServerButton;
 
 	Server* _server = nullptr;
+	std::thread _ioThr;
 	
 	wxTimer _timer;
 	const int _targetFPS = 30;

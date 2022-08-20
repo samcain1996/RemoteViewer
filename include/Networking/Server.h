@@ -5,7 +5,9 @@
 class Server : public NetAgent {
 private:
 
-	std::chrono::seconds _timeout;
+	ScreenCapture _screen;
+	tcp::acceptor _acceptor;
+	Ushort _localport;
 
 	// Send a buffer of bytes to the client
 	bool Send(const ByteVec& data) override;
@@ -14,8 +16,6 @@ private:
 	void ProcessPacket(const Packet&) override {};
 
 	void Handshake() override;
-
-	ScreenCapture _screen;
 
 public:
 

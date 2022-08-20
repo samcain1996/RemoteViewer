@@ -5,12 +5,12 @@
 #include "Networking/Packet.h"
 #include "Messages.h"
 
-using boost::asio::ip::udp;
+using boost::asio::ip::tcp;
 
 class NetAgent {
 
 protected:
-	NetAgent(const Ushort localPort);
+	NetAgent(const std::chrono::seconds& timeout = std::chrono::seconds(5));
 	
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent
@@ -21,23 +21,20 @@ protected:
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
 
-	constexpr const static Ushort HANDSHAKE_SIZE = 4;
-	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
-
-	constexpr const static Ushort DISCONNECT_SIZE = 4;
-	constexpr const static Byte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = { 'B', 'Y', 'E', '!' };
+	constexpr const static std::array<Byte, 4> HANDSHAKE_MESSAGE = { 'H', 'I', ':', ')' };
+	constexpr const static std::array<Byte, 4> DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };
 	
-	static std::random_device rd;  // Used to seed random number generator
-
-	// Random number generator, C-style rand does not have enough precision
+	// Random number generation
+	static std::random_device rd;
 	static std::mt19937 randomGenerator;
 
+	std::chrono::seconds _timeout;
+
 	boost::asio::io_context _io_context;  // Used for I/O
-	Ushort _localPort;				  // Port to reside on
-	udp::endpoint _localEndpoint, _remoteEndpoint;
+	// tcp::endpoint _endpoint;
 
 	std::mutex _mutex;
-	udp::socket _socket;
+	tcp::socket _socket;
 	boost::system::error_code _errcode;
 
 	PacketBuffer _tmpBuffer; // Temporary buffer for receiving/sending packets

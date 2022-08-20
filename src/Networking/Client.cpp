@@ -1,6 +1,6 @@
 #include "Networking/Client.h"
 
-Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
+Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout) {
     _hostname = hostname;
 }
 
@@ -31,15 +31,20 @@ void Client::ProcessPacket(const Packet& packet) {
     }
 }
 
-const bool Client::Connect(const std::string& serverPort) {
+const bool Client::Connect(const Ushort port) {
 
-    _remotePort = std::stoi(serverPort);
+    try {
+        _socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(_hostname), port));
+    }
+    catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return false;
+	}
+	
+    Handshake();
 
-    // Find endpoint to connect to
-    udp::resolver resolver(_io_context);
-    _remoteEndpoint = *resolver.resolve(udp::v4(), _hostname, serverPort).begin();
-
-    _socket.connect(_remoteEndpoint);
+    _io_context.run_until(std::chrono::steady_clock::now() + _timeout);
+    _io_context.restart();
 
     return true;
 
@@ -47,24 +52,18 @@ const bool Client::Connect(const std::string& serverPort) {
 
 void Client::Handshake()
 {
-
-    _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), 0, _errcode);
 	
-	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), 
+	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()), 
         [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
 	{
         if (ec.value() == 0 && bytes_transferred > 0) {
-            _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
+
+            _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE), 0, _errcode);
+			
+            _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE.data(), HANDSHAKE_MESSAGE.size()) == 0;
         }
     });
 	
-#if defined(_WIN32)
-    Sleep(2000);  // TODO: Don't sleep
-#else
-    sleep(2);
-#endif
-    _io_context.run_one();
-    _io_context.restart();
 }
 
 void Client::Receive() {
@@ -73,7 +72,7 @@ void Client::Receive() {
 
         _io_context.restart();
 
-        _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()),
+        _socket.async_read_some(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()),
             [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
             {
                 if (ec.value() == 0 && bytes_transferred > 0) {
@@ -83,9 +82,7 @@ void Client::Receive() {
                         return;
                     }
 
-                    // Copy buffer to dummy packet
-                    ProcessPacket(Packet(_tmpBuffer));
-                    _socket.send(boost::asio::buffer(_tmpBuffer, DISCONNECT_SIZE), 0, _errcode);
+                    ProcessPacket(_tmpBuffer);
                 }
 
             });
