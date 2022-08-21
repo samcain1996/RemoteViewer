@@ -174,7 +174,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	bool isWindows = true;
 	
 	
-	_client->Connect(remotePort, [this, isWindows]() {
+	_client->Connect(remotePort, [this, &isWindows]() {
 		
 		_popup->Destroy();
 		
