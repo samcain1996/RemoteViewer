@@ -162,8 +162,6 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size), 
 	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE),
 	_timer(this, 1234) {
-	
-
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -172,7 +170,6 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	_client = new Client(ip);
 
 	bool isWindows = true;
-	
 	
 	_client->Connect(remotePort, [this, &isWindows]() {
 		
@@ -185,9 +182,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 
 		_init = true;
 
-		bool reverse = !IS_WINDOWS || (IS_WINDOWS && IS_WINDOWS != isWindows);
-
-		const BmpFileHeader header = ScreenCapture::ConstructBMPHeader(ScreenCapture::DefaultResolution, 32, reverse);
+		const BmpFileHeader header = ScreenCapture::ConstructBMPHeader(ScreenCapture::DefaultResolution, 32, !isWindows);
 
 		std::copy(header.begin(), header.end(), _imageData.begin());
 		
