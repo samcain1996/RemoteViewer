@@ -4,7 +4,7 @@ Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) :
     NetAgent(timeout), _localport(listenPort), _screen(), _acceptor(_io_context, tcp::endpoint(tcp::v4(), listenPort))
 {}
 
-void Server::Handshake() {
+void Server::Handshake(bool& isWindows) {
    
     _socket.async_send(boost::asio::buffer(HANDSHAKE_MESSAGE),
         [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
@@ -23,8 +23,9 @@ void Server::Listen() {
 
     _acceptor.async_accept(_socket, [this](boost::system::error_code ec) 
         {
+            bool dummy = false;
             if (!ec) {
-                Handshake();
+                Handshake(dummy);
             }
         });
 

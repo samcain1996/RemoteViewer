@@ -2,7 +2,6 @@
 #include "Networking/NetAgent.h"
 
 class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
-	friend class ClientStreamWindow;
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
 
@@ -19,7 +18,7 @@ private:
 	 */
 	void ProcessPacket(const Packet& packet) override;
 
-	void Handshake() override;
+	void Handshake(bool& isWindows) override;
 
 public:
 
@@ -42,7 +41,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	const void Connect(const Ushort port, const std::function<void()>& onConnect);
+	const void Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows );
 
 	/**
 	 * @brief Receive data from server

@@ -39,6 +39,12 @@ using ThreadLock		= std::lock_guard<std::mutex>;
 using DWORD = std::uint32_t;
 #endif
 
+#if defined(_WIN32)
+constexpr const bool IS_WINDOWS = true;
+#else
+constexpr const bool IS_WINDOWS = false;
+#endif
+
 template <typename Message>
 class MessageReader;
 

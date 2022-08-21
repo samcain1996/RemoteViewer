@@ -22,7 +22,16 @@ protected:
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
 
-	constexpr const static std::array<Byte, 4> HANDSHAKE_MESSAGE = { 'H', 'I', ':', ')' };
+
+	constexpr const static std::array<Byte, 4> WIN_HANDSHAKE = { 'W', 'I', 'N'};
+	constexpr const static std::array<Byte, 4> OTHER_HANDSHAKE = { 'N', 'O', 'T' };
+	
+#if defined(_WIN32)
+	constexpr const static std::array<Byte, 4>& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
+#else
+	constexpr const static std::array<Byte, 4>& HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
+#endif
+	
 	constexpr const static std::array<Byte, 4> DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };
 	
 	// Random number generation
@@ -48,7 +57,7 @@ protected:
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const ByteVec& data);
-	virtual void Handshake() = 0;
+	virtual void Handshake(bool& isWindows) = 0;
 	virtual const bool IsDisconnectMsg() const;
 	
 	virtual void Receive() = 0;

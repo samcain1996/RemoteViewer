@@ -15,7 +15,7 @@ private:
 	void Receive() override;
 	void ProcessPacket(const Packet&) override {};
 
-	void Handshake() override;
+	void Handshake(bool& isWindows) override;
 
 public:
 

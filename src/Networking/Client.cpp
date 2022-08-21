@@ -31,7 +31,7 @@ void Client::ProcessPacket(const Packet& packet) {
     }
 }
 
-const void Client::Connect(const Ushort port, const std::function<void()>& onConnect) {
+const void Client::Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows) {
 
     try {
         _socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(_hostname), port));
@@ -41,7 +41,7 @@ const void Client::Connect(const Ushort port, const std::function<void()>& onCon
         return;
 	}
 	
-    Handshake();
+    Handshake(isWindows);
 
     _io_context.run_until(steady_clock::now() + _timeout);
     _io_context.restart();
@@ -50,17 +50,18 @@ const void Client::Connect(const Ushort port, const std::function<void()>& onCon
 
 }
 
-void Client::Handshake()
+void Client::Handshake(bool& isWindows)
 {
 	
 	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()), 
-        [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
+        [this, &isWindows](const boost::system::error_code& ec, std::size_t bytes_transferred)
 	{
         if (ec.value() == 0 && bytes_transferred > 0) {
 
             _socket.write_some(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), _errcode);
 			
             _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE.data(), HANDSHAKE_MESSAGE.size()) == 0;
+            isWindows = HANDSHAKE_MESSAGE == WIN_HANDSHAKE;
         }
     });
 	
