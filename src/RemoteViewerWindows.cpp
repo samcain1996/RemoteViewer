@@ -182,7 +182,7 @@ ClientStreamWindow::~ClientStreamWindow() {
 
 	if (_client->Connected()) {
 		_client->Disconnect();
-		_ioThr.join();
+		if (_ioThr.joinable()) { _ioThr.join(); }
 	}
 
 	delete _client;
@@ -244,7 +244,6 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_init) { return; }
 
-
 	if (_client->Connected()) {
 
 		// Delete popup on connect
@@ -266,6 +265,10 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 		}
 
 	}	
+
+	else if (_ioThr.joinable()) {
+		_ioThr.join();
+	}
 	
 }
 
@@ -325,9 +328,9 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
 		}
 
-		else {
+		else if (!_server->Serve()) {
 			// Show();
-			_server->Serve();
+			GoBack();
 		}
 
 	}

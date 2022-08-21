@@ -6,6 +6,7 @@
 #include "Messages.h"
 
 using boost::asio::ip::tcp;
+using std::chrono::steady_clock;
 
 class NetAgent {
 
@@ -56,7 +57,7 @@ protected:
 
 public:
 
-	bool Disconnect();
+	void Disconnect();
 
 	const bool Connected() const;
 	

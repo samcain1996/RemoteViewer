@@ -32,6 +32,9 @@ struct PacketHeader {
 // Packet of data that can be sent over a socket
 class Packet {
 	bool friend operator<(const Packet&, const Packet&);
+public:
+	
+	static const bool InvalidPacketSize(const PacketBuffer& packetBuffer);
 private:
 	PacketHeader  _header;		// Header containing packet metadata
 	PacketPayload _payload;		// Packet data

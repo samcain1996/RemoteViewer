@@ -14,10 +14,9 @@ const bool NetAgent::IsDisconnectMsg() const {
 
 }
 
-bool NetAgent::Disconnect() {
+void NetAgent::Disconnect() {
     _connected = false; 
     _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
-    return !_errcode;
 }
 
 PacketList NetAgent::ConvertToPackets(const ByteVec& data)

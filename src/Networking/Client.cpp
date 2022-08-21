@@ -43,7 +43,7 @@ const bool Client::Connect(const Ushort port) {
 	
     Handshake();
 
-    _io_context.run_until(std::chrono::steady_clock::now() + _timeout);
+    _io_context.run_until(steady_clock::now() + _timeout);
     _io_context.restart();
 
     return true;
@@ -58,7 +58,7 @@ void Client::Handshake()
 	{
         if (ec.value() == 0 && bytes_transferred > 0) {
 
-            _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), 0, _errcode);
+            _socket.write_some(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), _errcode);
 			
             _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE.data(), HANDSHAKE_MESSAGE.size()) == 0;
         }
@@ -66,12 +66,11 @@ void Client::Handshake()
 	
 }
 
-void Client::Send(const PacketBuffer& data) {
-    _socket.async_write_some(boost::asio::buffer(data, DISCONNECT_MESSAGE.size()),
-                        [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {});
-}
+void Client::Send(const PacketBuffer& data) {}
 
 void Client::Receive() {
+
+	std::chrono::seconds disconnect_timout = std::chrono::seconds(2);
 
     while (_connected) {
 
@@ -79,19 +78,20 @@ void Client::Receive() {
             [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
             {
                 if (ec.value() == 0 && bytes_transferred > 0) {
-                    
-                    if (IsDisconnectMsg()) {
-                        _connected = false;
+					
+                    _socket.write_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
+                    if (_errcode || Packet::InvalidPacketSize(_tmpBuffer) || IsDisconnectMsg()) {
+                        Disconnect();
                         return;
                     }
-
-                    Send(_tmpBuffer);
+					  
                     ProcessPacket(Packet(_tmpBuffer));
                 }
+                else { Disconnect(); }
 
             });
 
-        _io_context.run();
+        _io_context.run_until(steady_clock::now() + disconnect_timout);
         _io_context.restart();
 
     }

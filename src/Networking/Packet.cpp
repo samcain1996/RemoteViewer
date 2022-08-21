@@ -10,6 +10,19 @@ bool operator<(const Packet& p1, const Packet& p2) {
 	return p1._header.group > p2._header.group;
 }
 
+const bool Packet::InvalidPacketSize(const PacketBuffer& packetBuffer) {
+	
+	Byte encodedSize[4] = { packetBuffer[0], packetBuffer[1], packetBuffer[2], packetBuffer[3] };
+	Uint32 size = DecodeAsByte(encodedSize);
+
+	if (size > MAX_PACKET_SIZE) {
+		return true;
+	}
+
+	return false;
+	
+}
+
 Packet::Packet(const Packet& other) {
 	_header  = other._header;
 	_payload = other._payload;

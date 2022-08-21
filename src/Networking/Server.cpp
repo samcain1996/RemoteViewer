@@ -34,47 +34,45 @@ void Server::Listen() {
 }
 
 bool Server::Serve() {
+
     // Convert the message into a list of packets
     PacketList packets = ConvertToPackets(_screen.CaptureScreen());
 
     // Loop through all the packets and send them
-    for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
+    for (size_t packetNo = 0; packetNo < packets.size() && _connected; packetNo++) {
         const Packet& packet = packets[packetNo];
 
         Send(packet.RawData());
-
-        _io_context.run();
-        _io_context.restart();
     }
 
-    return true;
+    return _connected;
 }
 
 void Server::Receive() {
-	_socket.async_read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), 
-        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
-		if (!ec) {
-            if (IsDisconnectMsg()) {
-                _connected = false;
-            }
-		}
-	});
 
 }
 
 void Server::Send(const PacketBuffer& data) {
+
+    std::chrono::seconds disconnect_timeout = std::chrono::seconds(2);
 
     // Send packet and then wait for acknowledgment
     _socket.async_write_some(boost::asio::buffer(data, data.size()),
         [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
     
             if (!ec) {
-                 Receive();
-                
+                _socket.read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
+                if (_errcode || Packet::InvalidPacketSize(_tmpBuffer) || IsDisconnectMsg()) {
+                    Disconnect();
+                    return;
+                }
             }
+            else { Disconnect(); }
         }
     );
-   
+	
+    _io_context.run_until(steady_clock::now() + disconnect_timeout);
+    _io_context.restart();
 }
 
 Server::~Server() {}
