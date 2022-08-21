@@ -136,10 +136,10 @@ public:
 
 class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQueue*> {
 
-	MessageReader<PacketPriorityQueue*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
-
 private:
 	
+	bool _wasConnected = false;
+
 	ImageData _imageData{};
 	
 	Client* _client = nullptr;

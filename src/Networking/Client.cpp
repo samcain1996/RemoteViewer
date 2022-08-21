@@ -31,14 +31,14 @@ void Client::ProcessPacket(const Packet& packet) {
     }
 }
 
-const bool Client::Connect(const Ushort port) {
+const void Client::Connect(const Ushort port, const std::function<void()>& onConnect) {
 
     try {
         _socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(_hostname), port));
     }
     catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
-		return false;
+        return;
 	}
 	
     Handshake();
@@ -46,7 +46,7 @@ const bool Client::Connect(const Ushort port) {
     _io_context.run_until(steady_clock::now() + _timeout);
     _io_context.restart();
 
-    return true;
+    if (_connected) { onConnect(); }
 
 }
 

@@ -166,16 +166,24 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	const BmpFileHeader header = ScreenCapture::ConstructBMPHeader();
 
 	std::copy(header.begin(), header.end(), _imageData.begin());
-	
-	_client = new Client(ip);
-	_ioThr = std::thread(&Client::Connect, _client, remotePort);
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
 	_popup->Popup();
 
-	_init = true;
+	_client = new Client(ip);
+	ConnectMessageables(*this, *_client);
+	
+	_client->Connect(remotePort, [this]() {
+		
+		_popup->Destroy();
+		
+		_ioThr = std::thread(&Client::Receive, _client);
+		_timer.Start(1000 / _targetFPS);
+		
+		});
 
+	_init = true;
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
@@ -189,6 +197,8 @@ ClientStreamWindow::~ClientStreamWindow() {
 }
 
 const bool ClientStreamWindow::AssembleImage() {
+
+	MessageReader<PacketPriorityQueue*>*& groupReader = msgReader;
 	
 	// Check  if there is a complete image
 	if (!groupReader->Empty()) {
@@ -246,25 +256,11 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (_client->Connected()) {
 
-		// Delete popup on connect
-		if (_popup != nullptr) {
-			
-			delete _popup;
-			_popup = nullptr;
-
-			_ioThr.join();
-
-			ConnectMessageables(*this, *_client);
-			
-			_ioThr = std::thread(&Client::Receive, _client);
-			_timer.Start(1000 / _targetFPS);
-		}
-
-		else if (AssembleImage()) {
+		if (AssembleImage()) {
 			PaintNow();
 		}
 
-	}	
+	}
 
 	else if (_ioThr.joinable()) {
 		_ioThr.join();
