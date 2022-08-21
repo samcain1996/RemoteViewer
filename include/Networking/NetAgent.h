@@ -10,7 +10,7 @@ using boost::asio::ip::tcp;
 class NetAgent {
 
 protected:
-	NetAgent(const std::chrono::seconds& timeout = std::chrono::seconds(5));
+	NetAgent(const std::chrono::seconds& timeout = std::chrono::seconds(30));
 	
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent

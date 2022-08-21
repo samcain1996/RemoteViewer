@@ -20,7 +20,7 @@ Packet::Packet(Packet&& other) noexcept {
 	_payload = std::move(other._payload);
 }
 
-Packet::Packet(PacketBuffer& packetData) {
+Packet::Packet(const PacketBuffer& packetData) {
 	
 	Byte encoded[4];  // Temp variable to store encoded Uint32 values
 

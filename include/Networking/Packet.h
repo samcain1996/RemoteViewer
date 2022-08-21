@@ -49,7 +49,7 @@ public:
 	Packet(const Packet&);
 	Packet(Packet&&) noexcept;
 	
-	Packet(PacketBuffer& packetData);
+	Packet(const PacketBuffer& packetData);
 	Packet(const PacketHeader& header, const PacketPayload& payload);
 
 	Packet& operator=(const Packet&);

@@ -319,14 +319,14 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 			_ioThr.join();
 
 			delete _popup;
-			//Hide();
+			Hide();
 
 			_timer.Start(1000 / _targetFPS);
 
 		}
 
 		else if (!_server->Serve()) {
-			//Show();
+			Show();
 		}
 
 	}

@@ -67,10 +67,8 @@ void Client::Handshake()
 }
 
 void Client::Receive() {
-   
-    while (_connected) {
 
-        _io_context.restart();
+    while (_connected) {
 
         _socket.async_read_some(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()),
             [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
@@ -82,12 +80,16 @@ void Client::Receive() {
                         return;
                     }
 
-                    ProcessPacket(_tmpBuffer);
+                    ProcessPacket(Packet(_tmpBuffer));
+                    /*_socket.async_write_some(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()),
+                        [&](const boost::system::error_code& ec, std::size_t bytes_transferred) {});*/
+                    _socket.write_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
                 }
 
             });
 
-        _io_context.run_one();
+        _io_context.run();
+        _io_context.restart();
 
     }
 

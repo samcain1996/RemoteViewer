@@ -12,7 +12,7 @@ private:
 	// Send a buffer of bytes to the client
 	bool Send(const ByteVec& data) override;
 
-	void Receive() override {};
+	void Receive() override;
 	void ProcessPacket(const Packet&) override {};
 
 	void Handshake() override;
