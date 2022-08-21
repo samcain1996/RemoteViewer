@@ -51,14 +51,14 @@ protected:
 	virtual const bool IsDisconnectMsg() const;
 	
 	virtual void Receive() = 0;
-	virtual bool Send(const ByteVec& data);
-	virtual void ProcessPacket(const Packet&) = 0;
+	virtual void Send(const PacketBuffer& data) = 0;
+	virtual void ProcessPacket(const Packet& packet) = 0;
 
 public:
 
-	virtual bool Disconnect();
+	bool Disconnect();
 
-	const bool Connected() const { return _connected; }
+	const bool Connected() const;
 	
 	virtual ~NetAgent();
 };

@@ -10,7 +10,7 @@ private:
 	Ushort _localport;
 
 	// Send a buffer of bytes to the client
-	bool Send(const ByteVec& data) override;
+	void Send(const PacketBuffer& data) override;
 
 	void Receive() override;
 	void ProcessPacket(const Packet&) override {};

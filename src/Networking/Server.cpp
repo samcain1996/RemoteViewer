@@ -7,7 +7,7 @@ Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) :
 void Server::Handshake() {
    
     _socket.async_send(boost::asio::buffer(HANDSHAKE_MESSAGE),
-        [&](const boost::system::error_code& ec, std::size_t bytesTransferred) {
+        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
 
             if (!ec) {
                 _socket.receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()), 0, _errcode);
@@ -39,42 +39,42 @@ bool Server::Serve() {
 
     // Loop through all the packets and send them
     for (size_t packetNo = 0; packetNo < packets.size(); packetNo++) {
-        Packet& packet = packets[packetNo];
+        const Packet& packet = packets[packetNo];
 
-        Send(ByteVec(packet.RawData().data(), packet.RawData().data() + packet.Header().size));
+        Send(packet.RawData());
+
+        _io_context.run();
+        _io_context.restart();
     }
+
     return true;
 }
 
 void Server::Receive() {
 	_socket.async_read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), 
-        [&](const boost::system::error_code& ec, std::size_t bytesTransferred) {
+        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
 		if (!ec) {
             if (IsDisconnectMsg()) {
                 _connected = false;
             }
 		}
 	});
+
 }
 
-bool Server::Send(const ByteVec& data) {
+void Server::Send(const PacketBuffer& data) {
 
     // Send packet and then wait for acknowledgment
-    _socket.async_write_some(boost::asio::buffer(data, _tmpBuffer.size()),
-        [&](const boost::system::error_code& ec, std::size_t bytesTransferred) {
+    _socket.async_write_some(boost::asio::buffer(data, data.size()),
+        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
     
             if (!ec) {
-                Receive();
-    
+                 Receive();
+                
             }
         }
     );
-    
-    _io_context.run();
-    _io_context.restart();
-
-    return true;
+   
 }
 
-Server::~Server() {
-}
+Server::~Server() {}

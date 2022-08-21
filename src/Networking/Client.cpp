@@ -54,11 +54,11 @@ void Client::Handshake()
 {
 	
 	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()), 
-        [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
+        [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
 	{
         if (ec.value() == 0 && bytes_transferred > 0) {
 
-            _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE), 0, _errcode);
+            _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), 0, _errcode);
 			
             _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE.data(), HANDSHAKE_MESSAGE.size()) == 0;
         }
@@ -66,24 +66,27 @@ void Client::Handshake()
 	
 }
 
+void Client::Send(const PacketBuffer& data) {
+    _socket.async_write_some(boost::asio::buffer(data, DISCONNECT_MESSAGE.size()),
+                        [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {});
+}
+
 void Client::Receive() {
 
     while (_connected) {
 
         _socket.async_read_some(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()),
-            [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
+            [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
             {
                 if (ec.value() == 0 && bytes_transferred > 0) {
-
-                    if (IsDisconnectMsg() || !_connected) {
+                    
+                    if (IsDisconnectMsg()) {
                         _connected = false;
                         return;
                     }
 
+                    Send(_tmpBuffer);
                     ProcessPacket(Packet(_tmpBuffer));
-                    /*_socket.async_write_some(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()),
-                        [&](const boost::system::error_code& ec, std::size_t bytes_transferred) {});*/
-                    _socket.write_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
                 }
 
             });

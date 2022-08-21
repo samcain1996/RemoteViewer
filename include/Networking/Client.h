@@ -3,9 +3,9 @@
 
 class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
 private:
-	std::string _hostname;  // Hostname of computer to connect to
+	std::string _hostname{};  // Hostname of computer to connect to
 
-	PacketGroupMap _packetGroups;
+	PacketGroupMap _packetGroups{};
 
 	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
 
@@ -48,4 +48,6 @@ public:
 	 * 
 	 */
 	void Receive() override;
+
+	void Send(const PacketBuffer& data) override;
 };

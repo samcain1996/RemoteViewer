@@ -16,8 +16,8 @@ const bool NetAgent::IsDisconnectMsg() const {
 
 bool NetAgent::Disconnect() {
     _connected = false; 
-    _socket.send(boost::asio::buffer(DISCONNECT_MESSAGE), 0, _errcode);
-    return _errcode.value() == 0; 
+    _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
+    return !_errcode;
 }
 
 PacketList NetAgent::ConvertToPackets(const ByteVec& data)
@@ -69,18 +69,4 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
     return packets;
 }
 
-bool NetAgent::Send(const ByteVec& data) {
-
-	// Convert message to packets
-	PacketList packets = ConvertToPackets(data);
-
-    for (size_t packetIdx = 0; packetIdx < packets.size() && _errcode.value() == 0; ++packetIdx) {
-
-		const Packet& packet = packets[packetIdx];
-		
-        // _socket.send_to(boost::asio::buffer(packet.RawData(), MAX_PACKET_SIZE), _remoteEndpoint, 0, _errcode);
-    }
-	
-	return _errcode.value() == 0;
-
-}
+const bool NetAgent::Connected() const { return _connected; }

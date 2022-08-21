@@ -207,8 +207,7 @@ const bool ClientStreamWindow::AssembleImage() {
 			queue->pop();
 		}
 		
-		delete queue;
-		ready = true;
+		delete queue;	
 		return true;
 	}
 	
@@ -223,13 +222,14 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 
 void ClientStreamWindow::PaintNow() {
 
-	if (!_client->Connected() || !ready) { return; }
+	if (!_client->Connected()) { return; }
 	
 	wxClientDC dc(this);
 	
 	wxMemoryInputStream istream(_imageData.data(), _imageData.size());
 	wxImage image(istream);
 	wxBitmap bitmap(image);
+	
 	dc.DrawBitmap(bitmap, 0, 0);
 }
 
@@ -319,14 +319,15 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 			_ioThr.join();
 
 			delete _popup;
-			Hide();
+			// Hide();
 
 			_timer.Start(1000 / _targetFPS);
 
 		}
 
-		else if (!_server->Serve()) {
-			Show();
+		else {
+			// Show();
+			_server->Serve();
 		}
 
 	}
