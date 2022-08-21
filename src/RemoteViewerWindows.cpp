@@ -163,7 +163,12 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE),
 	_timer(this, 1234) {
 
-	const BmpFileHeader header = ScreenCapture::ConstructBMPHeader();
+	bool isWindows = false;
+#if defined(_WIN32) 
+	isWindows = true;
+	#endif
+	
+	const BmpFileHeader header = ScreenCapture::ConstructBMPHeader(ScreenCapture::DefaultResolution, 32, !isWindows);
 
 	std::copy(header.begin(), header.end(), _imageData.begin());
 
@@ -172,18 +177,21 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	_popup->Popup();
 
 	_client = new Client(ip);
-	ConnectMessageables(*this, *_client);
+	
 	
 	_client->Connect(remotePort, [this]() {
 		
 		_popup->Destroy();
 		
+		ConnectMessageables(*this, *_client);
+
 		_ioThr = std::thread(&Client::Receive, _client);
 		_timer.Start(1000 / _targetFPS);
+
+		_init = true;
 		
 		});
 
-	_init = true;
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
@@ -232,7 +240,7 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 
 void ClientStreamWindow::PaintNow() {
 
-	if (!_client->Connected()) { return; }
+	if (!_init || !_client->Connected()) { return; }
 	
 	wxClientDC dc(this);
 	
@@ -246,7 +254,7 @@ void ClientStreamWindow::PaintNow() {
 void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 	
 	// Do not paint until connected because no data is sent until then.
-	if (!_client->Connected()) { evt.Skip(); }
+	if (!_init || !_client->Connected()) { evt.Skip(); }
 	else { PaintNow(); }
 }
 

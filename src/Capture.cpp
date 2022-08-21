@@ -100,33 +100,29 @@ constexpr const BmpFileHeader ScreenCapture::BaseHeader() {
 }
 
 const BmpFileHeader ScreenCapture::ConstructBMPHeader(Resolution resolution,
-        const Ushort bitsPerPixel) {
+    const Ushort bitsPerPixel, const bool reverse) {
 
     BmpFileHeader header = BaseHeader();
 
     // Encode file size
-    EncodeAsByte(&header[2], resolution.width * resolution.height * 
+    EncodeAsByte(&header[2], resolution.width * resolution.height *
         BMP_COLOR_CHANNELS + BMP_FILE_HEADER_SIZE + BMP_INFO_HEADER_SIZE);
 
     // Encode pixels wide
     EncodeAsByte(&header[4 + BMP_FILE_HEADER_SIZE], resolution.width);
 
     // TODO: This should be determined by the client and not this computer
-#if defined(_WIN32)  // Window bitmaps are stored upside down
-
-    resolution.height = -resolution.height;
-
-#endif
+    if (reverse) { resolution.height = -resolution.height; }
 
     // Encode pixels high
     EncodeAsByte(&header[8 + BMP_FILE_HEADER_SIZE], resolution.height);
 
-#if defined(_WIN32)  // Window bitmaps are stored upside down
+    if (reverse) {
 
-    std::transform( (header.begin() + BMP_FILE_HEADER_SIZE + 8), (header.begin() + BMP_FILE_HEADER_SIZE + 12), 
-        (header.begin() + BMP_FILE_HEADER_SIZE + 8), [](Byte& b) { return b == '\0' ? (Byte)255 : b; });
+        std::transform((header.begin() + BMP_FILE_HEADER_SIZE + 8), (header.begin() + BMP_FILE_HEADER_SIZE + 12),
+            (header.begin() + BMP_FILE_HEADER_SIZE + 8), [](Byte& b) { return b == '\0' ? (Byte)255 : b; });
 
-#endif
+    }
 
     header[BMP_FILE_HEADER_SIZE + 14] = bitsPerPixel;
 	

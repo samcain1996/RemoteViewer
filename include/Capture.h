@@ -57,7 +57,7 @@ class ScreenCapture {
 public:
 	
     static const BmpFileHeader ConstructBMPHeader(Resolution resolution = DefaultResolution,
-        const Ushort bitsPerPixel = 32);  // Initializes values for bitmap header
+        const Ushort bitsPerPixel = 32, const bool reverse = false);  // Initializes values for bitmap header
 
     static const Uint32 CalculateBMPFileSize(const Resolution& resolution = DefaultResolution, const Ushort bitsPerPixel = 32);
 
