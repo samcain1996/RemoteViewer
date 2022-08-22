@@ -13,7 +13,7 @@ private:
 	void Send(const PacketBuffer& data) override;
 
 	void Receive() override;
-	void ProcessPacket(const Packet&) override {};
+	// void ProcessPacket(const Packet&) override {};
 
 	void Handshake(bool& isWindows) override;
 

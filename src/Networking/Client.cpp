@@ -4,33 +4,6 @@ Client::Client(const std::string& hostname, const std::chrono::seconds& timeout)
     _hostname = hostname;
 }
 
-void Client::ProcessPacket(const Packet& packet) {
-	
-    // Get packet group
-    Uint32 group = packet.Header().group;
-
-    if (packet.Header().sequence == 0) {
-        _packetGroups[group] = packet.Header().size - 1;
-        return;
-    }
-
-    ThreadLock lock(_mutex);  // Prevent other threads from accessing variables used in scope
-
-    // Add packet to list of packets in its group
-    PacketPriorityQueue& packetGroupBucket = _incompletePackets[group];
-    packetGroupBucket.push(packet);
-
-	// If the packet is the last in the group, process group
-    if (_packetGroups[group] == packetGroupBucket.size()) {
-        
-        PacketPriorityQueue* completeGroup = new PacketPriorityQueue(std::move(_incompletePackets[group]));
-        _incompletePackets.erase(group);
-
-        groupWriter->WriteMessage(completeGroup);
-        _packetGroups.erase(group);
-    }
-}
-
 const void Client::Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows) {
 
     try {
@@ -77,21 +50,19 @@ void Client::Receive() {
 
     while (_connected) {
 
-        _socket.async_read_some(boost::asio::buffer(_tmpBuffer, _tmpBuffer.size()),
+        _socket.async_read_some(boost::asio::buffer(_tmpBuffer),
             [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
             {
                 if (ec.value() == 0 && bytes_transferred > 0) {
 					
-                    if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
-                        _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
-                    }
+                    if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {}
+
                     else if (IsDisconnectMsg()) {
                         _connected = false;
                         return;
                     }
                     else {
-                        _socket.write_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
-                        ProcessPacket(Packet(_tmpBuffer));
+                        groupWriter->WriteMessage(new Packet(_tmpBuffer));
                     }
                 }
                 else { Disconnect(); }

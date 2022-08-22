@@ -105,7 +105,7 @@ private:
 
 public:
 
-    static inline Resolution DefaultResolution = RES_720;
+    static inline Resolution DefaultResolution = RES_480;
 
 private:
 

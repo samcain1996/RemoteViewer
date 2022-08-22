@@ -63,16 +63,13 @@ void Server::Send(const PacketBuffer& data) {
         [this, &data](const boost::system::error_code& ec, std::size_t bytesTransferred) {
     
             if (!ec) {
-                _socket.read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
+                // _socket.read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
                 if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
-                    _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
+                    // _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
                 }
                 else if (IsDisconnectMsg()) {
                     _connected = false;
                     return;
-                }
-                else if (IsResendRequest()) {
-					_socket.write_some(boost::asio::buffer(data), _errcode);
                 }
             }
             else { Disconnect(); }

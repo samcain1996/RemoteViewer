@@ -36,18 +36,9 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
     // Calculate the number of packets that will
     // need to be send in order to send entire message
     Uint32 numberOfPackets = (Uint32)std::ceil(
-        ((float)data.size() / MAX_PACKET_PAYLOAD_SIZE)) + 1;
+        ((float)data.size() / MAX_PACKET_PAYLOAD_SIZE));
 
     packets.reserve(numberOfPackets);
-
-    // Create the first packet, the first packet
-    // has a sequence of 0 and its size is the
-    // number of packets in the entire message
-    header.size = numberOfPackets;
-    header.sequence = 0;
-
-    // First packet gets dummy payload
-    packets.push_back(Packet(header, PacketPayload()));  // Add header to list of packets to send
 
     // Break message down into packets
     for (size_t bytesRemaining = data.size(), iteration = 0; bytesRemaining > 0; iteration++) {

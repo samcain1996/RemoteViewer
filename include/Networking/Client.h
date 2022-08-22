@@ -1,13 +1,13 @@
 #pragma once
 #include "Networking/NetAgent.h"
 
-class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
+class Client : public NetAgent, public Messageable<Packet*> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
 
 	PacketGroupMap _packetGroups{};
 
-	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
+	MessageWriter<Packet*>*& groupWriter = Messageable<Packet*>::msgWriter;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -16,7 +16,7 @@ private:
 	 * @param const Packet		Packet to process
 	 * 
 	 */
-	void ProcessPacket(const Packet& packet) override;
+	// void ProcessPacket(const Packet& packet) override;
 
 	void Handshake(bool& isWindows) override;
 

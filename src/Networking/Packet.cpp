@@ -49,6 +49,11 @@ Packet::Packet(const PacketBuffer& packetData) {
 	std::memcpy(encoded, &(packetData.data())[PACKET_SEQUENCE_OFFSET], sizeof encoded);
 	_header.sequence = DecodeAsByte(encoded);
 
+	// if (_header.size > MAX_PACKET_SIZE) {
+	// 	_payload = PacketPayload();
+	// 	return;
+	// }
+
 	// Retrieve payload
 	std::copy(packetData.begin() + PACKET_PAYLOAD_OFFSET,
 		packetData.begin() + _header.size, std::back_inserter(_payload));

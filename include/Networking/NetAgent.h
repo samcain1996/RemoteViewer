@@ -63,7 +63,7 @@ protected:
 	
 	virtual void Receive() = 0;
 	virtual void Send(const PacketBuffer& data) = 0;
-	virtual void ProcessPacket(const Packet& packet) = 0;
+	// virtual void ProcessPacket(const Packet& packet) = 0;
 
 public:
 

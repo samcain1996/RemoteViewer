@@ -200,36 +200,27 @@ ClientStreamWindow::~ClientStreamWindow() {
 	delete _client;
 }
 
-const bool ClientStreamWindow::AssembleImage() {
+void ClientStreamWindow::ImageBuilder() {
 
-	MessageReader<PacketPriorityQueue*>*& groupReader = msgReader;
-	
+	MessageReader<Packet*>*& packetReader = msgReader;
+
 	// Check  if there is a complete image
-	if (!groupReader->Empty()) {
+	while (!packetReader->Empty()) {
 		
 		// Get the packets to construct the image
-		PacketPriorityQueue* queue = groupReader->ReadMessage();
+		Packet* packet = packetReader->ReadMessage();
+
+		int offset = packet->Header().sequence * MAX_PACKET_PAYLOAD_SIZE + BMP_HEADER_SIZE;; 
 		
-		// Assemble image from packets
-		Uint32 offset = BMP_HEADER_SIZE;
-		for (Uint32 packetNo = 0; !queue->empty(); ++packetNo) {
-			const PacketPayload& payload = queue->top().Payload();
-			
-			std::copy(payload.begin(), payload.end(), (_imageData.begin() + offset));
-			
-			offset += payload.size();
-			queue->pop();
-		}
+		std::memcpy(&_imageData[offset], packet->Payload().data(), packet->Payload().size());  // Will cause an error
 		
-		delete queue;	
-		return true;
+		delete packet;	
 	}
 	
-	// Nothing available to render
-	return false;
 }
 
 void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
+	_render = true;
 	wxWakeUpIdle();
 	_timer.Start(1000 / _targetFPS);
 }
@@ -237,6 +228,8 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 void ClientStreamWindow::PaintNow() {
 
 	if (!_init || !_client->Connected()) { return; }
+
+	ImageBuilder();
 	
 	wxClientDC dc(this);
 	
@@ -260,9 +253,12 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (_client->Connected()) {
 
-		if (AssembleImage()) {
+		//if (AssembleImage()) {
+			if (_render) {
 			PaintNow();
-		}
+			_render = false;
+			}
+		//}
 
 	}
 

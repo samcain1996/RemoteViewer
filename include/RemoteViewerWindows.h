@@ -134,11 +134,11 @@ public:
 // Receives a video stream from the server and sends 
 // back a stream of keyboard and mouse events
 
-class ClientStreamWindow : public BaseWindow, public Messageable<PacketPriorityQueue*> {
+class ClientStreamWindow : public BaseWindow, public Messageable<Packet*> {
 
 private:
 	
-	bool _wasConnected = false;
+	bool _render = false;
 
 	ImageData _imageData{};
 	
@@ -162,7 +162,7 @@ public:
 	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
-	const bool AssembleImage();  // Assemble image from packet queue, return true if successful
+	void ImageBuilder();  // Assemble image from packet queue, return true if successful
 	
 	void OnPaint(wxPaintEvent& evt);
 	
