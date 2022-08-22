@@ -204,15 +204,17 @@ void ClientStreamWindow::ImageBuilder() {
 
 	MessageReader<Packet*>*& packetReader = msgReader;
 
+	Byte* pixelData = &_imageData.data()[BMP_HEADER_SIZE];
+
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
 		
 		// Get the packets to construct the image
 		Packet* packet = packetReader->ReadMessage();
 
-		int offset = packet->Header().sequence * MAX_PACKET_PAYLOAD_SIZE + BMP_HEADER_SIZE;; 
+		int offset = packet->Header().sequence * MAX_PACKET_PAYLOAD_SIZE; 
 		
-		std::memcpy(&_imageData[offset], packet->Payload().data(), packet->Payload().size());  // Will cause an error
+		std::memcpy(&pixelData[offset], packet->Payload().data(), packet->Payload().size());  // Will cause an error
 		
 		delete packet;	
 	}
@@ -253,12 +255,10 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (_client->Connected()) {
 
-		//if (AssembleImage()) {
-			if (_render) {
+		if (_render) {
 			PaintNow();
 			_render = false;
-			}
-		//}
+		}
 
 	}
 

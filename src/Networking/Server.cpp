@@ -60,23 +60,24 @@ void Server::Send(const PacketBuffer& data) {
 
     // Send packet and then wait for acknowledgment
     _socket.async_write_some(boost::asio::buffer(data),
-        [this, &data](const boost::system::error_code& ec, std::size_t bytesTransferred) {
+        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
     
             if (!ec) {
                 // _socket.read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
-                if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
+                //if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
                     // _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
-                }
-                else if (IsDisconnectMsg()) {
+                //}
+                /*else if (IsDisconnectMsg()) {
                     _connected = false;
                     return;
-                }
+                }*/
             }
             else { Disconnect(); }
         }
     );
 	
     _io_context.run_until(steady_clock::now() + disconnect_timeout);
+    //Sleep(1);
     _io_context.restart();
 }
 

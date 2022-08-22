@@ -59,7 +59,6 @@ protected:
 	virtual PacketList ConvertToPackets(const ByteVec& data);
 	virtual void Handshake(bool& isWindows) = 0;
 	const bool IsDisconnectMsg() const;
-	const bool IsResendRequest() const;
 	
 	virtual void Receive() = 0;
 	virtual void Send(const PacketBuffer& data) = 0;

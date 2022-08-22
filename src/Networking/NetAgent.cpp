@@ -8,11 +8,7 @@ NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), 
 
 NetAgent::~NetAgent() { }
 
-void NetAgent::Receive() {
-	
-
-	
-}
+void NetAgent::Receive() {}
 
 const bool NetAgent::IsDisconnectMsg() const {
 
@@ -53,7 +49,7 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
         PacketPayload payload(payloadSize); // Ensure payload is empty
 
         header.size = totalSize;     // Packet length in bytes
-        header.sequence = iteration + 1; // Packet sequence in group
+        header.sequence = iteration; // Packet sequence in group
 
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
 
@@ -65,5 +61,4 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
     return packets;
 }
 
-const bool NetAgent::IsResendRequest() const { return std::memcmp(_tmpBuffer.data(), PacketBuffer().data(), _tmpBuffer.size()) == 0; }
 const bool NetAgent::Connected() const { return _connected; }
