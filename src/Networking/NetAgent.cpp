@@ -8,6 +8,12 @@ NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), 
 
 NetAgent::~NetAgent() { }
 
+void NetAgent::Receive() {
+	
+
+	
+}
+
 const bool NetAgent::IsDisconnectMsg() const {
 
 	return std::memcmp(_tmpBuffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;

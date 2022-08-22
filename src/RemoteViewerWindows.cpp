@@ -180,11 +180,11 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 		_ioThr = std::thread(&Client::Receive, _client);
 		_timer.Start(1000 / _targetFPS);
 
-		_init = true;
-
 		const BmpFileHeader header = ScreenCapture::ConstructBMPHeader(ScreenCapture::DefaultResolution, 32, !isWindows);
 
 		std::copy(header.begin(), header.end(), _imageData.begin());
+		
+		_init = true;
 		
 		}, isWindows);
 

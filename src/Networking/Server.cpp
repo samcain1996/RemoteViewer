@@ -52,9 +52,7 @@ bool Server::Serve() {
     return _connected;
 }
 
-void Server::Receive() {
-
-}
+void Server::Receive() {}
 
 void Server::Send(const PacketBuffer& data) {
 
