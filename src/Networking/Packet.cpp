@@ -15,7 +15,11 @@ const bool Packet::InvalidPacketSize(const PacketBuffer& packetBuffer) {
 	Byte encodedSize[4] = { packetBuffer[0], packetBuffer[1], packetBuffer[2], packetBuffer[3] };
 	Uint32 size = DecodeAsByte(encodedSize);
 
-	if (size > MAX_PACKET_SIZE) {
+	Byte encodedSeq[4] = { packetBuffer[8], packetBuffer[9], packetBuffer[10], packetBuffer[11] };
+	Uint32 seq = DecodeAsByte(encodedSeq);
+
+	if (size > MAX_PACKET_SIZE || seq * MAX_PACKET_PAYLOAD_SIZE + size - PACKET_HEADER_SIZE >
+		ScreenCapture::CalculateBMPFileSize()) {
 		return true;
 	}
 
