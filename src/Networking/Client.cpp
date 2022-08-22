@@ -55,7 +55,7 @@ void Client::Receive() {
             {
                 if (ec.value() == 0 && bytes_transferred > 0) {
 					
-                    if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {}
+                    if (_errcode || Packet::InvalidImagePacket(_tmpBuffer)) {}
 
                     else if (IsDisconnectMsg()) {
                         _connected = false;

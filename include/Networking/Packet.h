@@ -19,25 +19,57 @@ constexpr const Uint32 PACKET_GROUP_OFFSET				= (PACKET_HEADER_ELEMENT_SIZE);
 constexpr const Uint32 PACKET_SEQUENCE_OFFSET			= (PACKET_HEADER_ELEMENT_SIZE * 2);
 constexpr const Uint32 PACKET_PAYLOAD_OFFSET			= PACKET_HEADER_SIZE;
 
-using PacketGroup   = Uint32;
-using PacketPayload = boost::container::static_vector<Byte, MAX_PACKET_PAYLOAD_SIZE>;
-using PacketBuffer  = std::array<Byte, MAX_PACKET_SIZE>;
+using PacketGroup    = Uint32;
+using PacketPayload  = boost::container::static_vector<Byte, MAX_PACKET_PAYLOAD_SIZE>;
+using PacketBuffer   = std::array<Byte, MAX_PACKET_SIZE>;
+using PacketMetadata = std::array<Byte, PACKET_HEADER_SIZE>;
 
-// Holds metadata about a packet
+enum class PacketTypes : Byte {
+	Image = static_cast<Byte>('I'),
+	Invalid = static_cast<Byte>('\0')
+};
+
+// Holds _metadata about a packet
 struct PacketHeader {
-	Uint32 size;	  // Packet payload + packet header size
-	Uint32 group;     // Group the packet belongs to
-	Uint32 sequence;  // Sequence in the group the packet is
+	static const Ushort SIZE_OFFSET = 1;
+	
+	PacketMetadata _metadata;
+	const Uint32 Size() const;
+
+	virtual const PacketTypes PacketType() const { return PacketTypes::Invalid; }
+
+	PacketHeader(const PacketBuffer& packetBuffer);
+
+	PacketHeader(const PacketHeader& header);
+
+	PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata);
+
+	virtual ~PacketHeader() {}
+	
+	
+};
+
+struct ImagePacketHeader : private PacketHeader {
+	static const Ushort POSITION_OFFSET = SIZE_OFFSET + 4;
+
+	const Uint32 Position() const;
+	const Uint32 Size() const;
+
+	const PacketTypes PacketType() const override { return PacketTypes::Image; }
+
+	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
 };
 
 // Packet of data that can be sent over a socket
 class Packet {
-	bool friend operator<(const Packet&, const Packet&);
+
 public:
 	
-	static const bool InvalidPacketSize(const PacketBuffer& packetBuffer);
+	static const bool InvalidImagePacket(const PacketBuffer& packetBuffer);
+	static const Uint32 DecodeAsByte(const Byte encodedNumber[4]);
+	
 private:
-	PacketHeader  _header;		// Header containing packet metadata
+	PacketHeader  _header;		// Header containing packet _metadata
 	PacketPayload _payload;		// Packet data
 public:
 
@@ -59,25 +91,11 @@ public:
 	Packet& operator=(const Packet&);
 	Packet& operator=(Packet&&) noexcept;
 
-	const PacketBuffer	    RawData() const;  // Metadata and payload in a contiguous array
-	const PacketHeader	    Header()  const;  // Metadata
+	const PacketBuffer	    RawData() const;  // _metadata and payload in a contiguous array
+	const PacketHeader	    Header()  const;  // _metadata
 	const PacketPayload		Payload() const;  // Payload
+	// const Ushort			Size()    const;  // Size of the whole packet
 
 };
 
 using PacketList			      = std::vector<Packet>;
-using PacketPriorityQueue		  = std::priority_queue<Packet, PacketList, std::less<Packet> >;
-
-using PacketGroupPriorityQueueMap = std::unordered_map<Uint32, PacketPriorityQueue>;
-using PacketGroupMap			  = std::unordered_map<Uint32, Uint32>;
-
-// Hash function for Packet priority queue.
-// Ideally, all packets with the same group will have
-// the same message. So hash can just be the group # for now.
-template <>
-class std::hash<PacketPriorityQueue> {
-public:
-	size_t operator()(const PacketPriorityQueue& queue) const {
-		return queue.top().Header().group;
-	}
-};

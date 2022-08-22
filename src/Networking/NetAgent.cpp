@@ -21,13 +21,9 @@ void NetAgent::Disconnect() {
     _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
 }
 
-PacketList NetAgent::ConvertToPackets(const ByteVec& data)
+PacketList NetAgent::ConvertToPackets(const ByteVec& data, const PacketTypes& packetType)
 {
     PacketList packets;  // List to hold all packets needed to create message
-
-    // Assign all packets that are part of this message to a group
-    PacketHeader header{};
-    header.group = randomGenerator();
 
     // Calculate the number of packets that will
     // need to be send in order to send entire message
@@ -46,12 +42,12 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
         Ushort totalSize = payloadSize + PACKET_HEADER_SIZE;  // Size of the entire packet
 
         // Assemble packet
-        PacketPayload payload(payloadSize); // Ensure payload is empty
-
-        header.size = totalSize;     // Packet length in bytes
-        header.sequence = iteration; // Packet sequence in group
-
+        PacketPayload payload(payloadSize); 
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
+
+        PacketMetadata metadata{ static_cast<Byte>(packetType) };
+        EncodeAsByte(&metadata[ImagePacketHeader::POSITION_OFFSET], iteration);
+        PacketHeader header(payload, metadata);
 
         packets.push_back(Packet(header, payload));
 

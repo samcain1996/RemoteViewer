@@ -5,8 +5,6 @@ class Client : public NetAgent, public Messageable<Packet*> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
 
-	PacketGroupMap _packetGroups{};
-
 	MessageWriter<Packet*>*& groupWriter = Messageable<Packet*>::msgWriter;
 
 	/**
@@ -16,7 +14,6 @@ private:
 	 * @param const Packet		Packet to process
 	 * 
 	 */
-	// void ProcessPacket(const Packet& packet) override;
 
 	void Handshake(bool& isWindows) override;
 

@@ -1,88 +1,60 @@
 #include "Networking/Packet.h"
 
-bool operator<(const Packet& p1, const Packet& p2) {
-	// A packet that has a larger sequence number 
-	// has a LOWER priority than one with a lower number;
-	if (p1._header.group == p2._header.group) { 
-		return p1._header.sequence > p2._header.sequence;
-	}
-
-	return p1._header.group > p2._header.group;
-}
-
-const bool Packet::InvalidPacketSize(const PacketBuffer& packetBuffer) {
+const bool Packet::InvalidImagePacket(const PacketBuffer& packetBuffer) {
 	
-	Byte encodedSize[4] = { packetBuffer[0], packetBuffer[1], packetBuffer[2], packetBuffer[3] };
-	Uint32 size = DecodeAsByte(encodedSize);
+	int expectedPackets = ceil(ScreenCapture::CalculateBMPFileSize() - BMP_HEADER_SIZE
+		/ (double)MAX_PACKET_PAYLOAD_SIZE);
 
-	Byte encodedSeq[4] = { packetBuffer[8], packetBuffer[9], packetBuffer[10], packetBuffer[11] };
-	Uint32 seq = DecodeAsByte(encodedSeq);
+	const PacketHeader header(packetBuffer);
+	const ImagePacketHeader imageheader(header);
 
-	if (size > MAX_PACKET_SIZE || seq * MAX_PACKET_PAYLOAD_SIZE + size - PACKET_HEADER_SIZE >
-		ScreenCapture::CalculateBMPFileSize()) {
-		return true;
-	}
-
-	return false;
+	return imageheader.Size() > MAX_PACKET_SIZE || imageheader.Position() > expectedPackets;
 	
 }
 
-Packet::Packet(const Packet& other) {
-	_header  = other._header;
+const Uint32 Packet::DecodeAsByte(const Byte encodedNumber[4])
+{
+
+	Byte temp[4];
+	std::memcpy(temp, encodedNumber, 4);
+
+	return ((Uint32)temp[0] + ((Uint32)temp[1] << ONE_BYTE) +
+		((Uint32)temp[2] << TWO_BYTES) + ((Uint32)temp[3] << THREE_BYTES));
+}
+
+Packet::Packet(const Packet& other) : _header(other.Header()) {
+
 	_payload = other._payload;
 }
 
-Packet::Packet(Packet&& other) noexcept {
-	_header  = std::move(other._header);
+Packet::Packet(Packet&& other) noexcept : _header(other.Header()) {
 	_payload = std::move(other._payload);
 }
 
-Packet::Packet(const PacketBuffer& packetData) {
+Packet::Packet(const PacketBuffer& packetData) :
+	_header(packetData) {
 	
-	Byte encoded[4];  // Temp variable to store encoded Uint32 values
-
-	// Retrieve encoded size
-	std::memcpy(encoded, packetData.data(), sizeof encoded);
-	_header.size = DecodeAsByte(encoded);
-
-	// Retrieve encoded group
-	std::memcpy(encoded, &(packetData.data())[PACKET_GROUP_OFFSET], sizeof encoded);
-	_header.group = DecodeAsByte(encoded);
-
-	// Retrieve encoded sequence
-	std::memcpy(encoded, &(packetData.data())[PACKET_SEQUENCE_OFFSET], sizeof encoded);
-	_header.sequence = DecodeAsByte(encoded);
-
-	// if (_header.size > MAX_PACKET_SIZE) {
-	// 	_payload = PacketPayload();
-	// 	return;
-	// }
-
 	// Retrieve payload
 	std::copy(packetData.begin() + PACKET_PAYLOAD_OFFSET,
-		packetData.begin() + _header.size, std::back_inserter(_payload));
+		packetData.begin() + _header.Size(), std::back_inserter(_payload));
 }
 
-Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
-
-	// Set header vars
-	_header.size	 = header.size;
-	_header.group    = header.group;
-	_header.sequence = header.sequence;
+Packet::Packet(const PacketHeader& header, const PacketPayload& payload) : 
+	_header(header) {
 
 	// Copy payload
 	_payload = payload;
 }
 
 Packet& Packet::operator=(const Packet& other) {
-	_header  = other._header;
+	_header._metadata  = other._header._metadata;
 	_payload = other._payload;
 
 	return *this;
 }
 
 Packet& Packet::operator=(Packet&& other) noexcept {
-	_header = std::move(other._header);
+	_header._metadata = std::move(other._header._metadata);
 	_payload = std::move(other._payload);
 
 	return *this;
@@ -90,22 +62,10 @@ Packet& Packet::operator=(Packet&& other) noexcept {
 
 const PacketBuffer Packet::RawData() const {
 	std::array<Byte, MAX_PACKET_SIZE> data;  // Entire packet as contiguous array
-	std::array<Byte, PACKET_HEADER_ELEMENT_SIZE> encoded;  // Encoded header vars
-
-	// Encode size into data
-	EncodeAsByte(encoded.data(), _header.size);
-	std::copy(encoded.begin(), encoded.end(), data.begin());
-
-	// Encode group into data
-	EncodeAsByte(encoded.data(), _header.group);
-	std::copy(encoded.begin(), encoded.end(), (data.begin() + PACKET_GROUP_OFFSET));
-
-	// Encode sequence into data
-	EncodeAsByte(encoded.data(), _header.sequence);
-	std::copy(encoded.begin(), encoded.end(), (data.begin() + PACKET_SEQUENCE_OFFSET));
 
 	// Append the payload
-	std::copy(_payload.begin(), _payload.end(), (data.begin() + PACKET_PAYLOAD_OFFSET));
+	std::copy(_header._metadata.begin(), _header._metadata.end(), data.begin());
+	std::copy(_payload.begin(), _payload.end(), data.begin() + PACKET_HEADER_SIZE);
 
 	return data;
 }
@@ -116,4 +76,35 @@ const PacketHeader Packet::Header() const {
 
 const PacketPayload Packet::Payload() const {
 	return _payload;
+}
+
+
+const Uint32 ImagePacketHeader::Position() const
+{
+	return Packet::DecodeAsByte(&_metadata.data()[POSITION_OFFSET]);
+}
+
+const Uint32 ImagePacketHeader::Size() const
+{
+	return PacketHeader::Size();
+}
+
+const Uint32 PacketHeader::Size() const
+{
+	return Packet::DecodeAsByte(&_metadata.data()[SIZE_OFFSET]);
+}
+
+PacketHeader::PacketHeader(const PacketBuffer& packetBuffer)
+{
+	std::copy(packetBuffer.begin(), packetBuffer.begin() + _metadata.size(), _metadata.begin());
+}
+
+PacketHeader::PacketHeader(const PacketHeader& header) : _metadata(header._metadata)
+{
+}
+
+PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata) :
+	_metadata(metadata)
+{
+	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], payload.size());
 }

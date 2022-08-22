@@ -210,11 +210,13 @@ void ClientStreamWindow::ImageBuilder() {
 	while (!packetReader->Empty()) {
 		
 		// Get the packets to construct the image
-		Packet* packet = packetReader->ReadMessage();
+		const Packet* const packet = packetReader->ReadMessage();
+		const PacketHeader header = packet->Header();
+		const ImagePacketHeader imageHeader(header);
 
-		int offset = packet->Header().sequence * MAX_PACKET_PAYLOAD_SIZE; 
+		int offset = imageHeader.Position() * MAX_PACKET_PAYLOAD_SIZE;
 		
-		std::memcpy(&pixelData[offset], packet->Payload().data(), packet->Payload().size());  // Will cause an error
+		std::memcpy(&pixelData[offset], packet->Payload().data(), packet->Payload().size()); 
 		
 		delete packet;	
 	}

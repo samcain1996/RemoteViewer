@@ -40,7 +40,7 @@ void Server::Listen() {
 bool Server::Serve() {
 
     // Convert the message into a list of packets
-    PacketList packets = ConvertToPackets(_screen.CaptureScreen());
+    PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketTypes::Image);
 
     // Loop through all the packets and send them
     for (size_t packetNo = 0; packetNo < packets.size() && _connected; packetNo++) {
@@ -77,7 +77,6 @@ void Server::Send(const PacketBuffer& data) {
     );
 	
     _io_context.run_until(steady_clock::now() + disconnect_timeout);
-    //Sleep(1);
     _io_context.restart();
 }
 

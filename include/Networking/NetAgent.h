@@ -49,14 +49,11 @@ protected:
 
 	PacketBuffer _tmpBuffer; // Temporary buffer for receiving/sending packets
 
-	// A map that maps packet groups to a priority queue
-	PacketGroupPriorityQueueMap _incompletePackets;
-
 	bool _connected = false;
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	virtual PacketList ConvertToPackets(const ByteVec& data);
+	virtual PacketList ConvertToPackets(const ByteVec& data, const PacketTypes& packetType = PacketTypes::Invalid);
 	virtual void Handshake(bool& isWindows) = 0;
 	const bool IsDisconnectMsg() const;
 	
