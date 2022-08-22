@@ -58,7 +58,8 @@ protected:
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const ByteVec& data);
 	virtual void Handshake(bool& isWindows) = 0;
-	virtual const bool IsDisconnectMsg() const;
+	const bool IsDisconnectMsg() const;
+	const bool IsResendRequest() const;
 	
 	virtual void Receive() = 0;
 	virtual void Send(const PacketBuffer& data) = 0;

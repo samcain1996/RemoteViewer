@@ -74,4 +74,5 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data)
     return packets;
 }
 
+const bool NetAgent::IsResendRequest() const { return std::memcmp(_tmpBuffer.data(), PacketBuffer().data(), _tmpBuffer.size()) == 0; }
 const bool NetAgent::Connected() const { return _connected; }

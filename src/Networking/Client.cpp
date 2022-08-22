@@ -82,13 +82,17 @@ void Client::Receive() {
             {
                 if (ec.value() == 0 && bytes_transferred > 0) {
 					
-                    _socket.write_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
-                    if (_errcode || Packet::InvalidPacketSize(_tmpBuffer) || IsDisconnectMsg()) {
-                        Disconnect();
+                    if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
+                        _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
+                    }
+                    else if (IsDisconnectMsg()) {
+                        _connected = false;
                         return;
                     }
-					  
-                    ProcessPacket(Packet(_tmpBuffer));
+                    else {
+                        _socket.write_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
+                        ProcessPacket(Packet(_tmpBuffer));
+                    }
                 }
                 else { Disconnect(); }
 

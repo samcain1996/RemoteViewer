@@ -59,14 +59,20 @@ void Server::Send(const PacketBuffer& data) {
     std::chrono::seconds disconnect_timeout = std::chrono::seconds(2);
 
     // Send packet and then wait for acknowledgment
-    _socket.async_write_some(boost::asio::buffer(data, data.size()),
-        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
+    _socket.async_write_some(boost::asio::buffer(data),
+        [this, &data](const boost::system::error_code& ec, std::size_t bytesTransferred) {
     
             if (!ec) {
                 _socket.read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
-                if (_errcode || Packet::InvalidPacketSize(_tmpBuffer) || IsDisconnectMsg()) {
-                    Disconnect();
+                if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
+                    _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
+                }
+                else if (IsDisconnectMsg()) {
+                    _connected = false;
                     return;
+                }
+                else if (IsResendRequest()) {
+					_socket.write_some(boost::asio::buffer(data), _errcode);
                 }
             }
             else { Disconnect(); }
