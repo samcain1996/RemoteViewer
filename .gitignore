@@ -1,9 +1,13 @@
-# Ignore everything
-*
-
 compile
 install_dependencies
 *.conf
+*.bmp
+RemoteViewer
+wx-config
+
+tests/*
+
+*.json
 
 # Do not ignore C/C++ header files
 *.h

@@ -55,13 +55,14 @@ public:
 	
 };
 
-struct ImagePacketHeader : private PacketHeader {
+struct ImagePacketHeader : public PacketHeader {
 	static const Ushort POSITION_OFFSET = SIZE_OFFSET + 4;
 
 	const Uint32 Position() const;
 	const Uint32 Size() const;
 
 	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
+	ImagePacketHeader(const Uint32 size, const Uint32 position);
 };
 
 // Packet of data that can be sent over a socket
@@ -70,7 +71,6 @@ class Packet {
 public:
 	
 	static const bool InvalidImagePacket(const PacketBuffer& packetBuffer);
-	static const Uint32 DecodeAsByte(const Byte encodedNumber[4]);
 	
 private:
 	PacketHeader  _header;		// Header containing packet _metadata

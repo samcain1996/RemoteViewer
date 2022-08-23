@@ -62,16 +62,7 @@ void Server::Send(const PacketBuffer& data) {
     _socket.async_write_some(boost::asio::buffer(data),
         [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
     
-            if (!ec) {
-                // _socket.read_some(boost::asio::buffer(_tmpBuffer, DISCONNECT_MESSAGE.size()), _errcode);
-                //if (_errcode || Packet::InvalidPacketSize(_tmpBuffer)) {
-                    // _socket.write_some(boost::asio::buffer(PacketBuffer()), _errcode);
-                //}
-                /*else if (IsDisconnectMsg()) {
-                    _connected = false;
-                    return;
-                }*/
-            }
+            if (!ec) {}
             else { Disconnect(); }
         }
     );

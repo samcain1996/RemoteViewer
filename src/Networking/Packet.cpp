@@ -11,16 +11,6 @@ const bool Packet::InvalidImagePacket(const PacketBuffer& packetBuffer) {
 	
 }
 
-const Uint32 Packet::DecodeAsByte(const Byte encodedNumber[4])
-{
-
-	Byte temp[4];
-	std::memcpy(temp, encodedNumber, 4);
-
-	return ((Uint32)temp[0] + ((Uint32)temp[1] << ONE_BYTE) +
-		((Uint32)temp[2] << TWO_BYTES) + ((Uint32)temp[3] << THREE_BYTES));
-}
-
 Packet::Packet(const Packet& other) : _header(other.Header()) {
 
 	_payload = other._payload;
@@ -79,34 +69,41 @@ const PacketPayload Packet::Payload() const {
 }
 
 
-const Uint32 ImagePacketHeader::Position() const
-{
-	return Packet::DecodeAsByte(&_metadata.data()[POSITION_OFFSET]);
+const Uint32 ImagePacketHeader::Position() const {
+	return DecodeAsByte(&_metadata.data()[POSITION_OFFSET]);
 }
 
-const Uint32 ImagePacketHeader::Size() const
-{
+const Uint32 ImagePacketHeader::Size() const {
 	return PacketHeader::Size();
 }
 
-const Uint32 PacketHeader::Size() const
-{
-	return Packet::DecodeAsByte(&_metadata.data()[SIZE_OFFSET]);
+const Uint32 PacketHeader::Size() const {
+	return DecodeAsByte(&_metadata.data()[SIZE_OFFSET]);
 }
 
-PacketHeader::PacketHeader(const PacketBuffer& packetBuffer)
-{
-	std::copy(packetBuffer.begin(), packetBuffer.begin() + _metadata.max_size(), _metadata.begin());
+PacketHeader::PacketHeader(const PacketBuffer& packetBuffer) {
+	std::copy(packetBuffer.begin(), packetBuffer.begin() + _metadata.size(), _metadata.begin());
 }
 
-PacketHeader::PacketHeader() : _metadata() {}
+PacketHeader::PacketHeader() {
+	_metadata.fill('\0');
+}
 
-PacketHeader::PacketHeader(const PacketHeader& header) : _metadata(header._metadata) {}
+PacketHeader::PacketHeader(const PacketHeader& header) {
+	_metadata = header._metadata;
+}
 
-PacketHeader::PacketHeader(PacketHeader&& header) : _metadata(std::move(header._metadata)) {}
+PacketHeader::PacketHeader(PacketHeader&& header) {
+	_metadata = std::move(header._metadata);
+}
 
-PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata) :
-	_metadata(metadata)
-{
+PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata) {
+	_metadata = metadata;
 	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], payload.size());
+}
+
+ImagePacketHeader::ImagePacketHeader(const Uint32 size, const Uint32 position) : PacketHeader() {
+		_metadata[0] = static_cast<Byte>(PacketTypes::Image);
+		EncodeAsByte(&_metadata.data()[SIZE_OFFSET], size);
+		EncodeAsByte(&_metadata.data()[POSITION_OFFSET], position);
 }

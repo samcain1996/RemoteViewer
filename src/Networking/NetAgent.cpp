@@ -35,7 +35,7 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data, const PacketTypes& pa
     // Break message down into packets
     for (size_t bytesRemaining = data.size(), iteration = 0; bytesRemaining > 0; iteration++) {
 
-        size_t offset = (iteration + 1) * MAX_PACKET_PAYLOAD_SIZE; // Current offset in message for current packet
+        size_t offset = iteration * MAX_PACKET_PAYLOAD_SIZE; // Current offset in message for current packet
 
         // Payload will always be the maximum size, unless less room is needed
         Ushort payloadSize = bytesRemaining < MAX_PACKET_PAYLOAD_SIZE ? bytesRemaining : MAX_PACKET_PAYLOAD_SIZE;
@@ -45,9 +45,7 @@ PacketList NetAgent::ConvertToPackets(const ByteVec& data, const PacketTypes& pa
         PacketPayload payload(payloadSize); 
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
 
-        PacketMetadata metadata{ static_cast<Byte>(packetType) };
-        EncodeAsByte(&metadata.data()[ImagePacketHeader::POSITION_OFFSET], iteration);
-        PacketHeader header(payload, metadata);
+        ImagePacketHeader header(totalSize, iteration);
 
         packets.push_back(Packet(header, payload));
 

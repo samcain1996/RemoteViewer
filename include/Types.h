@@ -24,15 +24,9 @@
 using Uint32 = std::uint32_t;
 using Ushort = std::uint16_t;
 
-constexpr const Uint32 ONE_BYTE = 8;
-constexpr const Uint32 TWO_BYTES = (ONE_BYTE + ONE_BYTE);
-constexpr const Uint32 THREE_BYTES = (TWO_BYTES + ONE_BYTE);
-constexpr const Uint32 FOUR_BYTES = (TWO_BYTES + TWO_BYTES);
-
 /*------------------TYPES--------------------*/
 using Byte				= unsigned char;
 using ByteVec           = std::vector<Byte>;
-using BytePtr           = Byte*;
 
 using ThreadLock		= std::lock_guard<std::mutex>;
 
@@ -84,9 +78,9 @@ constexpr void EncodeAsByte(Byte encodedNumber[4], const Uint32 numberToEncode) 
 
 }
 
-constexpr Uint32 DecodeAsByte(Byte encodedNumber[4]) {
+constexpr Uint32 DecodeAsByte(const Byte encodedNumber[4]) {
 
-    return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << ONE_BYTE) +
-        ((Uint32)encodedNumber[2] << TWO_BYTES) + ((Uint32)encodedNumber[3] << THREE_BYTES));
+    return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << 8) +
+        ((Uint32)encodedNumber[2] << 16) + ((Uint32)encodedNumber[3] << 24));
 
 }
