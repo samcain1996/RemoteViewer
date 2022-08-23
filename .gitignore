@@ -1,15 +1,17 @@
 # Ignore everything
 *
 
-!compile
-!install_dependencies
-!*.conf
+compile
+install_dependencies
+*.conf
 
 # Do not ignore C/C++ header files
+*.h
 !include/*.h
 !include/Networking/*.h
 
 # Do not ignore C++ files
+*.cpp
 !src/*.cpp
 !src/Networking/*.cpp
 
