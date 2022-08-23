@@ -1,13 +1,20 @@
 #include "Networking/Packet.h"
 
 const bool Packet::InvalidImagePacket(const PacketBuffer& packetBuffer) {
+
+	const Uint32 imageSize = ScreenCapture::CalculateBMPFileSize();
 	
-	int expectedPackets = ceil(ScreenCapture::CalculateBMPFileSize()
-		/ (double)MAX_PACKET_PAYLOAD_SIZE);
+	const Uint32 expectedPackets = ceil(imageSize / (double)MAX_PACKET_PAYLOAD_SIZE);
+	const Uint32 expectedFinalPacketSize = imageSize % expectedPackets;
 
 	const ImagePacketHeader imageheader(packetBuffer);
+	
+	if( (imageSize - expectedFinalPacketSize) % (imageheader.Position() + 1) == 0 ||
+		imageheader.Position() + 1 == expectedPackets) {
+		return false;
+	}
 
-	return imageheader.Size() > MAX_PACKET_SIZE || imageheader.Position() > expectedPackets;
+	return imageheader.Size() > MAX_PACKET_SIZE || imageheader.Position() >= expectedPackets;
 	
 }
 

@@ -5,7 +5,7 @@ wxIMPLEMENT_APP(Application);
 Application::Application() {
 	
 #if defined(_WIN32)
-	SetProcessDPIAware();
+	// SetProcessDPIAware();
 #endif
 
 }
