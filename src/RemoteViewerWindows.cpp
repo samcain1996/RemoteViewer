@@ -204,20 +204,21 @@ void ClientStreamWindow::ImageBuilder() {
 
 	MessageReader<Packet*>*& packetReader = msgReader;
 
-	Byte* pixelData = &_imageData.data()[BMP_HEADER_SIZE];
+	int expectedPackets = ceil(ScreenCapture::CalculateBMPFileSize()
+		/ (double)MAX_PACKET_PAYLOAD_SIZE);
 
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
-		
+
 		// Get the packets to construct the image
 		const Packet* const packet = packetReader->ReadMessage();
-		const PacketHeader header = packet->Header();
-		const ImagePacketHeader imageHeader(header);
+		const ImagePacketHeader imageHeader(packet->Header());
 
-		int offset = imageHeader.Position() * MAX_PACKET_PAYLOAD_SIZE;
-		
-		std::memcpy(&pixelData[offset], packet->Payload().data(), packet->Payload().size()); 
-		
+		int offset = imageHeader.Position() * MAX_PACKET_PAYLOAD_SIZE + BMP_HEADER_SIZE;
+
+		if (expectedPackets >= imageHeader.Position() ) {
+			std::memcpy(&_imageData[offset], packet->Payload().data(), packet->Payload().size());
+		}
 		delete packet;	
 	}
 	

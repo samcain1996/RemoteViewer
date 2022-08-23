@@ -2,11 +2,10 @@
 
 const bool Packet::InvalidImagePacket(const PacketBuffer& packetBuffer) {
 	
-	int expectedPackets = ceil(ScreenCapture::CalculateBMPFileSize() - BMP_HEADER_SIZE
+	int expectedPackets = ceil(ScreenCapture::CalculateBMPFileSize()
 		/ (double)MAX_PACKET_PAYLOAD_SIZE);
 
-	const PacketHeader header(packetBuffer);
-	const ImagePacketHeader imageheader(header);
+	const ImagePacketHeader imageheader(packetBuffer);
 
 	return imageheader.Size() > MAX_PACKET_SIZE || imageheader.Position() > expectedPackets;
 	
@@ -39,8 +38,9 @@ Packet::Packet(const PacketBuffer& packetData) :
 		packetData.begin() + _header.Size(), std::back_inserter(_payload));
 }
 
-Packet::Packet(const PacketHeader& header, const PacketPayload& payload) : 
-	_header(header) {
+Packet::Packet(const PacketHeader& header, const PacketPayload& payload)  {
+
+	_header._metadata = header._metadata;
 
 	// Copy payload
 	_payload = payload;
@@ -96,12 +96,14 @@ const Uint32 PacketHeader::Size() const
 
 PacketHeader::PacketHeader(const PacketBuffer& packetBuffer)
 {
-	std::copy(packetBuffer.begin(), packetBuffer.begin() + _metadata.size(), _metadata.begin());
+	std::copy(packetBuffer.begin(), packetBuffer.begin() + _metadata.max_size(), _metadata.begin());
 }
 
-PacketHeader::PacketHeader(const PacketHeader& header) : _metadata(header._metadata)
-{
-}
+PacketHeader::PacketHeader() : _metadata() {}
+
+PacketHeader::PacketHeader(const PacketHeader& header) : _metadata(header._metadata) {}
+
+PacketHeader::PacketHeader(PacketHeader&& header) : _metadata(std::move(header._metadata)) {}
 
 PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata) :
 	_metadata(metadata)

@@ -30,22 +30,28 @@ enum class PacketTypes : Byte {
 };
 
 // Holds _metadata about a packet
-struct PacketHeader {
+class PacketHeader {
+
+	friend class Packet;
+	
+public:
+	
 	static const Ushort SIZE_OFFSET = 1;
+
+	PacketHeader();
+	
+protected:
 	
 	PacketMetadata _metadata;
-	const Uint32 Size() const;
-
-	virtual const PacketTypes PacketType() const { return PacketTypes::Invalid; }
-
-	PacketHeader(const PacketBuffer& packetBuffer);
 
 	PacketHeader(const PacketHeader& header);
+	PacketHeader(PacketHeader&& header);
 
-	PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata);
-
-	virtual ~PacketHeader() {}
+public:
 	
+	PacketHeader(const PacketBuffer& packetBuffer);
+	PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata);
+	const Uint32 Size() const;
 	
 };
 
@@ -54,8 +60,6 @@ struct ImagePacketHeader : private PacketHeader {
 
 	const Uint32 Position() const;
 	const Uint32 Size() const;
-
-	const PacketTypes PacketType() const override { return PacketTypes::Image; }
 
 	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
 };
@@ -94,8 +98,7 @@ public:
 	const PacketBuffer	    RawData() const;  // _metadata and payload in a contiguous array
 	const PacketHeader	    Header()  const;  // _metadata
 	const PacketPayload		Payload() const;  // Payload
-	// const Ushort			Size()    const;  // Size of the whole packet
 
 };
 
-using PacketList			      = std::vector<Packet>;
+using PacketList = std::vector<Packet>;

@@ -18,6 +18,7 @@
 #include <thread>
 #include <cstring>
 #include <array>
+#include <cmath>
 #include <iostream>
 
 using Uint32 = std::uint32_t;
