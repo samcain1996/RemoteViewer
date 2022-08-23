@@ -5,9 +5,16 @@ install_dependencies
 RemoteViewer
 wx-config
 
-tests/*
+tests/
+build/
+.vscode/
+.vs/
 
 *.json
+!CmakePresets.json
+
+*.txt
+!CMakeLists.txt
 
 # Do not ignore C/C++ header files
 *.h
@@ -19,10 +26,5 @@ tests/*
 !src/*.cpp
 !src/Networking/*.cpp
 
-# Do not ignore C files
-!*.c
-
-!*.txt
-
-!*.json
-
+*.swp
+*.DS_STORE
