@@ -50,7 +50,7 @@ bool Server::Serve() {
     //}
 
     ImageData image = _screen.CaptureScreen();
-    NewSend(image.data(), image.size());
+    NewSend(image.data(), 0);
 
     _io_context.run();
     _io_context.restart();
@@ -62,21 +62,19 @@ void Server::Receive() {}
 
 void Server::NewSend(Byte* data, size_t size) {
 
-    if (size == 0 || size > ScreenCapture::CalculateBMPFileSize()) {
-        auto tmp = _screen.CaptureScreen();
-        data = tmp.data();
-        size = tmp.size();
-    }
 
-    size_t transmitSize = std::min((size_t)MAX_PACKET_SIZE, size);
+        size = ScreenCapture::CalculateBMPFileSize();
+        std::memcpy(buf, _screen.CaptureScreen().data(), size);
+  
 
-    boost::asio::async_write(_socket, boost::asio::buffer(data, transmitSize),
-        [this, data = data + transmitSize, size = size - transmitSize]
+
+    boost::asio::async_write(_socket, boost::asio::buffer(buf, size),
+        [this]
     (std::error_code error, size_t /*bytes_transferred*/) {
             if (error) {
                 std::cerr << "async_write: " << error.message() << std::endl;
             }
-            else { NewSend(data, size); }
+            // else { NewSend(buf, size); }
         });
 }
 

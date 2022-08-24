@@ -18,6 +18,9 @@ private:
 
 	void Handshake(bool& isWindows) override;
 
+
+	Byte* buf = new Byte[ScreenCapture::CalculateBMPFileSize()];
+
 public:
 
 	// Servers should only be instantiated with a port number
