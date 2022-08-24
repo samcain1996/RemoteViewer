@@ -44,35 +44,33 @@ void Client::Handshake(bool& isWindows)
 
 void Client::Send(const PacketBuffer& data) {}
 
+void Client::Start() {
+
+    Receive();
+    _io_context.run();
+}
+
 void Client::Receive() {
 
-	std::chrono::seconds disconnect_timout = std::chrono::seconds(2);
+    _socket.async_read_some(boost::asio::buffer(_tmpBuffer),
+        [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
+        {
+            if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
 
-    while (_connected) {
-
-        _socket.async_read_some(boost::asio::buffer(_tmpBuffer),
-            [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
-            {
-                if (ec.value() == 0 && bytes_transferred > 0) {
-					
-                    if (_errcode || Packet::InvalidImagePacket(_tmpBuffer)) {}
-
-                    else if (IsDisconnectMsg()) {
-                        _connected = false;
-                        return;
-                    }
-                    else {
-                        groupWriter->WriteMessage(new Packet(_tmpBuffer));
-                    }
-                }
-                else { Disconnect(); }
-
-            });
-
-        _io_context.run_until(steady_clock::now() + disconnect_timout);
-        _io_context.restart();
-
-    }
+                // if (_errcode || Packet::InvalidImagePacket(_tmpBuffer)) 
+                //else if (IsDisconnectMsg()) {
+                //    _connected = false;
+                //    return;
+                //}
+                //else {
+                groupWriter->WriteMessage(new PacketBuffer(_tmpBuffer));
+                //}
+                Receive();
+            }
+            else {
+                Disconnect();
+            }
+        });
 
 }
 

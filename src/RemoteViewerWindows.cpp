@@ -123,7 +123,7 @@ wxEND_EVENT_TABLE()
 
 ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
-	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_ipInput = new wxTextCtrl(this, 20001, "127.0.0.1", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	_localPortInput = new wxTextCtrl(this, 20003, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
@@ -177,7 +177,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 		
 		ConnectMessageables(*this, *_client);
 
-		_ioThr = std::thread(&Client::Receive, _client);
+		_ioThr = std::thread(&Client::Start, _client);
 		_timer.Start(1000 / _targetFPS);
 
 		const BmpFileHeader header = ScreenCapture::ConstructBMPHeader(ScreenCapture::DefaultResolution, 32, !isWindows);
@@ -202,24 +202,30 @@ ClientStreamWindow::~ClientStreamWindow() {
 
 void ClientStreamWindow::ImageBuilder() {
 
-	MessageReader<Packet*>*& packetReader = msgReader;
+	MessageReader<PacketBuffer*>*& packetReader = msgReader;
 
 	int expectedPackets = ceil(ScreenCapture::CalculateBMPFileSize()
-		/ (double)MAX_PACKET_PAYLOAD_SIZE);
+		/ (double)MAX_PACKET_SIZE);
 
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
 
+		const PacketBuffer* const data = packetReader->ReadMessage();
 		// Get the packets to construct the image
-		const Packet* const packet = packetReader->ReadMessage();
-		const ImagePacketHeader imageHeader(packet->Header());
+		//const Packet* const packet = packetReader->ReadMessage();
+		//const ImagePacketHeader imageHeader(packet->Header());
 
-		int offset = imageHeader.Position() * MAX_PACKET_PAYLOAD_SIZE + BMP_HEADER_SIZE;
+		int offset = tmpidx++ * MAX_PACKET_SIZE + BMP_HEADER_SIZE;
+		int size = tmpidx == expectedPackets ? _imageData.size() - offset : MAX_PACKET_SIZE;
 
-		if (expectedPackets >= imageHeader.Position() ) {
-			std::memcpy(&_imageData[offset], packet->Payload().data(), packet->Payload().size());
-		}
-		delete packet;	
+		//if (expectedPackets >= imageHeader.Position() ) {
+			//std::memcpy(&_imageData[offset], packet->Payload().data(), packet->Payload().size());
+		//}
+
+		std::memcpy(&_imageData[offset], data->data(), size);
+
+		if (tmpidx >= expectedPackets) { tmpidx = 0; }
+		delete data;	
 	}
 	
 }

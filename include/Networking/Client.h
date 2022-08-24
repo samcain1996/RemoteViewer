@@ -1,11 +1,11 @@
 #pragma once
 #include "Networking/NetAgent.h"
 
-class Client : public NetAgent, public Messageable<Packet*> {
+class Client : public NetAgent, public Messageable<PacketBuffer*> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
 
-	MessageWriter<Packet*>*& groupWriter = Messageable<Packet*>::msgWriter;
+	MessageWriter<PacketBuffer*>*& groupWriter = msgWriter;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -45,6 +45,7 @@ public:
 	 * 
 	 */
 	void Receive() override;
+	void Start();
 
 	void Send(const PacketBuffer& data) override;
 };

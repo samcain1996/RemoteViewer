@@ -11,6 +11,7 @@ private:
 
 	// Send a buffer of bytes to the client
 	void Send(const PacketBuffer& data) override;
+	void NewSend(Byte* data, size_t size);
 
 	void Receive() override;
 	// void ProcessPacket(const Packet&) override {};

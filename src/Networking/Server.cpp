@@ -40,35 +40,59 @@ void Server::Listen() {
 bool Server::Serve() {
 
     // Convert the message into a list of packets
-    PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketTypes::Image);
+    // PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketTypes::Image);
 
     // Loop through all the packets and send them
-    for (size_t packetNo = 0; packetNo < packets.size() && _connected; packetNo++) {
-        const Packet& packet = packets[packetNo];
+    //for (size_t packetNo = 0; packetNo < packets.size() && _connected; packetNo++) {
+    //    const Packet& packet = packets[packetNo];
 
-        Send(packet.RawData());
-    }
+    //    Send(packet.RawData());
+    //}
+
+    ImageData image = _screen.CaptureScreen();
+    NewSend(image.data(), image.size());
+
+    _io_context.run();
+    _io_context.restart();
 
     return _connected;
 }
 
 void Server::Receive() {}
 
+void Server::NewSend(Byte* data, size_t size) {
+
+    if (size == 0 || size > ScreenCapture::CalculateBMPFileSize()) {
+        auto tmp = _screen.CaptureScreen();
+        data = tmp.data();
+        size = tmp.size();
+    }
+
+    size_t transmitSize = std::min((size_t)MAX_PACKET_SIZE, size);
+
+    boost::asio::async_write(_socket, boost::asio::buffer(data, transmitSize),
+        [this, data = data + transmitSize, size = size - transmitSize]
+    (std::error_code error, size_t /*bytes_transferred*/) {
+            if (error) {
+                std::cerr << "async_write: " << error.message() << std::endl;
+            }
+            else { NewSend(data, size); }
+        });
+}
+
 void Server::Send(const PacketBuffer& data) {
 
-    std::chrono::seconds disconnect_timeout = std::chrono::seconds(2);
-
-    // Send packet and then wait for acknowledgment
-    _socket.async_write_some(boost::asio::buffer(data),
-        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
-    
-            if (!ec) {}
-            else { Disconnect(); }
-        }
-    );
-	
-    _io_context.run_until(steady_clock::now() + disconnect_timeout);
-    _io_context.restart();
+    //ImageData image = _screen.CaptureScreen();
+    //Byte* data = image.data();
+    //size_t dataSize = image.size();
+    //size_t transmitSize = std::min((size_t)MAX_PACKET_SIZE, dataSize);
+    //boost::asio::async_write(_socket, boost::asio::buffer(data, transmitSize),
+    //    [data = data + transmitSize, dataSize = dataSize - transmitSize]
+    //(std::error_code error, size_t /*bytes_transferred*/) {
+    //        if (error) {
+    //            std::cerr << "async_write: " << error.message() << std::endl;
+    //        }
+    //    });
 }
 
 Server::~Server() {}

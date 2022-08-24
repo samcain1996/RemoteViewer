@@ -23,8 +23,8 @@ protected:
 	NetAgent& operator=(NetAgent&&) = delete;
 
 
-	constexpr const static std::array<Byte, 4> WIN_HANDSHAKE = { 'W', 'I', 'N'};
-	constexpr const static std::array<Byte, 4> OTHER_HANDSHAKE = { 'N', 'O', 'T' };
+	constexpr const static std::array<Byte, 4> WIN_HANDSHAKE = { 'W', 'I', 'N', '!' };
+	constexpr const static std::array<Byte, 4> OTHER_HANDSHAKE = { 'N', 'O', 'T', '!' };
 	
 #if defined(_WIN32)
 	constexpr const static std::array<Byte, 4>& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
@@ -38,6 +38,8 @@ protected:
 	static std::random_device rd;
 	static std::mt19937 randomGenerator;
 
+	bool _connected = false;
+
 	std::chrono::seconds _timeout;
 
 	boost::asio::io_context _io_context;  // Used for I/O
@@ -48,8 +50,6 @@ protected:
 	boost::system::error_code _errcode;
 
 	PacketBuffer _tmpBuffer; // Temporary buffer for receiving/sending packets
-
-	bool _connected = false;
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
