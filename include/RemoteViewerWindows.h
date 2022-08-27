@@ -134,7 +134,7 @@ public:
 // Receives a video stream from the server and sends 
 // back a stream of keyboard and mouse events
 
-class ClientStreamWindow : public BaseWindow, public Messageable<PacketBuffer*> {
+class ClientStreamWindow : public BaseWindow, public Messageable<ByteVec*> {
 
 private:
 	

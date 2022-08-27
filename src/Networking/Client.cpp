@@ -63,7 +63,7 @@ void Client::Receive() {
                 //    return;
                 //}
                 //else {
-                groupWriter->WriteMessage(new PacketBuffer(_tmpBuffer));
+                groupWriter->WriteMessage(new ByteVec(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
                 //}
                 Receive();
             }

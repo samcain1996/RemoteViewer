@@ -62,11 +62,8 @@ void Server::Receive() {}
 
 void Server::NewSend(Byte* data, size_t size) {
 
-
-        size = ScreenCapture::CalculateBMPFileSize();
-        std::memcpy(buf, _screen.CaptureScreen().data(), size);
-  
-
+    size = ScreenCapture::CalculateBMPFileSize();
+    std::memcpy(buf, _screen.CaptureScreen().data(), size);
 
     boost::asio::async_write(_socket, boost::asio::buffer(buf, size),
         [this]
