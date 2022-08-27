@@ -11,6 +11,7 @@
 
 #include "Capture.h"
 
+
 class PopUp;
 
 enum class WindowNames {
@@ -18,6 +19,7 @@ enum class WindowNames {
 	ClientInit,
 	ServerInit,
 	ClientStream,
+	ServerStream,
 	UNDEFINED
 };
 
@@ -148,9 +150,9 @@ private:
 	const int _windowId = 3;
 
 	const int _targetFPS = 30;
-	int tmpidx = 0;
 	wxTimer _timer;
 
+	int offset = 0;
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
@@ -185,12 +187,6 @@ private:
 	wxTextCtrl* _portTb;
 	wxButton* _startServerButton;
 
-	Server* _server = nullptr;
-	std::thread _ioThr;
-	
-	wxTimer _timer;
-	const int _targetFPS = 30;
-
 	const int _windowId = 4;
 
 public:
@@ -204,11 +200,38 @@ public:
 	ServerInitWindow& operator=(ServerInitWindow&&) = delete;
 	
 	void StartServer(wxCommandEvent& evt);
-	void BackgroundTask(wxIdleEvent& evt);	
-
-	void OnTick(wxTimerEvent& timerEvent);
 	
 	constexpr const WindowNames WindowName() override { return WindowNames::ServerInit; }
+
+	wxDECLARE_EVENT_TABLE();
+};
+
+class ServerStreamWindow : public BaseWindow {
+private:
+
+	Server* _server = nullptr;
+	std::thread _ioThr;
+
+	wxTimer _timer;
+	const int _targetFPS = 30;
+
+	const int _windowId = 5;
+
+public:
+	ServerStreamWindow(const int listenPort);
+	~ServerStreamWindow();
+
+	// Delete copy and move constructors and assignment operators
+	ServerStreamWindow(const ServerStreamWindow&) = delete;
+	ServerStreamWindow(ServerStreamWindow&&) = delete;
+	ServerStreamWindow& operator=(const ServerStreamWindow&) = delete;
+	ServerStreamWindow& operator=(ServerStreamWindow&&) = delete;
+
+	void BackgroundTask(wxIdleEvent& evt);
+
+	void OnTick(wxTimerEvent& timerEvent);
+
+	constexpr const WindowNames WindowName() override { return WindowNames::ServerStream; }
 
 	wxDECLARE_EVENT_TABLE();
 };

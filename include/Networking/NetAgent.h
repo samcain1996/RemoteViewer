@@ -49,7 +49,7 @@ protected:
 	tcp::socket _socket;
 	boost::system::error_code _errcode;
 
-	PacketBuffer _tmpBuffer; // Temporary buffer for receiving/sending packets
+	PacketBuffer _tmpBuffer{}; // Temporary buffer for receiving/sending packets
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets

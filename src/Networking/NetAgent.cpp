@@ -4,7 +4,9 @@ std::random_device NetAgent::rd{};
 
 std::mt19937 NetAgent::randomGenerator(rd());
 
-NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), _timeout(timeout) {}
+NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), _timeout(timeout) {
+    std::fill(_tmpBuffer.begin(), _tmpBuffer.end(), '\0');
+}
 
 NetAgent::~NetAgent() { }
 

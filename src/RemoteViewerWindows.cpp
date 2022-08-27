@@ -42,6 +42,7 @@ void BaseWindow::GoBack() {
 		previousWindow = new ClientInitWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::ServerInit:
+	case WindowNames::ServerStream:
 		previousWindow = new ServerInitWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::UNDEFINED:
@@ -123,7 +124,7 @@ wxEND_EVENT_TABLE()
 
 ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
-	_ipInput = new wxTextCtrl(this, 20001, "127.0.0.1", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.197", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	_localPortInput = new wxTextCtrl(this, 20003, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
@@ -160,8 +161,7 @@ wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort, 
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size), 
-	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE),
-	_timer(this, 1234) {
+	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE), _timer(this, 1234) {
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -203,27 +203,19 @@ ClientStreamWindow::~ClientStreamWindow() {
 void ClientStreamWindow::ImageBuilder() {
 
 	MessageReader<ByteVec*>*& packetReader = msgReader;
-	int totalSize = ScreenCapture::CalculateBMPFileSize();
+	const int totalSize = ScreenCapture::CalculateBMPFileSize();
+	const PixelData const pixeldata = &_imageData[BMP_HEADER_SIZE];
 
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
 
-		const ByteVec* const data = packetReader->ReadMessage();
-		// Get the packets to construct the image
-		//const Packet* const packet = packetReader->ReadMessage();
-		//const ImagePacketHeader imageHeader(packet->Header());
+		const ByteVec* const imageFragment = packetReader->ReadMessage();
 
-		int offset = tmpidx + BMP_HEADER_SIZE;
+		std::memcpy(&pixeldata[offset], imageFragment->data(), imageFragment->size());
+		offset += imageFragment->size();
+		if (offset >= totalSize) { offset = 0; }
 
-		//if (expectedPackets >= imageHeader.Position() ) {
-			//std::memcpy(&_imageData[offset], packet->Payload().data(), packet->Payload().size());
-		//}
-		tmpidx += data->size();
-		std::memcpy(&_imageData[offset], data->data(), data->size());
-
-
-		if (tmpidx >= totalSize) { tmpidx = 0; }
-		delete data;	
+		delete imageFragment;	
 	}
 	
 }
@@ -279,28 +271,38 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 	EVT_BUTTON(30001, ServerInitWindow::StartServer)
-	EVT_IDLE(ServerInitWindow::BackgroundTask)
 	EVT_KEY_UP(ServerInitWindow::HandleInput)
-	EVT_TIMER(2345, ServerInitWindow::OnTick)
 wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) : 
-	BaseWindow("Server Initialization", pos, size), _timer(this, 2345) {
+	BaseWindow("Server Initialization", pos, size) {
 	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
 	_startServerButton = new wxButton(this, 30001, "Listen for connections", wxPoint(400, 400), wxSize(200, 50));
 
 }
 
-ServerInitWindow::~ServerInitWindow() {
-	if (_server->Connected()) {
-		_server->Disconnect();
-	}
-	delete _server;
-}
-
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
+
+	ServerStreamWindow* streamWindow = new ServerStreamWindow(listenPort);
+
+	Close(true);
+}
+
+ServerInitWindow::~ServerInitWindow() {}
+
+
+/*----------------Server Streaming Window---------------------*/
+
+wxBEGIN_EVENT_TABLE(ServerStreamWindow, BaseWindow)
+	EVT_IDLE(ServerStreamWindow::BackgroundTask)
+	EVT_TIMER(2345, ServerStreamWindow::OnTick)
+wxEND_EVENT_TABLE()
+
+
+ServerStreamWindow::ServerStreamWindow(const int listenPort) : 
+	BaseWindow(std::string()), _timer(this, 2345) {
 	
 	_server = new Server(listenPort, std::chrono::seconds(10));
 
@@ -314,7 +316,14 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
 }
 
-void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
+ServerStreamWindow::~ServerStreamWindow() {
+	if (_server->Connected()) {
+		_server->Disconnect();
+	}
+	delete _server;
+}
+
+void ServerStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 	
 	if (!_init) { return; }
 
@@ -325,21 +334,21 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 			_ioThr.join();
 
 			delete _popup;
-			// Hide();
 
 			_timer.Start(1000 / _targetFPS);
+
+			Hide();
 
 		}
 
 		else if (!_server->Serve()) {
-			// Show();
 			GoBack();
 		}
 
 	}
 }
 
-void ServerInitWindow::OnTick(wxTimerEvent& timerEvent) {
+void ServerStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 	wxWakeUpIdle();
 	_timer.Start(1000 / _targetFPS);
 }
