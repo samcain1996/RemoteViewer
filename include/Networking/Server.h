@@ -5,7 +5,6 @@
 
 class Server : public NetAgent {
 private:
-	Logger log;
 	ScreenCapture _screen;
 	tcp::acceptor _acceptor;
 	Ushort _localport;

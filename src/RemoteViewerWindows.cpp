@@ -161,7 +161,7 @@ wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort, 
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size), 
-	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE + MAX_PACKET_SIZE), _timer(this, 1234), log("builder.log") {
+	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE + MAX_PACKET_SIZE), _timer(this, 1234) {
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -211,15 +211,17 @@ void ClientStreamWindow::ImageBuilder() {
 	while (!packetReader->Empty()) {
 
 		ByteVec*  imageFragment = packetReader->ReadMessage();
-		if (imageFragment->size() == 3) { offset = 0; continue; }
 		
 		const size_t minSize = (size_t)(totalSize - offset);
 		const int size = std::min(imageFragment->size(), minSize);
-		//log.LogLine(std::to_string(imageFragment->size()));
 
 		std::memcpy(&pixeldata[offset], imageFragment->data(), size);
 		offset += size;
-		if (imageFragment->size() != MAX_PACKET_SIZE) { offset = 0; }
+		
+		if (imageFragment->size() != MAX_PACKET_SIZE) {
+			Logger::Log("client.log", "New Frame", true);
+			offset = 0;
+		}
 
 		delete imageFragment;	
 	}

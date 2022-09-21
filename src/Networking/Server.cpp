@@ -1,7 +1,7 @@
 #include "Networking/Server.h"
 
 Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) : 
-    NetAgent(timeout), log("server.log"), _localport(listenPort), _screen(), _acceptor(_io_context, tcp::endpoint(tcp::v4(), listenPort))
+    NetAgent(timeout), _localport(listenPort), _screen(), _acceptor(_io_context, tcp::endpoint(tcp::v4(), listenPort))
 {}
 
 void Server::Handshake(bool& isWindows) {

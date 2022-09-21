@@ -1,7 +1,9 @@
 #include "Networking/Client.h"
 
-Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout), log("client.log") {
+Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout) {
     _hostname = hostname;
+
+    Logger::createNewLogStream("client.log");
 }
 
 const void Client::Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows) {
@@ -56,7 +58,6 @@ void Client::Receive() {
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
-                log.LogLine(std::to_string(bytes_transferred));
                 groupWriter->WriteMessage(new ByteVec(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
                 Receive();
             }
