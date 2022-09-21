@@ -1,5 +1,6 @@
 #pragma once
 #include "Networking/NetAgent.h"
+#include "Logging.h"
 
 class Client : public NetAgent, public Messageable<ByteVec*> {
 private:
@@ -16,7 +17,7 @@ private:
 	 */
 
 	void Handshake(bool& isWindows) override;
-
+	Logger log;
 public:
 
 	// Constructors

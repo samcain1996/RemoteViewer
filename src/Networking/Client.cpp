@@ -1,6 +1,6 @@
 #include "Networking/Client.h"
 
-Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout) {
+Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout), log("client.log") {
     _hostname = hostname;
 }
 
@@ -56,15 +56,8 @@ void Client::Receive() {
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
-
-                // if (_errcode || Packet::InvalidImagePacket(_tmpBuffer)) 
-                //else if (IsDisconnectMsg()) {
-                //    _connected = false;
-                //    return;
-                //}
-                //else {
+                log.LogLine(std::to_string(bytes_transferred));
                 groupWriter->WriteMessage(new ByteVec(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
-                //}
                 Receive();
             }
             else {

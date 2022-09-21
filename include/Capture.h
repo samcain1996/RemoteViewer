@@ -44,6 +44,7 @@ struct Resolution {
     Ushort height;
 };
 
+constexpr const Resolution RES_144 = { 256, 144 };
 constexpr const Resolution RES_480 = { 640, 480 };
 constexpr const Resolution RES_720 = { 1280, 720 };
 constexpr const Resolution RES_1080 = { 1920, 1080 };
@@ -105,7 +106,7 @@ private:
 
 public:
 
-    static inline Resolution DefaultResolution = RES_720;
+    static inline Resolution DefaultResolution = RES_1080;
 
 private:
 
@@ -124,7 +125,7 @@ public:
     ScreenCapture& operator=(const ScreenCapture&) = delete;
     ScreenCapture& operator=(ScreenCapture&&) = delete;
 
-    void ReSize(const Resolution& res = DefaultResolution);
+    void ReSize(const Resolution& rwqees = DefaultResolution);
 
     const ImageData CaptureScreen(); 
     

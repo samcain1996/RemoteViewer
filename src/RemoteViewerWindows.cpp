@@ -124,7 +124,7 @@ wxEND_EVENT_TABLE()
 
 ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
-	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.197", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	_ipInput = new wxTextCtrl(this, 20001, "127.0.0.1", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	_localPortInput = new wxTextCtrl(this, 20003, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
@@ -161,7 +161,7 @@ wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort, 
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer - Master", pos, size), 
-	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE), _timer(this, 1234) {
+	_imageData(ScreenCapture::CalculateBMPFileSize() + BMP_HEADER_SIZE + MAX_PACKET_SIZE), _timer(this, 1234), log("builder.log") {
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -204,16 +204,22 @@ void ClientStreamWindow::ImageBuilder() {
 
 	MessageReader<ByteVec*>*& packetReader = msgReader;
 	const int totalSize = ScreenCapture::CalculateBMPFileSize();
-	const PixelData const pixeldata = &_imageData[BMP_HEADER_SIZE];
+	const PixelData const pixeldata = &_imageData.data()[BMP_HEADER_SIZE];
+	static int offset = 0;
 
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
 
-		const ByteVec* const imageFragment = packetReader->ReadMessage();
+		ByteVec*  imageFragment = packetReader->ReadMessage();
+		if (imageFragment->size() == 3) { offset = 0; continue; }
+		
+		const size_t minSize = (size_t)(totalSize - offset);
+		const int size = std::min(imageFragment->size(), minSize);
+		//log.LogLine(std::to_string(imageFragment->size()));
 
-		std::memcpy(&pixeldata[offset], imageFragment->data(), imageFragment->size());
-		offset += imageFragment->size();
-		if (offset >= totalSize) { offset = 0; }
+		std::memcpy(&pixeldata[offset], imageFragment->data(), size);
+		offset += size;
+		if (imageFragment->size() != MAX_PACKET_SIZE) { offset = 0; }
 
 		delete imageFragment;	
 	}
@@ -302,7 +308,7 @@ wxEND_EVENT_TABLE()
 
 
 ServerStreamWindow::ServerStreamWindow(const int listenPort) : 
-	BaseWindow(std::string()), _timer(this, 2345) {
+	BaseWindow(std::string(), wxPoint(1000, 0), wxSize(10, 10)), _timer(this, 2345) {
 	
 	_server = new Server(listenPort, std::chrono::seconds(10));
 
@@ -337,7 +343,6 @@ void ServerStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 			_timer.Start(1000 / _targetFPS);
 
-			Hide();
 
 		}
 

@@ -1,10 +1,11 @@
 #pragma once
 #include "Networking/NetAgent.h"
 #include "Capture.h"
+#include "Logging.h"
 
 class Server : public NetAgent {
 private:
-
+	Logger log;
 	ScreenCapture _screen;
 	tcp::acceptor _acceptor;
 	Ushort _localport;
@@ -12,14 +13,11 @@ private:
 	// Send a buffer of bytes to the client
 	void Send(const PacketBuffer& data) override;
 	void NewSend(Byte* data, size_t size);
+	void HandleSend(const boost::system::error_code& err);
 
 	void Receive() override;
-	// void ProcessPacket(const Packet&) override {};
 
 	void Handshake(bool& isWindows) override;
-
-
-	Byte* buf = new Byte[ScreenCapture::CalculateBMPFileSize()];
 
 public:
 

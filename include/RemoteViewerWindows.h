@@ -10,6 +10,7 @@
 #include "Server.h"
 
 #include "Capture.h"
+#include "Logging.h"
 
 
 class PopUp;
@@ -139,6 +140,8 @@ public:
 class ClientStreamWindow : public BaseWindow, public Messageable<ByteVec*> {
 
 private:
+
+	Logger log;
 	
 	bool _render = false;
 
@@ -151,8 +154,6 @@ private:
 
 	const int _targetFPS = 30;
 	wxTimer _timer;
-
-	int offset = 0;
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);

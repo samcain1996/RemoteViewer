@@ -1,7 +1,7 @@
 #include "Networking/Server.h"
 
 Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) : 
-    NetAgent(timeout), _localport(listenPort), _screen(), _acceptor(_io_context, tcp::endpoint(tcp::v4(), listenPort))
+    NetAgent(timeout), log("server.log"), _localport(listenPort), _screen(), _acceptor(_io_context, tcp::endpoint(tcp::v4(), listenPort))
 {}
 
 void Server::Handshake(bool& isWindows) {
@@ -39,18 +39,11 @@ void Server::Listen() {
 
 bool Server::Serve() {
 
-    // Convert the message into a list of packets
-    // PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketTypes::Image);
-
-    // Loop through all the packets and send them
-    //for (size_t packetNo = 0; packetNo < packets.size() && _connected; packetNo++) {
-    //    const Packet& packet = packets[packetNo];
-
-    //    Send(packet.RawData());
-    //}
+    auto expectedsize = ScreenCapture::CalculateBMPFileSize();
 
     ImageData image = _screen.CaptureScreen();
-    NewSend(image.data(), 0);
+	
+    NewSend(image.data(), image.size());
 
     _io_context.run();
     _io_context.restart();
@@ -62,16 +55,23 @@ void Server::Receive() {}
 
 void Server::NewSend(Byte* data, size_t size) {
 
-    size = ScreenCapture::CalculateBMPFileSize();
-    std::memcpy(buf, _screen.CaptureScreen().data(), size);
+    if (size <= 0) { return; }
 
-    boost::asio::async_write(_socket, boost::asio::buffer(buf, size),
-        [this]
-    (std::error_code error, size_t /*bytes_transferred*/) {
+    size_t transmit_size = std::min(size, (size_t)MAX_PACKET_SIZE);
+
+    _socket.async_write_some(boost::asio::buffer(data, transmit_size),
+        [this, data = data + transmit_size, remaining = size - transmit_size, transmit_size, size]
+    (std::error_code error, size_t bytes_transferred) {
             if (error) {
                 std::cerr << "async_write: " << error.message() << std::endl;
+                Disconnect();
             }
-            // else { NewSend(buf, size); }
+
+            else if (remaining > 0) {
+
+                NewSend(data, remaining);
+            }
+
         });
 }
 

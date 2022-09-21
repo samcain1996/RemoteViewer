@@ -47,10 +47,11 @@ protected:
 
 	// Remove message from the front of the queue
 	const Message* const Pop() {
+		
 		ThreadLock lock(*_mutex);
 
 		if (_queuePtr->empty()) { return nullptr; }
-
+		
 		_msg = _queuePtr->front();
 		_queuePtr->pop();
 
