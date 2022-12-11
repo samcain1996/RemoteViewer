@@ -1,67 +1,75 @@
+
 #pragma once
 #include <boost/asio.hpp>
 #include <thread>
 #include <random>
+#include <iostream>
 #include "Networking/Packet.h"
 #include "Messages.h"
 
-using boost::asio::ip::udp;
+using boost::asio::ip::tcp;
+using std::chrono::steady_clock;
+
+constexpr const int HANDSHAKE_SIZE = 4;
 
 class NetAgent {
 
 protected:
-	NetAgent(const Ushort localPort);
-	
+	NetAgent(const std::chrono::seconds& timeout = std::chrono::seconds(30));
+
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent
-	NetAgent() 				  = delete;
-	NetAgent(NetAgent&&) 	  = delete;
+	NetAgent() = delete;
+	NetAgent(NetAgent&&) = delete;
 	NetAgent(const NetAgent&) = delete;
 
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
 
-	constexpr const static Ushort HANDSHAKE_SIZE = 4;
-	constexpr const static MyByte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
 
-	constexpr const static Ushort DISCONNECT_SIZE = 4;
-	constexpr const static MyByte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = { 'B', 'Y', 'E', '!' };
-	
-	static std::random_device rd;  // Used to seed random number generator
+	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> WIN_HANDSHAKE = { 'W', 'I', 'N', '!' };
+	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> OTHER_HANDSHAKE = { 'N', 'O', 'T', '!' };
 
-	// Random number generator, C-style rand does not have enough precision
+#if defined(_WIN32)
+	constexpr const static std::array<MyByte, HANDSHAKE_SIZE>& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
+#else
+	constexpr const static std::array<MyByte, HANDSHAKE_SIZE>& HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
+#endif
+
+	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };
+
+	// Random number generation
+	static std::random_device rd;
 	static std::mt19937 randomGenerator;
-
-	boost::asio::io_context _io_context;  // Used for I/O
-	Ushort _localPort;				  // Port to reside on
-	udp::endpoint _localEndpoint, _remoteEndpoint;
-
-	std::mutex _mutex;
-	udp::socket _socket;
-	boost::system::error_code _errcode;
-
-	PacketBuffer _tmpBuffer; // Temporary buffer for receiving/sending packets
-
-	// A map that maps packet groups to a priority queue
-	PacketGroupPriorityQueueMap _incompletePackets;
 
 	bool _connected = false;
 
+	std::chrono::seconds _timeout;
+
+	boost::asio::io_context _io_context;  // Used for I/O
+	// tcp::endpoint _endpoint;
+
+	std::mutex _mutex;
+	tcp::socket _socket;
+	boost::system::error_code _errcode;
+
+	PacketBuffer _tmpBuffer{}; // Temporary buffer for receiving/sending packets
+
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	virtual PacketList ConvertToPackets(const ByteVec& data);
-	virtual void Handshake() = 0;
-	virtual const bool IsDisconnectMsg() const;
-	
+	virtual PacketList ConvertToPackets(const ByteVec& data, const PacketTypes& packetType = PacketTypes::Invalid);
+	virtual void Handshake(bool& isWindows) = 0;
+	const bool IsDisconnectMsg() const;
+
 	virtual void Receive() = 0;
-	virtual bool Send(const ByteVec& data);
-	virtual void ProcessPacket(const Packet&) = 0;
+	virtual void Send(const PacketBuffer& data) = 0;
+	// virtual void ProcessPacket(const Packet& packet) = 0;
 
 public:
 
-	virtual bool Disconnect();
+	void Disconnect();
 
-	const bool Connected() const { return _connected; }
-	
+	const bool Connected() const;
+
 	virtual ~NetAgent();
 };

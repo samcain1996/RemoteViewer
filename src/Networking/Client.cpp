@@ -1,94 +1,69 @@
 #include "Networking/Client.h"
 
-Client::Client(const Ushort port, const std::string& hostname) : NetAgent(port) {
+Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout) {
     _hostname = hostname;
+
 }
 
-void Client::ProcessPacket(const Packet& packet) {
-	
-    // Get packet group
-    Uint32 group = packet.Header().group;
+const void Client::Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows) {
 
-    if (packet.Header().sequence == 0) {
-        _packetGroups[group] = packet.Header().size - 1;
+    try {
+        _socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(_hostname), port));
+    }
+    catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
         return;
     }
 
-    ThreadLock lock(_mutex);  // Prevent other threads from accessing variables used in scope
+    Handshake(isWindows);
 
-    // Add packet to list of packets in its group
-    PacketPriorityQueue& packetGroupBucket = _incompletePackets[group];
-    packetGroupBucket.push(packet);
+    _io_context.run_until(steady_clock::now() + _timeout);
+    _io_context.restart();
 
-	// If the packet is the last in the group, process group
-    if (_packetGroups[group] == packetGroupBucket.size()) {
-        
-        PacketPriorityQueue* completeGroup = new PacketPriorityQueue(std::move(_incompletePackets[group]));
-        _incompletePackets.erase(group);
-
-        groupWriter->WriteMessage(completeGroup);
-        _packetGroups.erase(group);
-    }
-}
-
-const bool Client::Connect(const std::string& serverPort) {
-
-    _remotePort = std::stoi(serverPort);
-
-    // Find endpoint to connect to
-    udp::resolver resolver(_io_context);
-    _remoteEndpoint = *resolver.resolve(udp::v4(), _hostname, serverPort).begin();
-
-    _socket.connect(_remoteEndpoint);
-
-    return true;
+    if (_connected) { onConnect(); }
 
 }
 
-void Client::Handshake()
+void Client::Handshake(bool& isWindows)
 {
 
-    _socket.send(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_SIZE), 0, _errcode);
-	
-	_socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_SIZE), 
-        [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
-	{
-        if (ec.value() == 0 && bytes_transferred > 0) {
-            _connected = std::memcmp(_tmpBuffer.data(), HANDSHAKE_MESSAGE, HANDSHAKE_SIZE) == 0;
-        }
-    });
-	
-    Sleep(2000);  // TODO: Change, this is MS specific
-    _io_context.run_one();
-    _io_context.restart();
+    _socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()),
+        [this, &isWindows](const boost::system::error_code& ec, std::size_t bytes_transferred)
+        {
+            if (ec.value() == 0 && bytes_transferred > 0) {
+
+                _socket.write_some(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), _errcode);
+
+                _connected = std::memcmp(_tmpBuffer.data(), OTHER_HANDSHAKE.data(), OTHER_HANDSHAKE.size()) == 0 ||
+                    std::memcmp(_tmpBuffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
+
+                isWindows = std::memcmp(_tmpBuffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
+            }
+        });
+
+}
+
+void Client::Send(const PacketBuffer& data) {}
+
+void Client::Start() {
+
+    Receive();
+    _io_context.run();
 }
 
 void Client::Receive() {
-   
-    while (_connected) {
 
-        _io_context.restart();
-
-        _socket.async_receive(boost::asio::buffer(_tmpBuffer, _tmpBuffer.max_size()),
-            [&](const boost::system::error_code& ec, std::size_t bytes_transferred)
-            {
-                if (ec.value() == 0 && bytes_transferred > 0) {
-
-                    if (IsDisconnectMsg() || !_connected) {
-                        _connected = false;
-                        return;
-                    }
-
-                    // Copy buffer to dummy packet
-                    ProcessPacket(Packet(_tmpBuffer));
-                    _socket.send(boost::asio::buffer(_tmpBuffer, DISCONNECT_SIZE), 0, _errcode);
-                }
-
-            });
-
-        _io_context.run_one();
-
-    }
+    _socket.async_read_some(boost::asio::buffer(_tmpBuffer),
+        [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
+        {
+            if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
+                groupWriter->WriteMessage(new ByteVec(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
+                Receive();
+            }
+            else {
+                Disconnect();
+            }
+        });
 
 }
 

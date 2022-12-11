@@ -57,7 +57,7 @@ constexpr void EncodeAsByte(MyByte encodedNumber[4], const Uint32 numberToEncode
 
 }
 
-constexpr Uint32 DecodeAsByte(MyByte encodedNumber[4]) {
+constexpr Uint32 DecodeAsByte(const MyByte encodedNumber[4]) {
 
     return ((Uint32)encodedNumber[0] + ((Uint32)encodedNumber[1] << ONE_BYTE) +
         ((Uint32)encodedNumber[2] << TWO_BYTES) + ((Uint32)encodedNumber[3] << THREE_BYTES));

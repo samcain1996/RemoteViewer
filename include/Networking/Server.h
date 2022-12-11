@@ -1,29 +1,30 @@
+
 #pragma once
 #include "Networking/NetAgent.h"
-#include "Capture.h"
+#include "QuickShot/Capture.h"
 
 class Server : public NetAgent {
 private:
-
-	std::chrono::seconds _timeout;
+	ScreenCapture _screen;
+	tcp::acceptor _acceptor;
+	Ushort _localport;
 
 	// Send a buffer of bytes to the client
-	bool Send(const ByteVec& data) override;
+	void Send(const PacketBuffer& data) override;
+	void NewSend(MyByte* data, size_t size);
+	void HandleSend(const boost::system::error_code& err);
 
-	void Receive() override {};
-	void ProcessPacket(const Packet&) override {};
+	void Receive() override;
 
-	void Handshake() override;
-
-	ScreenCapture _screen;
+	void Handshake(bool& isWindows) override;
 
 public:
 
 	// Servers should only be instantiated with a port number
-	Server() 			  = delete;
+	Server() = delete;
 	Server(const Server&) = delete;
-	Server(Server&&) 	  = delete;
-	
+	Server(Server&&) = delete;
+
 	Server(const Ushort listenPort, const std::chrono::seconds timeout = std::chrono::seconds(30));
 
 	Server& operator=(const Server&) = delete;
@@ -31,7 +32,7 @@ public:
 
 	// Serve content to client
 	bool Serve();
-	bool Listen();
+	void Listen();
 
 	~Server();
 };

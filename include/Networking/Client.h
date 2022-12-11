@@ -1,33 +1,30 @@
 #pragma once
 #include "Networking/NetAgent.h"
 
-class Client : public NetAgent, public Messageable<PacketPriorityQueue*> {
+class Client : public NetAgent, public Messageable<ByteVec*> {
 private:
-	std::string _hostname;  // Hostname of computer to connect to
+	std::string _hostname{};  // Hostname of computer to connect to
 
-	PacketGroupMap _packetGroups;
-
-	int _remotePort = -1;
-
-	MessageWriter<PacketPriorityQueue*>*& groupWriter = Messageable<PacketPriorityQueue*>::msgWriter;
+	MessageWriter<ByteVec*>*& groupWriter = msgWriter;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
 	 * 		  appropriate priority queue.
-	 * 
+	 *
 	 * @param const Packet		Packet to process
-	 * 
+	 *
 	 */
-	void ProcessPacket(const Packet& packet) override;
+
+	void Handshake(bool& isWindows) override;
 
 public:
 
 	// Constructors
-	Client()				= delete;
-	Client(const Client&)   = delete;
-	Client(Client&&)		= delete;
+	Client() = delete;
+	Client(const Client&) = delete;
+	Client(Client&&) = delete;
 
-	Client(const Ushort port, const std::string& hostname);
+	Client(const std::string& hostname, const std::chrono::seconds& timeout = std::chrono::seconds(5));
 
 	~Client();
 
@@ -36,18 +33,19 @@ public:
 
 	/**
 	 * @brief Connects to a server via a udp socket
-	 * 
+	 *
 	 * @param hostname		Name of the computer to connect to
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	const bool Connect(const std::string& serverPort);
-
-	void Handshake() override;
+	const void Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows);
 
 	/**
 	 * @brief Receive data from server
-	 * 
+	 *
 	 */
 	void Receive() override;
+	void Start();
+
+	void Send(const PacketBuffer& data) override;
 };
