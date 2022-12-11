@@ -15,7 +15,7 @@ private:
 	 *
 	 */
 
-	void Handshake(bool& isWindows) override;
+	void Handshake() override;
 
 public:
 
@@ -38,7 +38,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	const void Connect(const Ushort port, const std::function<void()>& onConnect, bool& isWindows);
+	const void Connect(const Ushort port, const std::function<void()>& onConnect);
 
 	/**
 	 * @brief Receive data from server

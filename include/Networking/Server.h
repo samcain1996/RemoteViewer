@@ -16,7 +16,7 @@ private:
 
 	void Receive() override;
 
-	void Handshake(bool& isWindows) override;
+	void Handshake() override;
 
 public:
 

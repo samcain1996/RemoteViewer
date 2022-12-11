@@ -11,6 +11,7 @@ using boost::asio::ip::tcp;
 using std::chrono::steady_clock;
 
 constexpr const int HANDSHAKE_SIZE = 4;
+using HANDSHAKE_MESSAGE = std::array<MyByte, HANDSHAKE_SIZE>;
 
 class NetAgent {
 
@@ -33,7 +34,7 @@ protected:
 #if defined(_WIN32)
 	constexpr const static std::array<MyByte, HANDSHAKE_SIZE>& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
 #else
-	constexpr const static std::array<MyByte, HANDSHAKE_SIZE>& HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
+	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> & HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
 #endif
 
 	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };
@@ -58,7 +59,7 @@ protected:
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const ByteVec& data, const PacketTypes& packetType = PacketTypes::Invalid);
-	virtual void Handshake(bool& isWindows) = 0;
+	virtual void Handshake() = 0;
 	const bool IsDisconnectMsg() const;
 
 	virtual void Receive() = 0;
