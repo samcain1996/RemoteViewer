@@ -71,9 +71,9 @@ public:
 // Receives a video stream from the server and sends 
 // back a stream of keyboard and mouse events
 
-class ClientStreamWindow : public BaseWindow, public Messageable<ByteVec*> {
+class ClientStreamWindow : public BaseWindow, public Messageable<PixelData*> {
 
-	MessageReader<ByteVec*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
+	MessageReader<PixelData*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
 
 private:
 	

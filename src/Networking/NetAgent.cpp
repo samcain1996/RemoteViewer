@@ -8,8 +8,6 @@ NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), 
     std::fill(_tmpBuffer.begin(), _tmpBuffer.end(), '\0');
 }
 
-NetAgent::~NetAgent() { }
-
 void NetAgent::Receive() {}
 
 const bool NetAgent::IsDisconnectMsg() const {
@@ -23,7 +21,7 @@ void NetAgent::Disconnect() {
     _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
 }
 
-PacketList NetAgent::ConvertToPackets(const ByteVec& data, const PacketTypes& packetType)
+PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketTypes& packetType)
 {
     PacketList packets;  // List to hold all packets needed to create message
 

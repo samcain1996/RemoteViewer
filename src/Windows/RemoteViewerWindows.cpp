@@ -4,8 +4,10 @@
 
 BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size, const bool show) : 
 	wxFrame(nullptr, wxID_ANY, name, pos, size) {
-	IP_VALIDATOR.SetCharIncludes("0123456789.");
+
 	SetIcon(FetchIcon());
+	IP_VALIDATOR.SetCharIncludes("0123456789.");
+
 	_windowElements.clear();
 
 	Show(show);

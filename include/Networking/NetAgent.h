@@ -58,7 +58,7 @@ protected:
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	virtual PacketList ConvertToPackets(const ByteVec& data, const PacketTypes& packetType = PacketTypes::Invalid);
+	virtual PacketList ConvertToPackets(const PixelData& data, const PacketTypes& packetType = PacketTypes::Invalid);
 	virtual void Handshake() = 0;
 	const bool IsDisconnectMsg() const;
 
@@ -72,5 +72,5 @@ public:
 
 	const bool Connected() const;
 
-	virtual ~NetAgent();
+	virtual ~NetAgent() = default;
 };

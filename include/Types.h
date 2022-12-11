@@ -39,7 +39,6 @@ constexpr const Uint32 FOUR_BYTES = (TWO_BYTES + TWO_BYTES);
 
 /*------------------TYPES--------------------*/
 using MyByte = unsigned char;
-using ByteVec = std::vector<MyByte>;
 using BytePtr = MyByte*;
 
 constexpr const MyByte MAX_MYBYTE_VAL = static_cast<MyByte>(255);

@@ -54,7 +54,7 @@ void ClientStreamWindow::Resize(const Resolution& resolution) { _imageData = Pix
 
 void ClientStreamWindow::ImageBuilder() {
 
-	static MessageReader<ByteVec*>*& packetReader = msgReader;
+	static MessageReader<PixelData*>*& packetReader = msgReader;
 	static int offset = 0;
 
 	const auto const pixeldata = &_imageData.data()[BMP_HEADER_SIZE];
@@ -63,7 +63,7 @@ void ClientStreamWindow::ImageBuilder() {
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
 
-		ByteVec* imageFragment = packetReader->ReadMessage();
+		PixelData* imageFragment = packetReader->ReadMessage();
 
 		const size_t minSize = (size_t)(expectedSize - offset);
 		const int size = std::min(imageFragment->size(), minSize);

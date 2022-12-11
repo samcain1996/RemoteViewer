@@ -54,7 +54,7 @@ void Client::Receive() {
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
-                groupWriter->WriteMessage(new ByteVec(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
+                groupWriter->WriteMessage(new PixelData(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
                 Receive();
             }
             else {
