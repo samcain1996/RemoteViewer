@@ -1,26 +1,7 @@
-# Ignore everything
-*
+.vs
+build
+docs
+etc
+libs
 
-!compile
-!install_dependencies
-!*.conf
-
-# Do not ignore C/C++ header files
-!include/*.h
-!include/QuickShot/*.h
-!include/Windows/*.h
-!include/Networking/*.h
-
-# Do not ignore C++ files
-!src/*.cpp
-!src/QuickShot/*.cpp
-!src/Windows/*.cpp
-!src/Networking/*.cpp
-
-# Do not ignore C files
-!*.c
-
-!*.txt
-
-!*.json
 
