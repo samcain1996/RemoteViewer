@@ -22,7 +22,7 @@ Packet::Packet(Packet&& other) noexcept {
 
 Packet::Packet(PacketBuffer& packetData) {
 	
-	Byte encoded[4];  // Temp variable to store encoded Uint32 values
+	MyByte encoded[4];  // Temp variable to store encoded Uint32 values
 
 	// Retrieve encoded size
 	std::memcpy(encoded, packetData.data(), sizeof encoded);
@@ -67,8 +67,8 @@ Packet& Packet::operator=(Packet&& other) noexcept {
 }
 
 const PacketBuffer Packet::RawData() const {
-	std::array<Byte, MAX_PACKET_SIZE> data;  // Entire packet as contiguous array
-	std::array<Byte, PACKET_HEADER_ELEMENT_SIZE> encoded;  // Encoded header vars
+	std::array<MyByte, MAX_PACKET_SIZE> data;  // Entire packet as contiguous array
+	std::array<MyByte, PACKET_HEADER_ELEMENT_SIZE> encoded;  // Encoded header vars
 
 	// Encode size into data
 	EncodeAsByte(encoded.data(), _header.size);

@@ -1,5 +1,5 @@
 #pragma once
-#include "Types.h"
+#include "Messageable.h"
 
 /*---------------------------------------*/
 /*		Allows for threads to send		 */

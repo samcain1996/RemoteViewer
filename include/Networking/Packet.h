@@ -19,8 +19,8 @@ constexpr const Uint32 PACKET_SEQUENCE_OFFSET			= (PACKET_HEADER_ELEMENT_SIZE * 
 constexpr const Uint32 PACKET_PAYLOAD_OFFSET			= PACKET_HEADER_SIZE;
 
 using PacketGroup   = Uint32;
-using PacketPayload = boost::container::static_vector<Byte, MAX_PACKET_PAYLOAD_SIZE>;
-using PacketBuffer  = std::array<Byte, MAX_PACKET_SIZE>;
+using PacketPayload = boost::container::static_vector<MyByte, MAX_PACKET_PAYLOAD_SIZE>;
+using PacketBuffer  = std::array<MyByte, MAX_PACKET_SIZE>;
 
 // Holds metadata about a packet
 struct PacketHeader {

@@ -22,10 +22,10 @@ protected:
 	NetAgent& operator=(NetAgent&&) = delete;
 
 	constexpr const static Ushort HANDSHAKE_SIZE = 4;
-	constexpr const static Byte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
+	constexpr const static MyByte HANDSHAKE_MESSAGE[HANDSHAKE_SIZE] = { 'H', 'I', ':', ')' };
 
 	constexpr const static Ushort DISCONNECT_SIZE = 4;
-	constexpr const static Byte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = { 'B', 'Y', 'E', '!' };
+	constexpr const static MyByte DISCONNECT_MESSAGE[DISCONNECT_SIZE] = { 'B', 'Y', 'E', '!' };
 	
 	static std::random_device rd;  // Used to seed random number generator
 
