@@ -13,7 +13,7 @@ wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort,
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
-	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize(RES_1080)), _timer(this, 1234) {
+	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -46,7 +46,6 @@ ClientStreamWindow::~ClientStreamWindow() {
 		if (_clientThr.joinable()) { _clientThr.join(); }
 	}
 	
-	while (!packetReader->Empty()) { packetReader->ReadMessage(); }
 	delete _client;
 }
 

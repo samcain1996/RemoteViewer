@@ -84,7 +84,7 @@ private:
 
 	int group = 0;
 
-	const int _targetFPS = 300;
+	const int _targetFPS = 1;
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;

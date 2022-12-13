@@ -1,14 +1,13 @@
 #pragma once
 
 #include <stack>
-#include <coroutine>
 
 #include "wx/wx.h"
 #include "wx/filesys.h"
 #include "wx/mstream.h"
 #include "wx/popupwin.h"
 
-#include "Capture.h"
+#include "QuickShot/Capture.h"
 
 enum class WindowNames {
 	StartUp,
