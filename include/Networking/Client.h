@@ -1,11 +1,11 @@
 #pragma once
 #include "Networking/NetAgent.h"
 
-class Client : public NetAgent, public Messageable<PixelData*> {
+class Client : public NetAgent, public Messageable<Packet*> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
 
-	MessageWriter<PixelData*>*& groupWriter = msgWriter;
+	MessageWriter<Packet*>*& groupWriter = msgWriter;
 
 	/**
 	 * @brief Processes data from packets and stores them in the

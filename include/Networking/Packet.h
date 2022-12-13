@@ -10,7 +10,7 @@ constexpr const Uint32 MAX_PACKET_SIZE = 4096;
 
 constexpr const Uint32 PACKET_HEADER_COUNT = 3;
 constexpr const Uint32 PACKET_HEADER_ELEMENT_SIZE = 4;
-constexpr const Uint32 PACKET_HEADER_SIZE = (PACKET_HEADER_ELEMENT_SIZE * PACKET_HEADER_COUNT);
+constexpr const Uint32 PACKET_HEADER_SIZE = (PACKET_HEADER_ELEMENT_SIZE * PACKET_HEADER_COUNT + 1);
 
 constexpr const Uint32 MAX_PACKET_PAYLOAD_SIZE = (MAX_PACKET_SIZE - PACKET_HEADER_SIZE);
 
@@ -36,7 +36,8 @@ class PacketHeader {
 
 public:
 
-	static const Ushort SIZE_OFFSET = 1;
+	static const Ushort GROUP_OFFSET = 1;
+	static const Ushort SIZE_OFFSET = GROUP_OFFSET + sizeof(Uint32);
 
 	PacketHeader();
 
@@ -51,26 +52,27 @@ public:
 
 	PacketHeader(const PacketBuffer& packetBuffer);
 	PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata);
-	const Uint32 Size() const;
+	Uint32 Size() const;
+	Uint32 Group() const;
+
+	PacketTypes PacketType() const;
 
 };
 
 struct ImagePacketHeader : public PacketHeader {
-	static const Ushort POSITION_OFFSET = SIZE_OFFSET + 4;
+	static const Ushort POSITION_OFFSET = SIZE_OFFSET + sizeof(Uint32);
 
-	const Uint32 Position() const;
-	const Uint32 Size() const;
+	Uint32 Position() const;
+	Uint32 Size() const;
+	Uint32 Group() const;
 
 	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
-	ImagePacketHeader(const Uint32 size, const Uint32 position);
+	ImagePacketHeader(const Uint32 group, const Uint32 size, const Uint32 position);
+
 };
 
 // Packet of data that can be sent over a socket
 class Packet {
-
-public:
-
-	static const bool InvalidImagePacket(const PacketBuffer& packetBuffer);
 
 private:
 	PacketHeader  _header;		// Header containing packet _metadata
@@ -101,4 +103,4 @@ public:
 
 };
 
-using PacketList = std::vector<Packet>;
+using PacketList = std::queue<Packet>;

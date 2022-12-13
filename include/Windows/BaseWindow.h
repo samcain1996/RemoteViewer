@@ -17,6 +17,10 @@ enum class WindowNames {
 	UNDEFINED
 };
 
+using std::ifstream;
+using std::string;
+using std::ios;
+
 using WindowStack = std::stack<WindowNames>;
 using ElementList = std::vector<wxControl*>;
 
@@ -29,8 +33,12 @@ protected:
 
 	bool _init = false;
 	static const wxIcon inline FetchIcon() {
+
 		static const auto GetIcon = []() {
-			wxFSInputStream inputStream("C:\\Users\\scain\\source\\repos\\RemoteViewer\\logo.png");
+
+			const string filepath = "C:\\Users\\scain\\source\\repos\\RemoteViewer\\logo.png";
+
+			wxFSInputStream inputStream(filepath);
 			wxImage image(inputStream);
 			wxBitmap bitmap(image);
 

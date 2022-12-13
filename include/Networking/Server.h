@@ -11,7 +11,8 @@ private:
 
 	// Send a buffer of bytes to the client
 	void Send(const PacketBuffer& data) override;
-	void NewSend(MyByte* data, size_t size);
+	void NewSend(PacketList&);
+	void NewSend2(MyByte* data, size_t size);
 	void HandleSend(const boost::system::error_code& err);
 
 	void Receive() override;

@@ -49,12 +49,11 @@ void Client::Start() {
 }
 
 void Client::Receive() {
-
-    _socket.async_read_some(boost::asio::buffer(_tmpBuffer),
+    _socket.async_receive(boost::asio::buffer(_tmpBuffer),
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
-                groupWriter->WriteMessage(new PixelData(_tmpBuffer.begin(), _tmpBuffer.begin() + bytes_transferred));
+                groupWriter->WriteMessage(new Packet(_tmpBuffer));
                 Receive();
             }
             else {

@@ -1,24 +1,6 @@
 #include "Networking/Packet.h"
 #include "QuickShot/Capture.h"
 
-const bool Packet::InvalidImagePacket(const PacketBuffer& packetBuffer) {
-
-	const Uint32 imageSize = CalculateBMPFileSize();
-
-	const Uint32 expectedPackets = ceil(imageSize / (double)MAX_PACKET_PAYLOAD_SIZE);
-	const Uint32 expectedFinalPacketSize = imageSize % expectedPackets;
-
-	const ImagePacketHeader imageheader(packetBuffer);
-
-	if ((imageSize - expectedFinalPacketSize) % (imageheader.Position() + 1) == 0 ||
-		imageheader.Position() + 1 == expectedPackets) {
-		return false;
-	}
-
-	return imageheader.Size() > MAX_PACKET_SIZE || imageheader.Position() >= expectedPackets;
-
-}
-
 Packet::Packet(const Packet& other) : _header(other.Header()) {
 
 	_payload = other._payload;
@@ -77,16 +59,31 @@ const PacketPayload Packet::Payload() const {
 }
 
 
-const Uint32 ImagePacketHeader::Position() const {
+Uint32 ImagePacketHeader::Position() const {
 	return DecodeAsByte(&_metadata.data()[POSITION_OFFSET]);
 }
 
-const Uint32 ImagePacketHeader::Size() const {
+Uint32 ImagePacketHeader::Size() const {
 	return PacketHeader::Size();
 }
 
-const Uint32 PacketHeader::Size() const {
+Uint32 ImagePacketHeader::Group() const {
+	return PacketHeader::Group();
+}
+
+Uint32 PacketHeader::Size() const {
 	return DecodeAsByte(&_metadata.data()[SIZE_OFFSET]);
+}
+
+Uint32 PacketHeader::Group() const {
+	return DecodeAsByte(&_metadata.data()[GROUP_OFFSET]);
+}
+
+PacketTypes PacketHeader::PacketType() const {
+	switch (_metadata.data()[0]) {
+	case 'I': return static_cast<PacketTypes>(_metadata.data()[0]);
+	default: return PacketTypes::Invalid;
+	}
 }
 
 PacketHeader::PacketHeader(const PacketBuffer& packetBuffer) {
@@ -110,8 +107,9 @@ PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& m
 	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], payload.size());
 }
 
-ImagePacketHeader::ImagePacketHeader(const Uint32 size, const Uint32 position) : PacketHeader() {
+ImagePacketHeader::ImagePacketHeader(const Uint32 group, const Uint32 size, const Uint32 position) : PacketHeader() {
 	_metadata[0] = static_cast<MyByte>(PacketTypes::Image);
+	EncodeAsByte(&_metadata.data()[GROUP_OFFSET], group);
 	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], size);
 	EncodeAsByte(&_metadata.data()[POSITION_OFFSET], position);
 }

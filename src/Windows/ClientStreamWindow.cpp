@@ -52,9 +52,17 @@ ClientStreamWindow::~ClientStreamWindow() {
 
 void ClientStreamWindow::Resize(const Resolution& resolution) { _imageData = PixelData(CalculateBMPFileSize(resolution)); }
 
+int ClientStreamWindow::ValidImagePacket(const ImagePacketHeader& header) {
+
+	if (header.PacketType() != PacketTypes::Image) { return -1; }
+	
+	if (group != header.Group()) { group = header.Group(); return 0; }
+	return header.Position();
+}
+
 void ClientStreamWindow::ImageBuilder() {
 
-	static MessageReader<PixelData*>*& packetReader = msgReader;
+	static MessageReader<Packet*>*& packetReader = msgReader;
 	static int offset = 0;
 
 	const auto const pixeldata = &_imageData.data()[BMP_HEADER_SIZE];
@@ -63,22 +71,25 @@ void ClientStreamWindow::ImageBuilder() {
 	// Check  if there is a complete image
 	while (!packetReader->Empty()) {
 
-		PixelData* imageFragment = packetReader->ReadMessage();
+		const Packet* const p = packetReader->ReadMessage();
+		const ImagePacketHeader& header = p->Header();
+		const PacketPayload& imageFragment = p->Payload();
 
-		const size_t minSize = (size_t)(expectedSize - offset);
-		const int size = std::min(imageFragment->size(), minSize);
+		PacketTypes type = p->Header().PacketType();
+		if (type == PacketTypes::Image) {
 
-		std::memcpy(&pixeldata[offset], imageFragment->data(), size);
-		offset += size;
-
-		if (imageFragment->size() != MAX_PACKET_SIZE ||
-			offset >= expectedSize) {
-			offset = 0;
-			delete imageFragment;
-			continue;
+			if (group != header.Group()) {
+				group = header.Group();
+				offset = 0;
+			}
+			else { offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE; }
 		}
+		else if (imageFragment.size() + offset > expectedSize) { continue; }
+		
+		std::memcpy(&pixeldata[offset], imageFragment.data(), imageFragment.size());
+		offset += imageFragment.size();
 
-		delete imageFragment;
+		delete p;
 	}
 
 }

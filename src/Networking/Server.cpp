@@ -36,9 +36,9 @@ void Server::Listen() {
 
 bool Server::Serve() {
 
-    PixelData image = _screen.CaptureScreen();
-
-    NewSend(image.data(), image.size());
+ 
+    PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketTypes::Image);
+    NewSend(packets);
 
     _io_context.run();
     _io_context.restart();
@@ -48,7 +48,28 @@ bool Server::Serve() {
 
 void Server::Receive() {}
 
-void Server::NewSend(MyByte* data, size_t size) {
+void Server::NewSend(PacketList& packets) {
+
+    if (packets.size() <= 0) { return; }
+    Packet p = packets.front();
+    packets.pop();
+    _socket.async_send(boost::asio::buffer(p.RawData(), p.RawData().size()),
+        [this, &packets](std::error_code error, size_t bytes_transferred) {
+        if (error) {
+            std::cerr << "async_write: " << error.message() << std::endl;
+            Disconnect();
+        }
+
+        else {
+
+            NewSend(packets);
+        }
+
+    });
+
+}
+
+void Server::NewSend2(MyByte* data, size_t size) {
 
     if (size <= 0) { return; }
 
@@ -64,11 +85,12 @@ void Server::NewSend(MyByte* data, size_t size) {
 
             else if (remaining > 0) {
 
-                NewSend(data, remaining);
+                NewSend2(data, remaining);
             }
 
         });
 }
+
 
 void Server::Send(const PacketBuffer& data) {
 

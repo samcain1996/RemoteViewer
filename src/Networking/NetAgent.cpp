@@ -25,12 +25,14 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketTypes& 
 {
     PacketList packets;  // List to hold all packets needed to create message
 
+    Uint32 group = randomGenerator();
+
     // Calculate the number of packets that will
     // need to be send in order to send entire message
     Uint32 numberOfPackets = (Uint32)std::ceil(
         ((float)data.size() / MAX_PACKET_PAYLOAD_SIZE));
 
-    packets.reserve(numberOfPackets);
+    //packets.reserve(numberOfPackets);
 
     // Break message down into packets
     for (size_t bytesRemaining = data.size(), iteration = 0; bytesRemaining > 0; iteration++) {
@@ -45,9 +47,9 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketTypes& 
         PacketPayload payload(payloadSize);
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
 
-        ImagePacketHeader header(totalSize, iteration);
+        ImagePacketHeader header(group, totalSize, iteration);
 
-        packets.push_back(Packet(header, payload));
+        packets.push(Packet(header, payload));
 
         bytesRemaining -= payloadSize;
     }

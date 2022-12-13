@@ -71,9 +71,9 @@ public:
 // Receives a video stream from the server and sends 
 // back a stream of keyboard and mouse events
 
-class ClientStreamWindow : public BaseWindow, public Messageable<PixelData*> {
+class ClientStreamWindow : public BaseWindow, public Messageable<Packet*> {
 
-	MessageReader<PixelData*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
+	MessageReader<Packet*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
 
 private:
 	
@@ -87,6 +87,7 @@ private:
 	std::thread _ioThread;
 
 	const int _windowId = 3;
+	int group = 0;
 
 	const int _targetFPS = 30;
 	int _timeSinceLastFrame = 0;
@@ -113,6 +114,7 @@ public:
 	void BackgroundTask(wxIdleEvent& evt);
 
 	void OnTick(wxTimerEvent& timerEvent);
+	int ValidImagePacket(const ImagePacketHeader& header);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 
