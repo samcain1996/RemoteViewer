@@ -53,8 +53,14 @@ void Client::Receive() {
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
-                groupWriter->WriteMessage(new Packet(_tmpBuffer));
-                Receive();
+
+                Packet* packet = new Packet(_tmpBuffer);
+
+                if (std::memcmp(packet->RawData().data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0) { Disconnect(); }
+                else {
+                    groupWriter->WriteMessage(packet);
+                    Receive();
+                }
             }
             else {
                 Disconnect();

@@ -49,7 +49,7 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
 		else {
 			delete _popup;
-			Hide();
+			this->SetSize({100, 100});
 
 			_timer.Start(1000 / _targetFPS);
 		}

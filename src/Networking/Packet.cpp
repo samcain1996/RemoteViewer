@@ -1,6 +1,12 @@
 #include "Networking/Packet.h"
 #include "QuickShot/Capture.h"
 
+bool Packet::VerifyPacket(const Packet& packet) {
+	bool match = packet.Header().Size() <= MAX_PACKET_SIZE;
+	match &= packet.Payload().size() == packet.Header().Size() - PACKET_HEADER_SIZE;
+	return match;
+}
+
 Packet::Packet(const Packet& other) : _header(other.Header()) {
 
 	_payload = other._payload;

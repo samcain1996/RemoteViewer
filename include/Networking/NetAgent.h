@@ -48,7 +48,6 @@ protected:
 	std::chrono::seconds _timeout;
 
 	boost::asio::io_context _io_context;  // Used for I/O
-	// tcp::endpoint _endpoint;
 
 	std::mutex _mutex;
 	tcp::socket _socket;

@@ -1,6 +1,6 @@
-#include "Capture.h"
+#include "QuickShot/Capture.h"
 
-Resolution ScreenCapture::DefaultResolution = RES_1440;// ScreenCapture::NativeResolution();
+Resolution ScreenCapture::DefaultResolution = RES_1080;// ScreenCapture::NativeResolution();
 
 Resolution ScreenCapture::NativeResolution(const bool reinit) {
 

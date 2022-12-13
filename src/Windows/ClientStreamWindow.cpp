@@ -13,7 +13,7 @@ wxEND_EVENT_TABLE()
 
 ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort,
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
-	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
+	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize(RES_1080)), _timer(this, 1234) {
 
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = new PopUp(this, message);
@@ -46,17 +46,17 @@ ClientStreamWindow::~ClientStreamWindow() {
 		if (_clientThr.joinable()) { _clientThr.join(); }
 	}
 	
+	while (!packetReader->Empty()) { packetReader->ReadMessage(); }
 	delete _client;
 }
 
-void ClientStreamWindow::Resize(const Resolution& resolution) { _imageData = PixelData(CalculateBMPFileSize(resolution)); }
+void ClientStreamWindow::Resize(const Resolution& resolution) { _imageData.reserve(CalculateBMPFileSize(resolution)); }
 
 void ClientStreamWindow::ImageBuilder() {
 
-	static MessageReader<Packet*>*& packetReader = msgReader;
-	static int offset = 0;
+	int offset = 0;
 
-	const auto const pixeldata = &_imageData.data()[BMP_HEADER_SIZE];
+	const PixelData::iterator pixelData = _imageData.begin() + BMP_HEADER_SIZE;
 	const Uint32 expectedSize = _imageData.size() - BMP_HEADER_SIZE;
 
 	// Check  if there is a complete image
@@ -74,9 +74,9 @@ void ClientStreamWindow::ImageBuilder() {
 			}
 			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
 		}
-		else if (imageFragment.size() + offset > expectedSize) { group = -1; continue; }
+		if (!Packet::VerifyPacket(*p) || imageFragment.size() + offset > expectedSize) { delete p; continue; }
 		
-		std::memcpy(&pixeldata[offset], imageFragment.data(), imageFragment.size());
+		std::copy(imageFragment.begin(), imageFragment.end(), pixelData + offset);
 
 		delete p;
 	}
@@ -115,7 +115,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 	if (!_init) { return; }
 
 	if (_client->Connected()) {
-
+		
 		if (_render) {
 			PaintNow();
 			_render = false;
@@ -125,6 +125,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	else if (_clientThr.joinable()) {
 		_clientThr.join();
+		GoBack();
 	}
 
 }

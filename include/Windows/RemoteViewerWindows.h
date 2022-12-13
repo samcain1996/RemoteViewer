@@ -88,6 +88,7 @@ private:
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;
+	MessageReader<Packet*>*& packetReader = msgReader;
 
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,

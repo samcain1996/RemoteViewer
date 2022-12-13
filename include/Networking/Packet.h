@@ -26,6 +26,7 @@ using PacketMetadata = std::array<MyByte, PACKET_HEADER_SIZE>;
 
 enum class PacketType : MyByte {
 	Image = static_cast<MyByte>('I'),
+	//Disonnect = static_cast<MyByte>('D'),
 	Invalid = static_cast<MyByte>('\0')
 };
 
@@ -43,6 +44,7 @@ public:
 		switch (header._metadata.data()[0]) {
 
 			case 'I': return PacketType::Image;
+			//case 'D': return PacketType::Disonnect;
 			default:  return PacketType::Invalid;
 
 		}
@@ -84,7 +86,7 @@ private:
 	PacketHeader  _header;		// Header containing packet _metadata
 	PacketPayload _payload;		// Packet data
 public:
-
+	static bool VerifyPacket(const Packet& packet);
 	/*-----------------PACKET--------------------*/
 	/*											 */
 	/*  Packets should only be constructed from  */
