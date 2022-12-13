@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <coroutine>
 
 #include "wx/wx.h"
 #include "wx/filesys.h"
@@ -32,11 +33,10 @@ class BaseWindow : public wxFrame
 protected:
 
 	bool _init = false;
-	static const wxIcon inline FetchIcon() {
 
-		static const auto GetIcon = []() {
+	static const wxIcon inline FetchIcon(const std::string& filepath="C:\\Users\\scain\\source\\repos\\RemoteViewer\\logo.png") {
 
-			const string filepath = "C:\\Users\\scain\\source\\repos\\RemoteViewer\\logo.png";
+		static const auto GetIcon = [](const std::string& filepath) {
 
 			wxFSInputStream inputStream(filepath);
 			wxImage image(inputStream);
@@ -47,7 +47,8 @@ protected:
 			icon.CopyFromBitmap(bitmap);
 			return icon;
 		};
-		return GetIcon();
+
+		return GetIcon(filepath);
 	}
 	
 public:
@@ -60,7 +61,7 @@ public:
 	wxTextValidator PORT_VALIDATOR = wxTextValidator(wxFILTER_DIGITS);
 
 protected:
-
+	
 	// Previous Windows
 	static inline WindowStack _prevWindows {};
 	static inline const wxPoint DEFAULT_POS = wxPoint(100, 100);
@@ -105,7 +106,8 @@ public:
 
 private:
 
-	const inline static wxSize POPUP_SIZE = wxSize(300, 200);
+	static const inline wxSize POPUP_SIZE = wxSize(300, 200);
+
 	wxStaticText* _text;
 	wxButton* _dismissButton;
 

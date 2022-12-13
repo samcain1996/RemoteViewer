@@ -24,10 +24,11 @@ using PacketPayload = boost::container::static_vector<MyByte, MAX_PACKET_PAYLOAD
 using PacketBuffer = std::array<MyByte, MAX_PACKET_SIZE>;
 using PacketMetadata = std::array<MyByte, PACKET_HEADER_SIZE>;
 
-enum class PacketTypes : MyByte {
+enum class PacketType : MyByte {
 	Image = static_cast<MyByte>('I'),
 	Invalid = static_cast<MyByte>('\0')
 };
+
 
 // Holds _metadata about a packet
 class PacketHeader {
@@ -38,7 +39,14 @@ public:
 
 	static const Ushort GROUP_OFFSET = 1;
 	static const Ushort SIZE_OFFSET = GROUP_OFFSET + sizeof(Uint32);
+	static inline PacketType GetType(const PacketHeader& header) {
+		switch (header._metadata.data()[0]) {
 
+			case 'I': return PacketType::Image;
+			default:  return PacketType::Invalid;
+
+		}
+	}
 	PacketHeader();
 
 protected:
@@ -55,7 +63,7 @@ public:
 	Uint32 Size() const;
 	Uint32 Group() const;
 
-	PacketTypes PacketType() const;
+	PacketType Type() const;
 
 };
 
@@ -63,8 +71,6 @@ struct ImagePacketHeader : public PacketHeader {
 	static const Ushort POSITION_OFFSET = SIZE_OFFSET + sizeof(Uint32);
 
 	Uint32 Position() const;
-	Uint32 Size() const;
-	Uint32 Group() const;
 
 	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
 	ImagePacketHeader(const Uint32 group, const Uint32 size, const Uint32 position);

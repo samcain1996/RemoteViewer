@@ -37,8 +37,8 @@ void Server::Listen() {
 bool Server::Serve() {
 
  
-    PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketTypes::Image);
-    NewSend(packets);
+    PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
+    Send(packets);
 
     _io_context.run();
     _io_context.restart();
@@ -48,12 +48,15 @@ bool Server::Serve() {
 
 void Server::Receive() {}
 
-void Server::NewSend(PacketList& packets) {
+void Server::Send(PacketList& packets) {
 
     if (packets.size() <= 0) { return; }
-    Packet p = packets.front();
-    packets.pop();
-    _socket.async_send(boost::asio::buffer(p.RawData(), p.RawData().size()),
+
+    const Packet& packet = packets.front();
+    const auto data = packet.RawData();
+    const auto size = packet.Header().Size();
+
+    _socket.async_send(boost::asio::buffer(data, size),
         [this, &packets](std::error_code error, size_t bytes_transferred) {
         if (error) {
             std::cerr << "async_write: " << error.message() << std::endl;
@@ -61,50 +64,13 @@ void Server::NewSend(PacketList& packets) {
         }
 
         else {
-
-            NewSend(packets);
+            packets.pop();
+            Send(packets);
         }
 
     });
 
 }
 
-void Server::NewSend2(MyByte* data, size_t size) {
-
-    if (size <= 0) { return; }
-
-    size_t transmit_size = std::min(size, (size_t)MAX_PACKET_SIZE);
-
-    _socket.async_write_some(boost::asio::buffer(data, transmit_size),
-        [this, data = data + transmit_size, remaining = size - transmit_size, transmit_size, size]
-    (std::error_code error, size_t bytes_transferred) {
-            if (error) {
-                std::cerr << "async_write: " << error.message() << std::endl;
-                Disconnect();
-            }
-
-            else if (remaining > 0) {
-
-                NewSend2(data, remaining);
-            }
-
-        });
-}
-
-
-void Server::Send(const PacketBuffer& data) {
-
-    //PixelData image = _screen.CaptureScreen();
-    //Byte* data = image.data();
-    //size_t dataSize = image.size();
-    //size_t transmitSize = std::min((size_t)MAX_PACKET_SIZE, dataSize);
-    //boost::asio::async_write(_socket, boost::asio::buffer(data, transmitSize),
-    //    [data = data + transmitSize, dataSize = dataSize - transmitSize]
-    //(std::error_code error, size_t /*bytes_transferred*/) {
-    //        if (error) {
-    //            std::cerr << "async_write: " << error.message() << std::endl;
-    //        }
-    //    });
-}
 
 Server::~Server() {}

@@ -27,11 +27,10 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 
 		ConnectMessageables(*this, *_client);
 
-		_ioThread = std::thread(&Client::Start, _client);
+		_clientThr = std::thread(&Client::Start, _client);
 		_timer.Start(1000 / _targetFPS);
 
 		const BmpFileHeader header = ConstructBMPHeader();
-
 		std::copy(header.begin(), header.end(), _imageData.begin());
 
 		_init = true;
@@ -44,21 +43,13 @@ ClientStreamWindow::~ClientStreamWindow() {
 
 	if (_client->Connected()) {
 		_client->Disconnect();
-		if (_ioThread.joinable()) { _ioThread.join(); }
+		if (_clientThr.joinable()) { _clientThr.join(); }
 	}
-
+	
 	delete _client;
 }
 
 void ClientStreamWindow::Resize(const Resolution& resolution) { _imageData = PixelData(CalculateBMPFileSize(resolution)); }
-
-int ClientStreamWindow::ValidImagePacket(const ImagePacketHeader& header) {
-
-	if (header.PacketType() != PacketTypes::Image) { return -1; }
-	
-	if (group != header.Group()) { group = header.Group(); return 0; }
-	return header.Position();
-}
 
 void ClientStreamWindow::ImageBuilder() {
 
@@ -75,19 +66,17 @@ void ClientStreamWindow::ImageBuilder() {
 		const ImagePacketHeader& header = p->Header();
 		const PacketPayload& imageFragment = p->Payload();
 
-		PacketTypes type = p->Header().PacketType();
-		if (type == PacketTypes::Image) {
+		if (header.Type() == PacketType::Image) {
 
 			if (group != header.Group()) {
 				group = header.Group();
 				offset = 0;
 			}
-			else { offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE; }
+			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
 		}
-		else if (imageFragment.size() + offset > expectedSize) { continue; }
+		else if (imageFragment.size() + offset > expectedSize) { group = -1; continue; }
 		
 		std::memcpy(&pixeldata[offset], imageFragment.data(), imageFragment.size());
-		offset += imageFragment.size();
 
 		delete p;
 	}
@@ -97,7 +86,6 @@ void ClientStreamWindow::ImageBuilder() {
 void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 	_render = true;
 	wxWakeUpIdle();
-	_timer.Start(1000 / _targetFPS);
 }
 
 void ClientStreamWindow::PaintNow() {
@@ -135,8 +123,8 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	}
 
-	else if (_ioThread.joinable()) {
-		_ioThread.join();
+	else if (_clientThr.joinable()) {
+		_clientThr.join();
 	}
 
 }

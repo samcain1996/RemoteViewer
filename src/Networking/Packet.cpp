@@ -10,12 +10,9 @@ Packet::Packet(Packet&& other) noexcept : _header(other.Header()) {
 	_payload = std::move(other._payload);
 }
 
-Packet::Packet(const PacketBuffer& packetData) :
-	_header(packetData) {
-
-	// Retrieve payload
-	std::copy(packetData.begin() + PACKET_PAYLOAD_OFFSET,
-		packetData.begin() + _header.Size(), std::back_inserter(_payload));
+Packet::Packet(const PacketBuffer& packetData) {
+	std::memcpy(&_header._metadata[0], packetData.data(), PACKET_HEADER_SIZE);
+	std::copy(packetData.begin() + PACKET_HEADER_SIZE, packetData.end(), std::back_inserter(_payload));
 }
 
 Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
@@ -63,13 +60,13 @@ Uint32 ImagePacketHeader::Position() const {
 	return DecodeAsByte(&_metadata.data()[POSITION_OFFSET]);
 }
 
-Uint32 ImagePacketHeader::Size() const {
-	return PacketHeader::Size();
-}
-
-Uint32 ImagePacketHeader::Group() const {
-	return PacketHeader::Group();
-}
+//Uint32 ImagePacketHeader::Size() const {
+//	return PacketHeader::Size();
+//}
+//
+//Uint32 ImagePacketHeader::Group() const {
+//	return PacketHeader::Group();
+//}
 
 Uint32 PacketHeader::Size() const {
 	return DecodeAsByte(&_metadata.data()[SIZE_OFFSET]);
@@ -79,11 +76,8 @@ Uint32 PacketHeader::Group() const {
 	return DecodeAsByte(&_metadata.data()[GROUP_OFFSET]);
 }
 
-PacketTypes PacketHeader::PacketType() const {
-	switch (_metadata.data()[0]) {
-	case 'I': return static_cast<PacketTypes>(_metadata.data()[0]);
-	default: return PacketTypes::Invalid;
-	}
+PacketType PacketHeader::Type() const {
+	return GetType(*this);
 }
 
 PacketHeader::PacketHeader(const PacketBuffer& packetBuffer) {
@@ -108,7 +102,7 @@ PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& m
 }
 
 ImagePacketHeader::ImagePacketHeader(const Uint32 group, const Uint32 size, const Uint32 position) : PacketHeader() {
-	_metadata[0] = static_cast<MyByte>(PacketTypes::Image);
+	_metadata[0] = static_cast<MyByte>(PacketType::Image);
 	EncodeAsByte(&_metadata.data()[GROUP_OFFSET], group);
 	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], size);
 	EncodeAsByte(&_metadata.data()[POSITION_OFFSET], position);

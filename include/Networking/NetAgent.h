@@ -54,16 +54,16 @@ protected:
 	tcp::socket _socket;
 	boost::system::error_code _errcode;
 
-	PacketBuffer _tmpBuffer{}; // Temporary buffer for receiving/sending packets
+	PacketBuffer _tmpBuffer {}; // Temporary buffer for receiving/sending packets
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
-	virtual PacketList ConvertToPackets(const PixelData& data, const PacketTypes& packetType = PacketTypes::Invalid);
+	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
 	virtual void Handshake() = 0;
 	const bool IsDisconnectMsg() const;
 
 	virtual void Receive() = 0;
-	virtual void Send(const PacketBuffer& data) = 0;
+	virtual void Send(PacketList&) = 0;
 	// virtual void ProcessPacket(const Packet& packet) = 0;
 
 public:
@@ -72,5 +72,5 @@ public:
 
 	const bool Connected() const;
 
-	virtual ~NetAgent() = default;
+	virtual ~NetAgent();
 };

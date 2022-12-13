@@ -10,10 +10,7 @@ private:
 	Ushort _localport;
 
 	// Send a buffer of bytes to the client
-	void Send(const PacketBuffer& data) override;
-	void NewSend(PacketList&);
-	void NewSend2(MyByte* data, size_t size);
-	void HandleSend(const boost::system::error_code& err);
+	void Send(PacketList&) override ;
 
 	void Receive() override;
 

@@ -21,7 +21,7 @@ void NetAgent::Disconnect() {
     _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
 }
 
-PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketTypes& packetType)
+PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& packetType)
 {
     PacketList packets;  // List to hold all packets needed to create message
 
@@ -58,3 +58,5 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketTypes& 
 }
 
 const bool NetAgent::Connected() const { return _connected; }
+
+NetAgent::~NetAgent() {}

@@ -52,6 +52,7 @@ public:
 
     static Resolution DefaultResolution;
     static Resolution NativeResolution(const bool reinit = false);
+    static inline void CalibrateResolution() { NativeResolution(true); }
 
 public:
 

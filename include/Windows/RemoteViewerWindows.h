@@ -14,8 +14,7 @@ class StartUpWindow : public BaseWindow {
 private:
 	wxButton* _clientButton;
 	wxButton* _serverButton;
-	
-	const int _windowId = 1;
+
 public:
 	StartUpWindow(const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~StartUpWindow();
@@ -44,8 +43,6 @@ private:
 	wxTextCtrl* _localPortInput;
 	wxTextCtrl* _ipInput;
 	wxButton* _connectButton;
-
-	const int _windowId = 2;
 
 public:
 	ClientInitWindow(const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
@@ -84,12 +81,10 @@ private:
 	
 	Client* _client = nullptr;
 	std::thread _clientThr;
-	std::thread _ioThread;
 
-	const int _windowId = 3;
 	int group = 0;
 
-	const int _targetFPS = 30;
+	const int _targetFPS = 300;
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;
@@ -114,7 +109,6 @@ public:
 	void BackgroundTask(wxIdleEvent& evt);
 
 	void OnTick(wxTimerEvent& timerEvent);
-	int ValidImagePacket(const ImagePacketHeader& header);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 
@@ -135,7 +129,6 @@ private:
 	wxTimer _timer;
 	const int _targetFPS = 30;
 
-	const int _windowId = 4;
 	PixelData iconData;
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);

@@ -1,7 +1,10 @@
-.vs
-build
-docs
-etc
-libs
+.vs/
+build/
+docs/
+etc/
+libs/
+
+*.swp
+
 
 

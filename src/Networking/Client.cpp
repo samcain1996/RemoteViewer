@@ -40,7 +40,7 @@ void Client::Handshake() {
 
 }
 
-void Client::Send(const PacketBuffer& data) {}
+void Client::Send(PacketList& data) {}
 
 void Client::Start() {
 

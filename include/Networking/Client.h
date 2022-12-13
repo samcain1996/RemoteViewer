@@ -47,5 +47,5 @@ public:
 	void Receive() override;
 	void Start();
 
-	void Send(const PacketBuffer& data) override;
+	void Send(PacketList& data) override;
 };
