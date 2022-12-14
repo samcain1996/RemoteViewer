@@ -6,6 +6,7 @@ Resolution ScreenCapture::NativeResolution(const bool reinit) {
 
     static auto retrieveRes = []() {
 
+
 #if defined(_WIN32)
 
         SetProcessDPIAware();

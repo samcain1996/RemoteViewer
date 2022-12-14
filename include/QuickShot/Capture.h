@@ -114,7 +114,8 @@ constexpr Uint32 CalculateBMPFileSize(const Resolution& resolution = ScreenCaptu
 };
 
 // Create a simple BITMAPFILEHEADER and BITMAPINFOHEADER as 1, 54-byte array
-constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = ScreenCapture::DefaultResolution, const Ushort bitsPerPixel = 32) {
+constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = ScreenCapture::DefaultResolution, const Ushort bitsPerPixel = 32,
+    const bool isWindows = true ) {
 
     using HeaderIter = BmpFileHeader::iterator;
 
@@ -131,16 +132,16 @@ constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = Screen
 
     // Encode pixels wide
     EncodeAsByte(ByteSpan(widthIter, sizeof(resolution.width)), resolution.width);
-
+    OS_MODIFIER = isWindows ? -1 : 1;
     // Encode pixels high
     EncodeAsByte(ByteSpan(heightIter, sizeof(resolution.height)), OS_MODIFIER * resolution.height);
 
-#if !defined(_WIN32)  // Window bitmaps are stored upside down
+    if (!isWindows) {
 
-    std::for_each(heightIter, heightIter + sizeof(resolution.height),
-        [](MyByte& b) { if (b == '\0') { b = (MyByte)MAX_MYBYTE_VAL; } });
+        std::for_each(heightIter, heightIter + sizeof(resolution.height),
+            [](MyByte& b) { if (b == '\0') { b = (MyByte)MAX_MYBYTE_VAL; } });
 
-#endif
+    }
 
     header[BMP_HEADER_BPP_OFFSET] = bitsPerPixel;
 

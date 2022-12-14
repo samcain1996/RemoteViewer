@@ -1,5 +1,3 @@
-#pragma once
-
 #include "RemoteViewerWindows.h"
 
 /*----------------------Client Streaming Window-----------------------*/
@@ -72,6 +70,7 @@ void ClientStreamWindow::ImageBuilder() {
 				offset = 0;
 			}
 			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
+
 		}
 		if (!Packet::VerifyPacket(*p) || imageFragment.size() + offset > expectedSize) { delete p; continue; }
 		
