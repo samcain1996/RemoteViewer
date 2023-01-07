@@ -29,7 +29,6 @@ enum class PacketType : MyByte {
 	Invalid = static_cast<MyByte>('\0')
 };
 
-
 // Holds _metadata about a packet
 class PacketHeader {
 
@@ -64,6 +63,7 @@ public:
 	Uint32 Group() const;
 
 	PacketType Type() const;
+	explicit operator std::string() const { return std::string((char*)_metadata.data()); }
 
 };
 
@@ -74,17 +74,19 @@ struct ImagePacketHeader : public PacketHeader {
 
 	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
 	ImagePacketHeader(const Uint32 group, const Uint32 size, const Uint32 position);
-
 };
+
 
 // Packet of data that can be sent over a socket
 class Packet {
+
+public:
+	static bool VerifyPacket(const Packet& packet);
 
 private:
 	PacketHeader  _header;		// Header containing packet _metadata
 	PacketPayload _payload;		// Packet data
 public:
-	static bool VerifyPacket(const Packet& packet);
 	/*-----------------PACKET--------------------*/
 	/*											 */
 	/*  Packets should only be constructed from  */
@@ -110,3 +112,4 @@ public:
 };
 
 using PacketList = std::queue<Packet>;
+using PacketPtr = std::shared_ptr<Packet>;

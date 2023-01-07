@@ -25,6 +25,7 @@ using WindowStack = std::stack<WindowNames>;
 using ElementList = std::vector<wxControl*>;
 
 class PopUp;
+using PopUpPtr = std::unique_ptr<PopUp>;
 
 class BaseWindow : public wxFrame
 {
@@ -58,6 +59,7 @@ public:
 	// Textbox validators used
 	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
 	wxTextValidator PORT_VALIDATOR = wxTextValidator(wxFILTER_DIGITS);
+	virtual ~BaseWindow();
 
 protected:
 	
@@ -68,7 +70,6 @@ protected:
 
 	BaseWindow(const std::string& name, const wxPoint& pos = DEFAULT_POS,
 		const wxSize& size = DEFAULT_SIZE, const bool show = true);
-	virtual ~BaseWindow();
 
 	// Delete copy and move constructors and assignment operators
 	BaseWindow(const BaseWindow&) = delete;
@@ -80,7 +81,7 @@ protected:
 	ElementList _windowElements;
 	const int _windowId = -1;
 
-	PopUp* _popup = nullptr;
+	PopUpPtr _popup;
 
 	void GoBack();
 
@@ -92,7 +93,7 @@ class PopUp : public wxPopupTransientWindow {
 
 public:
 
-	PopUp(BaseWindow* parent, const std::string& message);
+	PopUp(BaseWindow* parent, const std::string& message, Action&& OnClose = []() {});
 	~PopUp();
 
 	// Delete copy and move constructors and assignment operators
@@ -102,9 +103,10 @@ public:
 	PopUp& operator=(PopUp&&) = delete;
 
 	void OnButton(wxCommandEvent& evt);
+	void OnDismiss() override;
 
 private:
-
+	Action onClose;
 	static const inline wxSize POPUP_SIZE = wxSize(300, 200);
 
 	wxStaticText* _text;

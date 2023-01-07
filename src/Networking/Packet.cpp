@@ -2,8 +2,12 @@
 #include "QuickShot/Capture.h"
 
 bool Packet::VerifyPacket(const Packet& packet) {
-	bool match = packet.Header().Size() <= MAX_PACKET_SIZE;
-	match &= packet.Payload().size() == packet.Header().Size() - PACKET_HEADER_SIZE;
+	const PacketHeader header = packet.Header();
+
+	bool match = header.Type() != PacketType::Invalid;
+	match &= header.Size() <= MAX_PACKET_SIZE;
+	//match &= packet.Payload().size() == header.Size() - PACKET_HEADER_SIZE;
+
 	return match;
 }
 
@@ -16,7 +20,13 @@ Packet::Packet(Packet&& other) noexcept : _header(other.Header()) {
 	_payload = std::move(other._payload);
 }
 
-Packet::Packet(const PacketBuffer& packetData) {
+Packet::Packet(const PacketBuffer& packetData) //:
+	//_header(packetData) 
+{
+	//if (VerifyPacket(packetData)) {
+		//auto end = packetData.begin() + _header.Size();
+		//std::copy(packetData.begin() + PACKET_HEADER_SIZE, end, std::back_inserter(_payload));
+	//}
 	std::memcpy(&_header._metadata[0], packetData.data(), PACKET_HEADER_SIZE);
 	std::copy(packetData.begin() + PACKET_HEADER_SIZE, packetData.end(), std::back_inserter(_payload));
 }

@@ -1,11 +1,11 @@
 #pragma once
 #include "Networking/NetAgent.h"
 
-class Client : public NetAgent, public Messageable<Packet*> {
+class Client : public NetAgent, public Messageable<PacketPtr> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
 
-	MessageWriter<Packet*>*& groupWriter = msgWriter;
+	MessageWriter<PacketPtr>*& groupWriter = msgWriter;
 
 	/**
 	 * @brief Processes data from packets and stores them in the
@@ -22,10 +22,9 @@ public:
 	// Constructors
 	Client() = delete;
 	Client(const Client&) = delete;
-	Client(Client&&) = delete;
+	Client(Client&&) noexcept = delete;
 
 	Client(const std::string& hostname, const std::chrono::seconds& timeout = std::chrono::seconds(5));
-
 	~Client();
 
 	Client& operator=(const Client&) = delete;

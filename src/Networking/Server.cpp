@@ -37,7 +37,7 @@ void Server::Listen() {
 bool Server::Serve() {
 
  
-    PacketList packets = ConvertToPackets(_screen.WholeDeal(), PacketType::Image);
+    PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
     Send(packets);
 
     _io_context.run();

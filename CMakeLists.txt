@@ -21,12 +21,12 @@ add_compile_definitions(_UNICODE)
 # Add source to this project's executable.
 add_executable (RemoteViewer WIN32 
   # Source files
-  src/Application.cpp src/QuickShot/Capture.cpp src/Networking/Client.cpp
+  src/Application.cpp src/QuickShot/Capture.cpp src/Networking/Client.cpp src/Logger/Logger.cpp
   src/Networking/NetAgent.cpp src/Networking/Packet.cpp src/Networking/Server.cpp src/Windows/RemoteViewerWindows.cpp
   src/Windows/ClientStreamWindow.cpp src/Windows/ServerInitWindow.cpp
 
   # Header files
-  include/Application.h include/Types.h include/QuickShot/Capture.h include/Networking/Client.h 
+  include/Application.h include/Types.h include/QuickShot/Capture.h include/Networking/Client.h include/Logger/Logger.h
   include/Messages.h include/Networking/NetAgent.h include/Networking/Packet.h include/Networking/Server.h include/Windows/RemoteViewerWindows.h)
 
 include_directories(include include/Networking include/QuickShot include/Windows ${WX_DIR}/include ${WX_DIR}/include/msvc ${BOOST_DIR})

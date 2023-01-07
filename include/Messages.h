@@ -1,6 +1,7 @@
 #pragma once
 #include "Messageable.h"
 
+
 /*---------------------------------------*/
 /*		Allows for threads to send		 */
 /*	    messages between eachother       */
@@ -13,7 +14,6 @@ private:
 	const bool _ownsQueue;				// Flag to check whether the MessageHandler "owns" the queue
 
 protected:
-	Message _msg{};						// Last message read from queue
 	std::mutex*	_mutex;					// Mutex to ensure only 1 thread access queue at one time
 	std::queue<Message>* _queuePtr;	    // Pointer to queue holding messages
 
@@ -37,29 +37,35 @@ protected:
 	MessageHandler& operator=(MessageHandler&&) = delete;
 
 	// Put message in back of queue
-	const bool Push(const Message message) {
+	bool Push(Message&& message) {
 		ThreadLock lock(*_mutex);
 
-		_queuePtr->push(message);
+		_queuePtr->push(std::forward<Message>(message));
 
 		return true;
 	}
 
 	// Remove message from the front of the queue
-	const Message* const Pop() {
+	Message Pop() {
 		ThreadLock lock(*_mutex);
 
 		if (_queuePtr->empty()) { return nullptr; }
 
-		_msg = _queuePtr->front();
+		Message msg = _queuePtr->front();
 		_queuePtr->pop();
 
-		return &_msg;
+		return msg;
 	};
 
 public:
 	// Return if the queue is empty
 	bool Empty() const { return _queuePtr->empty(); }
+	void Clear() { 
+		ThreadLock lock(*_mutex);
+
+		while (!_queuePtr->empty()) { _queuePtr->pop(); }
+
+	}
 };
 
 // Read-only end of MessageHandler
@@ -80,14 +86,8 @@ public:
 	MessageReader& operator=(MessageReader&&) = delete;
 
 	// Read message from queue
-	const Message ReadMessage() {
-		const Message* const msgPtr = this->Pop();
-
-		if (msgPtr != nullptr) {
-			return *msgPtr;
-		}
-
-		return Message();
+	Message ReadMessage() {
+		return this->Pop();
 	}
 };
 
@@ -109,8 +109,8 @@ public:
 	MessageWriter& operator=(MessageWriter&&) = delete;
 
 	// Write message to queue
-	const bool WriteMessage(const Message& message) {
-		return this->Push(message);
+	bool WriteMessage(Message&& message) {
+		return this->Push(std::forward<Message>(message));
 	}
 };
 

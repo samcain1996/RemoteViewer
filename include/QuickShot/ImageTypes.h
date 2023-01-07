@@ -4,7 +4,7 @@
 #if defined(_WIN32)
 
 #define NOMINMAX
-static inline short OS_MODIFIER = -1;
+
 #include <Windows.h>
 #include <ShellScalingApi.h>
 
@@ -21,7 +21,7 @@ static inline short OS_MODIFIER = -1;
 
 #if defined(__APPLE__) || defined(__linux__)
 
-static inline short OS_MODIFIER = 1;
+
 
 #endif
 

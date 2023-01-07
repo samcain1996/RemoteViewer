@@ -22,6 +22,8 @@
 #include <optional>
 #include <functional>
 
+#include "Logger/Logger.h"
+
 
 #if defined(__APPLE__) || defined(__linux__)
 
@@ -63,4 +65,4 @@ constexpr Uint32 DecodeAsByte(const MyByte encodedNumber[4]) {
 
 }
 
-
+using Action = std::function<void()>;

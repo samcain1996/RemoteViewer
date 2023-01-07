@@ -2,7 +2,6 @@
 
 Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout) {
     _hostname = hostname;
-
 }
 
 const void Client::Connect(const Ushort port, const std::function<void()>& onConnect) {
@@ -53,12 +52,12 @@ void Client::Receive() {
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
+                
+                PacketPtr packet = std::make_shared<Packet>(_tmpBuffer);
 
-                Packet* packet = new Packet(_tmpBuffer);
-
-                if (std::memcmp(packet->RawData().data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0) { Disconnect(); }
+                if (IsDisconnectMsg()) { Disconnect(); }
                 else {
-                    groupWriter->WriteMessage(packet);
+                    groupWriter->WriteMessage(std::move(packet));
                     Receive();
                 }
             }

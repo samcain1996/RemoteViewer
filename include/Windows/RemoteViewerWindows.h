@@ -4,8 +4,8 @@
 
 #include "Messageable.h"
 
-#include "Client.h"
-#include "Server.h"
+#include "Networking/Client.h"
+#include "Networking/Server.h"
 
 
 //--------------Start Up Window Class-----------------------------//
@@ -68,10 +68,10 @@ public:
 // Receives a video stream from the server and sends 
 // back a stream of keyboard and mouse events
 
-class ClientStreamWindow : public BaseWindow, public Messageable<Packet*> {
+class ClientStreamWindow : public BaseWindow, public Messageable<PacketPtr> {
 
-	MessageReader<Packet*>*& groupReader = msgReader;  // Queue of packets that can create a complete image
-
+	MessageReader<PacketPtr>*& groupReader = msgReader;  // Queue of packets that can create a complete image
+	
 private:
 	
 	PixelData _imageData{};
@@ -79,16 +79,17 @@ private:
 
 	bool _render = false;
 	
-	Client* _client = nullptr;
+	std::shared_ptr<Client> _client;
 	std::thread _clientThr;
 
 	int group = 0;
 
-	const int _targetFPS = 1;
+	const int _targetFPS = 30;
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;
-	MessageReader<Packet*>*& packetReader = msgReader;
+	MessageReader<PacketPtr>*& packetReader = msgReader;
+
 
 public:
 	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
@@ -125,12 +126,11 @@ private:
 	wxTextCtrl* _portTb;
 	wxButton* _startServerButton;
 
-	Server* _server = nullptr;
+	std::unique_ptr<Server> _server = nullptr;
 	
-	wxTimer _timer;
+	wxTimer* _timer;
 	const int _targetFPS = 30;
 
-	PixelData iconData;
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);
 	~ServerInitWindow();

@@ -13,15 +13,17 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort local
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
+	Logger::newStream("Receive.log");
+
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
-	_popup = new PopUp(this, message);
+	_popup = std::make_unique<PopUp>(this, message);
 	_popup->Popup();
 
-	_client = new Client(ip);
+	_client = std::make_shared<Client>(ip);
 
 	_client->Connect(remotePort, [this]() {
 
-		_popup->Destroy();
+		_popup->Dismiss();
 
 		ConnectMessageables(*this, *_client);
 
@@ -43,46 +45,59 @@ ClientStreamWindow::~ClientStreamWindow() {
 		_client->Disconnect();
 		if (_clientThr.joinable()) { _clientThr.join(); }
 	}
-	
-	delete _client;
+	packetReader->Clear();
 }
 
-void ClientStreamWindow::Resize(const Resolution& resolution) { _imageData.reserve(CalculateBMPFileSize(resolution)); }
+void ClientStreamWindow::Resize(const Resolution& resolution) { 
+	_resolution = resolution;
+	_imageData.reserve(CalculateBMPFileSize(_resolution)); 
+}
 
 void ClientStreamWindow::ImageBuilder() {
 
 	int offset = 0;
+	static Loggette log = Logger::getLog("Receive.log").value();
 
 	const PixelData::iterator pixelData = _imageData.begin() + BMP_HEADER_SIZE;
-	const Uint32 expectedSize = _imageData.size() - BMP_HEADER_SIZE;
+	const Uint32 expectedSize = CalculateBMPFileSize(_resolution, 32, false);
 
 	// Check  if there is a complete image
-	while (!packetReader->Empty()) {
+	while (!packetReader->Empty() && _client->Connected()) {
 
-		const Packet* const p = packetReader->ReadMessage();
+		std::shared_ptr<Packet> p = packetReader->ReadMessage();
 		const ImagePacketHeader& header = p->Header();
 		const PacketPayload& imageFragment = p->Payload();
 
+		const auto& size = header.Size() - PACKET_HEADER_SIZE;
+
 		if (header.Type() == PacketType::Image) {
 
+			// New image
 			if (group != header.Group()) {
 				group = header.Group();
 				offset = 0;
 			}
 			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
-
+			
 		}
-		if (!Packet::VerifyPacket(*p) || imageFragment.size() + offset > expectedSize) { delete p; continue; }
-		
-		std::copy(imageFragment.begin(), imageFragment.end(), pixelData + offset);
+		if (!Packet::VerifyPacket(*p) || size + offset > expectedSize) {
+			offset = 0;
+			std::string lineToLog = "Header Size: " + std::to_string(header.Size()) + "\n";
+			lineToLog += "Actual Size: " + std::to_string(imageFragment.size() + PACKET_HEADER_SIZE) + "\n";
+			lineToLog += "Dump:\n" + (std::string)header + "\n";
 
-		delete p;
+			log.WriteLine(lineToLog);
+			continue; 
+		}
+		std::copy(imageFragment.begin(), imageFragment.begin() + size, pixelData + offset);
+		
 	}
 
 }
 
 void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 	_render = true;
+	_timer.Start(1000 / _targetFPS);
 	wxWakeUpIdle();
 }
 
@@ -123,7 +138,9 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	else if (_clientThr.joinable()) {
 		_clientThr.join();
-		GoBack();
+		_popup = std::make_unique<PopUp>(this, "Disconnected from server!", [this]() { GoBack(); });
+		_popup->Popup();
+		
 	}
 
 }

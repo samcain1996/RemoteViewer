@@ -5,7 +5,13 @@
 BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size, const bool show) : 
 	wxFrame(nullptr, wxID_ANY, name, pos, size) {
 
-	// SetIcon(FetchIcon());
+	try {
+		SetIcon(FetchIcon());
+	}
+	catch (std::exception e) {
+		_popup = std::make_unique<PopUp>(this, e.what());
+		_popup->Show();
+	}
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
 
 	_windowElements.clear();
@@ -14,13 +20,12 @@ BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize
 }
 
 BaseWindow::~BaseWindow() {
-
 	std::for_each(_windowElements.begin(), _windowElements.end(), [](wxControl* element) {
 		delete element;
 		});
 
 	_windowElements.clear();
-
+	
 }
 
 void BaseWindow::GoBack() {
@@ -28,7 +33,7 @@ void BaseWindow::GoBack() {
 	// Return to the previous window
 	// MEMORY LEAK?? I don't see how this wouldn't cause one...
 	
-	if (_prevWindows.empty()) { wxExit(); }
+	if (_prevWindows.empty()) { wxExit(); return; }
 	 
 	BaseWindow* previousWindow = nullptr;
 
@@ -63,7 +68,7 @@ void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 	//	
 	//	for (int index = 0; index < _windowElements.size(); ++index) {
 	//		if (_windowElements[index]->HasFocus()) {
-	//			_windowElements[(index + 1) % _windowElements.size()]->SetFocus();  // Really good one copilot
+	//			_windowElements[(index + 1) % _windowElements.size()]->SetFocus();
 	//			break;
 	//		}
 	//	}
@@ -155,11 +160,11 @@ wxBEGIN_EVENT_TABLE(PopUp, wxPopupTransientWindow)
 	EVT_BUTTON(90, PopUp::OnButton)
 wxEND_EVENT_TABLE()
 
-PopUp::PopUp(BaseWindow* parent, const std::string& message) : 
-	wxPopupTransientWindow(parent, wxBORDER_NONE | wxPU_CONTAINS_CONTROLS) {
+PopUp::PopUp(BaseWindow* parent, const std::string& message, Action&& OnClose) : 
+	wxPopupTransientWindow(parent, wxBORDER_NONE | wxPU_CONTAINS_CONTROLS), onClose(OnClose) {
 
-	_text = new wxStaticText(this, wxID_ANY, message, wxPoint(100, 0));
-	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(100, 100));
+	_text = new wxStaticText(this, wxID_ANY, message, wxPoint(0, 0));
+	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(0, 100));
 
 	SetClientSize(POPUP_SIZE);
 
@@ -172,6 +177,10 @@ PopUp::~PopUp() {
 	
 	delete _text;
 	delete _dismissButton;
+}
+
+void PopUp::OnDismiss() {
+	onClose();
 }
 
 void PopUp::OnButton(wxCommandEvent& evt) {

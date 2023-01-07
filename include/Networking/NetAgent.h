@@ -11,7 +11,7 @@ using boost::asio::ip::tcp;
 using std::chrono::steady_clock;
 
 constexpr const int HANDSHAKE_SIZE = 4;
-using HANDSHAKE_MESSAGE = std::array<MyByte, HANDSHAKE_SIZE>;
+using HANDSHAKE_MESSAGE_T = std::array<MyByte, HANDSHAKE_SIZE>;
 
 class NetAgent {
 
@@ -20,24 +20,23 @@ protected:
 
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent
-	NetAgent() = delete;
-	NetAgent(NetAgent&&) = delete;
+	NetAgent(NetAgent&&) noexcept = delete;
 	NetAgent(const NetAgent&) = delete;
 
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
 
 
-	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> WIN_HANDSHAKE = { 'W', 'I', 'N', '!' };
-	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> OTHER_HANDSHAKE = { 'N', 'O', 'T', '!' };
+	constexpr const static HANDSHAKE_MESSAGE_T WIN_HANDSHAKE = { 'W', 'I', 'N', '!' };
+	constexpr const static HANDSHAKE_MESSAGE_T OTHER_HANDSHAKE = { 'N', 'O', 'T', '!' };
 
 #if defined(_WIN32)
-	constexpr const static std::array<MyByte, HANDSHAKE_SIZE>& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
+	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
 #else
-	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> & HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
+	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
 #endif
 
-	constexpr const static std::array<MyByte, HANDSHAKE_SIZE> DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };
+	constexpr const static HANDSHAKE_MESSAGE_T DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };
 
 	// Random number generation
 	static std::random_device rd;
@@ -59,7 +58,7 @@ protected:
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
 	virtual void Handshake() = 0;
-	const bool IsDisconnectMsg() const;
+	bool IsDisconnectMsg() const;
 
 	virtual void Receive() = 0;
 	virtual void Send(PacketList&) = 0;
@@ -69,7 +68,7 @@ public:
 
 	void Disconnect();
 
-	const bool Connected() const;
+	bool Connected() const;
 
-	virtual ~NetAgent();
+	virtual ~NetAgent() = default;
 };

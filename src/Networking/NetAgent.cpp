@@ -8,9 +8,7 @@ NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), 
     std::fill(_tmpBuffer.begin(), _tmpBuffer.end(), '\0');
 }
 
-void NetAgent::Receive() {}
-
-const bool NetAgent::IsDisconnectMsg() const {
+bool NetAgent::IsDisconnectMsg() const {
 
     return std::memcmp(_tmpBuffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;
 
@@ -19,6 +17,8 @@ const bool NetAgent::IsDisconnectMsg() const {
 void NetAgent::Disconnect() {
     _connected = false;
     _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
+    _socket.cancel();
+    //_socket.close();
 }
 
 PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& packetType)
@@ -48,8 +48,8 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
 
         ImagePacketHeader header(group, totalSize, iteration);
-
-        packets.push(Packet(header, payload));
+        Packet x(header, payload);
+        packets.push(x);
 
         bytesRemaining -= payloadSize;
     }
@@ -57,6 +57,4 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
     return packets;
 }
 
-const bool NetAgent::Connected() const { return _connected; }
-
-NetAgent::~NetAgent() {}
+bool NetAgent::Connected() const { return _connected; }
