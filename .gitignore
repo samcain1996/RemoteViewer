@@ -5,6 +5,6 @@ etc/
 libs/
 
 *.swp
-
+.*
 
 
