@@ -18,6 +18,9 @@ file(WRITE ${CMAKE_BINARY_DIR}/asset_dir.txt ${CMAKE_SOURCE_DIR}/assets)
 add_compile_definitions(_UNICODE)
 
 if(WIN32)
+
+set(WX_DIR ${CMAKE_SOURCE_DIR}/wxWidgets)
+
 # Add source to this project's executable.
 add_executable (RemoteViewer WIN32 
 
@@ -27,6 +30,9 @@ src/Logger/Logger.cpp
 src/QuickShot/Capture.cpp #src/QuickShot/Scaler.cpp 
 src/Networking/NetAgent.cpp src/Networking/Client.cpp src/Networking/Server.cpp src/Networking/Packet.cpp 
 src/Windows/RemoteViewerWindows.cpp src/Windows/ClientStreamWindow.cpp src/Windows/ServerInitWindow.cpp)
+
+include_directories(${WX_DIR}/include ${WX_DIR}/include/msvc)
+target_link_directories(RemoteViewer PUBLIC ${WX_DIR}/lib/vc_x64_lib)
 
 else()
 
@@ -39,13 +45,13 @@ add_executable (RemoteViewer
   src/Networking/NetAgent.cpp src/Networking/Client.cpp src/Networking/Server.cpp src/Networking/Packet.cpp 
   src/Windows/RemoteViewerWindows.cpp src/Windows/ClientStreamWindow.cpp src/Windows/ServerInitWindow.cpp)
 
-endif()
-
-target_include_directories(RemoteViewer PUBLIC ${CMAKE_SOURCE_DIR}/boost)
-
 find_package(wxWidgets REQUIRED)
 include(${wxWidgets_USE_FILE})
 target_link_libraries(RemoteViewer PUBLIC ${wxWidgets_LIBRARIES})
+
+endif()
+
+target_include_directories(RemoteViewer PUBLIC ${CMAKE_SOURCE_DIR}/boost)
 
 if (UNIX)
 

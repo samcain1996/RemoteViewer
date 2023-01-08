@@ -9,6 +9,8 @@ libs/
 *.swp
 .*
 
+wxWidgets/
+boost/
 
 !assets/
 !etc/

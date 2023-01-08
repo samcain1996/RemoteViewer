@@ -18,19 +18,18 @@ This application relies on:
 1. Download dependencies `chmod +x setup/download_dependencies`
 2. `setup/download_dependencies .`
 
-3. Build wxWidgets (windowing system)
-  * `cd wxWidgets`
-  Windows:
+3. Build wxWidgets (windowing system) `cd wxWidgets`
+  * Windows:
     1. `cd build/msw` Navigate to correct folder
     2. `explorer .`
     3. Open wx_vc17.sln
     4. At the top goto Build->Build, wait for build
     5. `cd ../../../` (in the terminal again)
-  macOS:
+  * macOS:
     1. `chmod +x ../setup/build_dependencies_mac ../`
     2. `../setup/build_dependencies_mac ../`
     3. `cd ../`
-  Linux:
+  * Linux:
     1. `mkdir buildgtk`
     2. `cd buildgtk`
     3. `../configure --with-gtk`
