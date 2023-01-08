@@ -52,9 +52,9 @@ This application relies on:
 
 ## How To Use
 To test the application you need one of the following:
-  1. 2 computers on the same network.
-  2. 2 computers remotely of the computer receiving the video stream must have forwarded its ports
-  3. 1 computer locally with 2 instances of the application open
+  * 2 computers on the same network.
+  * 2 computers remotely of the computer receiving the video stream must have forwarded its ports
+  * 1 computer locally with 2 instances of the application open
  
 1. Obtain the computers' ip addresses 
 2. On the computer that you want to view, press the button labelled 'Server'
