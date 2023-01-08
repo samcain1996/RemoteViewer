@@ -19,7 +19,7 @@ This application relies on:
 2. `setup/download_dependencies .`
 
 3. Build wxWidgets (windowing system)
-  3a. `cd wxWidgets`
+  * `cd wxWidgets`
   Windows:
     1. `cd build/msw` Navigate to correct folder
     2. `explorer .`
@@ -41,10 +41,10 @@ This application relies on:
     8. `cd ../../`
 
 4. Build RemoteViewer, navigate back to the root directory of RemoteViewer
-  4a. `mkdir build`
-  4b. `cd build`
-  4c. `cmake ../`
-  4d. (if Linux or macOS ONLY) `make`
+  * `mkdir build`
+  * `cd build`
+  * `cmake ../`
+  * (if Linux or macOS ONLY) `make`
       (if Windows ONLY) Run `explorer .` and open RemoteViewer.sln
       * Under the 'Solution Explorer' on the right hand side, 
         right-click RemoteViewer and select 'Set as Startup Project'
