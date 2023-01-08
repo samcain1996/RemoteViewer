@@ -27,8 +27,8 @@ This application relies on:
     4. At the top goto Build->Build, wait for build
     5. `cd ../../../` (in the terminal again)
   macOS:
-    1. `chmod +x build_dependencies_mac`
-    2. `./build_dependencies_mac ../`
+    1. `chmod +x ../setup/build_dependencies_mac ../`
+    2. `../setup/build_dependencies_mac ../`
     3. `cd ../`
   Linux:
     1. `mkdir buildgtk`
