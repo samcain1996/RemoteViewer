@@ -1,9 +1,6 @@
 #!/bin/sh
 
-this_dir=`pwd`
 cd ${1}
-
-echo "${this_dir}/assets/" > asset_dir.txt
 
 # Download Dependencies
 curl -LO https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2 &

@@ -14,7 +14,7 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Server Initialization", pos, size) {
 	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 
-	_startServerButton = new wxButton(this, 30001, "Listen for connections", wxPoint(400, 400), wxSize(200, 50));
+	_startServerButton = new wxButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
 	_timer = new wxTimer();
 }
 

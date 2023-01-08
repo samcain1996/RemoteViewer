@@ -1,5 +1,7 @@
 .vs/
 build/
+wxWidgets/
+boost/
 docs/
 etc/
 libs/
@@ -8,3 +10,11 @@ libs/
 .*
 
 
+!assets/
+!etc/
+!include/
+!src/
+!setup/
+
+!./CMakeLists.txt
+!./README.md
