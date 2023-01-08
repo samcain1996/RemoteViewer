@@ -16,10 +16,10 @@ This application relies on:
 # Set-up / Installation
 ## Run the following commands in the console from the root folder
 1. Download dependencies `chmod +x setup/download_dependencies`
-  1a. `setup/download_dependencies .`
+2. `setup/download_dependencies .`
 
-2. Build wxWidgets (windowing system)
-  2a. `cd wxWidgets`
+3. Build wxWidgets (windowing system)
+  3a. `cd wxWidgets`
   Windows:
     1. `cd build/msw` Navigate to correct folder
     2. `explorer .`
@@ -40,15 +40,15 @@ This application relies on:
     7. `cp wx-config ../../`
     8. `cd ../../`
 
-3. Build RemoteViewer, navigate back to the root directory of RemoteViewer
-  3a. `mkdir build`
-  3b. `cd build`
-  3c. `cmake ../`
-  3d. (if Linux or macOS ONLY) `make`
+4. Build RemoteViewer, navigate back to the root directory of RemoteViewer
+  4a. `mkdir build`
+  4b. `cd build`
+  4c. `cmake ../`
+  4d. (if Linux or macOS ONLY) `make`
       (if Windows ONLY) Run `explorer .` and open RemoteViewer.sln
-      3e. Under the 'Solution Explorer' on the right hand side, 
+      * Under the 'Solution Explorer' on the right hand side, 
         right-click RemoteViewer and select 'Set as Startup Project'
-      3f. Run
+      * Run
 
 ## How To Use
 To test the application you need one of the following:
