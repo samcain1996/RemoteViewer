@@ -8,13 +8,16 @@
 
 cmake_minimum_required (VERSION 3.8)
 
-project(RemoteViewer)
+project(RemoteViewer VERSION 0.0.1)
 
 # Executable location
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(BOOST_DIR C:\\boost_1_79_0)
-set(WX_DIR C:\\Users\\scain\\source\\repos\\dependencies\\wxWidgets-3.1.7)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(BOOST_DIR ${CMAKE_SOURCE_DIR}\\boost)
+set(WX_DIR ${CMAKE_SOURCE_DIR}\\wxWidgets)
 
 add_compile_definitions(_UNICODE)
 
@@ -23,15 +26,8 @@ add_executable (RemoteViewer WIN32
   # Source files
   src/Application.cpp src/QuickShot/Capture.cpp src/Networking/Client.cpp src/Logger/Logger.cpp
   src/Networking/NetAgent.cpp src/Networking/Packet.cpp src/Networking/Server.cpp src/Windows/RemoteViewerWindows.cpp
-  src/Windows/ClientStreamWindow.cpp src/Windows/ServerInitWindow.cpp
+  src/Windows/ClientStreamWindow.cpp src/Windows/ServerInitWindow.cpp)
 
-  # Header files
-  include/Application.h include/Types.h include/QuickShot/Capture.h include/Networking/Client.h include/Logger/Logger.h
-  include/Messages.h include/Networking/NetAgent.h include/Networking/Packet.h include/Networking/Server.h include/Windows/RemoteViewerWindows.h)
-
-include_directories(include include/Networking include/QuickShot include/Windows ${WX_DIR}/include ${WX_DIR}/include/msvc ${BOOST_DIR})
+target_include_directories(RemoteViewer PUBLIC ${WX_DIR}/include ${WX_DIR}/include/msvc ${BOOST_DIR} ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/include/Networking
+  ${CMAKE_SOURCE_DIR}/include/Windows ${CMAKE_SOURCE_DIR}/include/QuickShot ${CMAKE_SOURCE_DIR}/include/Logger ${CMAKE_SOURCE_DIR}/include/Eigen)
 target_link_directories(RemoteViewer PUBLIC ${WX_DIR}/lib/vc_x64_lib)
-
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET RemoteViewer PROPERTY CXX_STANDARD 20)
-endif()

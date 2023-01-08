@@ -1,0 +1,12 @@
+#!/bin/sh
+
+project_directory=${0}
+
+# Build wxWidgets on mac
+cd wxWidgets-3.2.0
+mkdir build-macOS
+cd build-macOS
+../configure --enable-debug
+make
+
+cp wx-config ${project_directory}

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+this_dir=`pwd`
+cd ${1}
+
+echo "${this_dir}/assets/" > asset_dir.txt
+
+# Download Dependencies
+curl -LO https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2 &
+curl -LO https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.0/wxWidgets-3.2.0.tar.bz2 &
+wait
+
+# Unpack
+tar -xvjf boost_1_79_0.tar.bz2 &
+tar -xvjf wxWidgets-3.2.0.tar.bz2 &
+wait
+
+rm boost_1_79_0.tar.bz2
+rm wxWidgets-3.2.0.tar.bz2
+
+# Simplify name
+mv boost_1_79_0 boost
+mv wxWidgets-3.2.0 wxWidgets
+
+
+

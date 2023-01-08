@@ -42,7 +42,7 @@ private:
 
     static inline Display* _display = XOpenDisplay(nullptr);
     static inline Window _root = DefaultRootWindow(_display);
-    static inline XWindowAttributes _attributes = { 0 };
+    static inline XWindowAttrdfgibutes _attributes = { 0 };
 
     XImage* _image = nullptr;
 

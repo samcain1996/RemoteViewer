@@ -34,11 +34,37 @@ protected:
 
 	bool _init = false;
 
-	static const wxIcon inline FetchIcon(const std::string& filepath="C:\\Users\\scain\\source\\repos\\RemoteViewer\\logo.png") {
+	enum class Asset {
+		ICON
+	};
 
-		static const auto GetIcon = [](const std::string& filepath) {
+	static string GetAssetPath(Asset asset) {
 
-			wxFSInputStream inputStream(filepath);
+		static const auto GetAssetDirectory = []() {
+			ifstream asset_file("asset_dir.txt");
+
+			string directory = "";
+			asset_file >> directory;
+
+			return directory;
+		};
+
+		static const string AssetDirectory = GetAssetDirectory();
+
+		using enum Asset;
+
+		switch (asset) {
+		case ICON:
+		default:
+			return AssetDirectory + "logo.png";
+		}
+	}
+
+	static const wxIcon inline FetchIcon() {
+
+		static const auto GetIcon = []() {
+
+			wxFSInputStream inputStream(GetAssetPath(Asset::ICON));
 			wxImage image(inputStream);
 			wxBitmap bitmap(image);
 
@@ -48,7 +74,7 @@ protected:
 			return icon;
 		};
 
-		return GetIcon(filepath);
+		return GetIcon();
 	}
 	
 public:
