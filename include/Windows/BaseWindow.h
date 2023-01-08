@@ -51,16 +51,14 @@ protected:
 
 		static const string AssetDirectory = GetAssetDirectory();
 
-		using enum Asset;
-
 		switch (asset) {
-		case ICON:
+		case Asset::ICON:
 		default:
-			return AssetDirectory + "logo.png";
+			return AssetDirectory + "/logo.png";
 		}
 	}
 
-	static const wxIcon inline FetchIcon() {
+	static wxIcon inline FetchIcon() {
 
 		static const auto GetIcon = []() {
 

@@ -1,8 +1,0 @@
-#!/bin/sh
-
-project_dir=`pwd`
-boost_dir=~/boost_1_79_0
-
-wx_flags=`./wx-config --cxxflags --libs`
-
-clang++ -g -std=c++20 -I/${boost_dir} -I/${project_dir}/include -I/${project_dir}/include/Networking ${project_dir}/src/*.cpp ${project_dir}/src/Networking/*.cpp -o RemoteViewer ${wx_flags} -lX11

@@ -18,6 +18,3 @@ rm wxWidgets-3.2.0.tar.bz2
 # Simplify name
 mv boost_1_79_0 boost
 mv wxWidgets-3.2.0 wxWidgets
-
-
-

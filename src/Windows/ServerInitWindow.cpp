@@ -1,5 +1,4 @@
-#pragma once
-#include "RemoteViewerWindows.h"
+#include "Windows/RemoteViewerWindows.h"
 
 /*----------------Server Initialization Window---------------------*/
 

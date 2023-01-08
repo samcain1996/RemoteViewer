@@ -1,5 +1,5 @@
 #pragma once 
-#include "RemoteViewerWindows.h"
+#include "Windows/RemoteViewerWindows.h"
 
 class Application : public wxApp  {
 public:

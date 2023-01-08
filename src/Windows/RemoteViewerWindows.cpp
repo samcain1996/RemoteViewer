@@ -1,17 +1,11 @@
-#include "RemoteViewerWindows.h"
+#include "Windows/RemoteViewerWindows.h"
 
 /*---------------Abstract Base Window------------------*/
 
 BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size, const bool show) : 
 	wxFrame(nullptr, wxID_ANY, name, pos, size) {
 
-	try {
-		SetIcon(FetchIcon());
-	}
-	catch (std::exception e) {
-		_popup = std::make_unique<PopUp>(this, e.what());
-		_popup->Show();
-	}
+	SetIcon(FetchIcon());
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
 
 	_windowElements.clear();

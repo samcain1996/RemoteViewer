@@ -177,7 +177,7 @@ const PixelData& ScreenCapture::CaptureScreen() {
         captureAreaRes.width, captureAreaRes.height, AllPlanes, ZPixmap);
 
     _pixelData = PixelData(_image->data, _image->data + CalculateBMPFileSize(captureAreaRes, 32, false));
-    _pixelData = Scaler::Scale(_pixelData, captureAreaRes, _resolution);
+    //_pixelData = Scaler::Scale(_pixelData, captureAreaRes, _resolution);
 
 #endif
 

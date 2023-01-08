@@ -2,6 +2,7 @@
 
 #include <set>
 #include <mutex>
+#include <memory>
 #include <thread>
 #include <chrono>
 #include <string>
@@ -28,7 +29,7 @@ using namespace std::chrono;
 struct Loggette {
 
 	Loggette() = default;
-	Loggette(const std::string& name, const LogStreamPtr const logStreamPtr) : 
+	Loggette(const std::string& name, const LogStreamPtr logStreamPtr) : 
 		name(name), streamPtr(logStreamPtr) {}
 	Loggette(const NameStreamPair& pair) : Loggette(pair.first, pair.second) {}
 

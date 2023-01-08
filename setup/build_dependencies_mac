@@ -7,5 +7,3 @@ mkdir build-macOS
 cd build-macOS
 ../configure --enable-debug
 make
-
-cp wx-config ${project_directory}

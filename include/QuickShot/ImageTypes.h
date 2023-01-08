@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cmath>
 #include "Types.h"
 
 #if defined(_WIN32)
