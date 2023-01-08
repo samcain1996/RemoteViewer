@@ -15,10 +15,11 @@ This application relies on:
 
 # Set-up / Installation
 ## Run the following commands in the console from the root folder
-1. Download dependencies `chmod +x setup/download_dependencies`
-2. `setup/download_dependencies .`
+1. Download dependencies 
+  * `chmod +x setup/download_dependencies`
+  * `setup/download_dependencies .`
 
-3. Build wxWidgets (windowing system) `cd wxWidgets`
+2. Build wxWidgets (windowing system) `cd wxWidgets`
   * Windows:
     1. `cd build/msw` Navigate to correct folder
     2. `explorer .`
@@ -39,7 +40,7 @@ This application relies on:
     7. `cp wx-config ../../`
     8. `cd ../../`
 
-4. Build RemoteViewer, navigate back to the root directory of RemoteViewer
+3. Build RemoteViewer, navigate back to the root directory of RemoteViewer
   * `mkdir build`
   * `cd build`
   * `cmake ../`
