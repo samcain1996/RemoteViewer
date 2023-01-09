@@ -14,6 +14,20 @@ bool NetAgent::IsDisconnectMsg() const {
 
 }
 
+void NetAgent::Handshake() {
+
+    const bool isMac = std::memcmp(_tmpBuffer.data(), MAC_HANDSHAKE.data(), MAC_HANDSHAKE.size()) == 0;
+    const bool isLinux = std::memcmp(_tmpBuffer.data(), LIN_HANDSHAKE.data(), LIN_HANDSHAKE.size()) == 0;
+    const bool isWindows = std::memcmp(_tmpBuffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
+
+    if (isMac) { _connectedOS = OPERATING_SYSTEM::MAC; }
+    else if (isLinux) { _connectedOS = OPERATING_SYSTEM::LINUX; }
+    else if (isWindows) { _connectedOS = OPERATING_SYSTEM::WINDOWS; }
+
+    _connected = (isMac || isLinux || isWindows);
+
+}
+
 void NetAgent::Disconnect() {
     _connected = false;
     if (_socket.is_open()) {
@@ -57,3 +71,5 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
 }
 
 bool NetAgent::Connected() const { return _connected; }
+
+OPERATING_SYSTEM NetAgent::ConnectedOS() const { return _connectedOS; }

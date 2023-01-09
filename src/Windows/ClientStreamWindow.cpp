@@ -13,8 +13,6 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
-	Logger::newStream("Receive.log");
-
 	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
 	_popup = std::make_unique<PopUp>(this, message);
 	_popup->Popup();
@@ -56,7 +54,6 @@ void ClientStreamWindow::Resize(const Resolution& resolution) {
 void ClientStreamWindow::ImageBuilder() {
 
 	int offset = 0;
-	static Loggette log = Logger::getLog("Receive.log").value();
 
 	const PixelData::iterator pixelData = _imageData.begin() + BMP_HEADER_SIZE;
 	const Uint32 expectedSize = CalculateBMPFileSize(_resolution, 32, false);
@@ -82,11 +79,6 @@ void ClientStreamWindow::ImageBuilder() {
 		}
 		if (!Packet::VerifyPacket(*p) || size + offset > expectedSize) {
 			offset = 0;
-			std::string lineToLog = "Header Size: " + std::to_string(header.Size()) + "\n";
-			lineToLog += "Actual Size: " + std::to_string(imageFragment.size() + PACKET_HEADER_SIZE) + "\n";
-			lineToLog += "Dump:\n" + (std::string)header + "\n";
-
-			log.WriteLine(lineToLog);
 			continue; 
 		}
 		std::copy(imageFragment.begin(), imageFragment.begin() + size, pixelData + offset);
@@ -97,7 +89,6 @@ void ClientStreamWindow::ImageBuilder() {
 
 void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 	_render = true;
-	//_timer.Start(1000 / _targetFPS);
 	wxWakeUpIdle();
 }
 

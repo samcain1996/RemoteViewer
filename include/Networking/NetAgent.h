@@ -29,7 +29,8 @@ protected:
 
 
 	constexpr const static HANDSHAKE_MESSAGE_T WIN_HANDSHAKE = { 'W', 'I', 'N', '!' };
-	constexpr const static HANDSHAKE_MESSAGE_T OTHER_HANDSHAKE = { 'N', 'O', 'T', '!' };
+	constexpr const static HANDSHAKE_MESSAGE_T MAC_HANDSHAKE = { 'M', 'A', 'C', '!' };
+	constexpr const static HANDSHAKE_MESSAGE_T LIN_HANDSHAKE = { 'L', 'N', 'X', '!' };
 
 #if defined(_WIN32)
 	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
@@ -44,7 +45,7 @@ protected:
 	static std::mt19937 randomGenerator;
 
 	bool _connected = false;
-
+	OPERATING_SYSTEM _connectedOS = OPERATING_SYSTEM::NA;
 	std::chrono::seconds _timeout;
 
 	boost::asio::io_context _io_context;  // Used for I/O
@@ -58,7 +59,7 @@ protected:
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
-	virtual void Handshake() = 0;
+	virtual void Handshake();
 	bool IsDisconnectMsg() const;
 
 	virtual void Receive() = 0;
@@ -70,6 +71,7 @@ public:
 	void Disconnect();
 
 	bool Connected() const;
+	OPERATING_SYSTEM ConnectedOS() const;
 
 	static bool port_in_use(unsigned short port) {
 		using namespace boost::asio;

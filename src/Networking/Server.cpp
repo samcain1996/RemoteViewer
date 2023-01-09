@@ -10,10 +10,10 @@ void Server::Handshake() {
         [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
 
             if (!ec) {
+
                 _socket.receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()), 0, _errcode);
 
-                _connected = std::memcmp(_tmpBuffer.data(), OTHER_HANDSHAKE.data(), OTHER_HANDSHAKE.size()) == 0 ||
-                    std::memcmp(_tmpBuffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
+                NetAgent::Handshake();
             }
         }
     );
