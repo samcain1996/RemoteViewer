@@ -16,23 +16,23 @@ bool NetAgent::IsDisconnectMsg() const {
 
 void NetAgent::Disconnect() {
     _connected = false;
-    _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
-    _socket.cancel();
+    if (_socket.is_open()) {
+        _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
+        _socket.cancel();
+    }
     //_socket.close();
 }
 
 PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& packetType)
 {
-    PacketList packets;  // List to hold all packets needed to create message
-
     Uint32 group = randomGenerator();
 
     // Calculate the number of packets that will
     // need to be send in order to send entire message
     Uint32 numberOfPackets = (Uint32)std::ceil(
-        ((float)data.size() / MAX_PACKET_PAYLOAD_SIZE));
+        ((double)data.size() / MAX_PACKET_PAYLOAD_SIZE));
 
-    //packets.reserve(numberOfPackets);
+    PacketList packets(numberOfPackets);
 
     // Break message down into packets
     for (size_t bytesRemaining = data.size(), iteration = 0; bytesRemaining > 0; iteration++) {
@@ -48,8 +48,7 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
         std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
 
         ImagePacketHeader header(group, totalSize, iteration);
-        Packet x(header, payload);
-        packets.push(x);
+        packets[iteration] = Packet(header, payload);
 
         bytesRemaining -= payloadSize;
     }

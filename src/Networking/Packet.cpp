@@ -11,6 +11,8 @@ bool Packet::VerifyPacket(const Packet& packet) {
 	return match;
 }
 
+Packet::Packet() : _header(PacketHeader()), _payload() {}
+
 Packet::Packet(const Packet& other) : _header(other.Header()) {
 
 	_payload = other._payload;

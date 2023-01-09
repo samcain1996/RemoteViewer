@@ -94,7 +94,7 @@ public:
 	/*		2. A header and payload				 */
 	/*											 */
 	/*-------------------------------------------*/
-	Packet() = delete;
+	Packet();
 
 	Packet(const Packet&);
 	Packet(Packet&&) noexcept;
@@ -111,5 +111,5 @@ public:
 
 };
 
-using PacketList = std::queue<Packet>;
+using PacketList = std::vector<Packet>;
 using PacketPtr = std::shared_ptr<Packet>;

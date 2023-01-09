@@ -11,6 +11,7 @@ private:
 
 	// Send a buffer of bytes to the client
 	void Send(PacketList&) override ;
+	void Send2(std::span<Packet>);
 
 	void Receive() override;
 

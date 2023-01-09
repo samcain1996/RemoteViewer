@@ -6,59 +6,53 @@ wxBEGIN_EVENT_TABLE(ServerInitWindow, BaseWindow)
 EVT_BUTTON(30001, ServerInitWindow::StartServer)
 EVT_IDLE(ServerInitWindow::BackgroundTask)
 EVT_KEY_UP(ServerInitWindow::HandleInput)
-EVT_TIMER(-1, ServerInitWindow::OnTick)
+EVT_TIMER(9123, ServerInitWindow::OnTick)
 wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) :
-	BaseWindow("Server Initialization", pos, size) {
-	_portTb = new wxTextCtrl(this, 30002, "20009", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
+	BaseWindow("Server Initialization", pos, size), _timer(this, 9123) {
 
 	_startServerButton = new wxButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
-	_timer = new wxTimer();
+
 }
 
-ServerInitWindow::~ServerInitWindow() {
-	delete _timer;
+ServerInitWindow::~ServerInitWindow() {}
+
+void ServerInitWindow::CleanUp() {
+	_timer.Stop();
+	SetSize(DEFAULT_SIZE);
+	if (_listenThr.joinable()) { _listenThr.join(); }
+	if (_server.get() != nullptr) { _server->Disconnect(); _server.reset(nullptr); }
 }
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
-	const int listenPort = std::stoi(_portTb->GetValue().ToStdString());
 
-	_server = std::make_unique<Server>(listenPort, std::chrono::seconds(10));
+	while (NetAgent::port_in_use(portToTry)) { portToTry++; }
 
-	std::string message("Listening on port " + std::to_string(listenPort));
-	_popup = std::make_unique<PopUp>(this, message);
+	_server = std::make_unique<Server>(portToTry, std::chrono::seconds(10));
+	_popup = std::make_unique<PopUp>(this, "Listening on port " + std::to_string(portToTry));
 	_popup->Popup();
 
-	_init = true;
+	_listenThr = std::thread([this]() { _server->Listen(); reinit = true; });  // Race condition if reinit modifies after object deletion?
+	_listenThr.detach();
 
+	_init = true;
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	if (!_init) { return; }
+	if (_init && reinit) {
+		reinit = false;
+		_popup.reset(nullptr);
 
-	if (!_server->Connected()) {
-
-		_server->Listen();
-
-		if (!_server->Connected()) {
-
-			GoBack();
+		if (_server->Connected()) {
+			SetSize({ 100, 100 });
+			_timer.Start(1000 / _targetFPS);
 		}
-
-		else {
-			SetSize({100, 100});
-			_timer->SetOwner(this);
-			_timer->Start(1000 / _targetFPS);
-		}
-
 	}
-	if (!_server->Serve()) { SetSize(DEFAULT_SIZE); GoBack(); }
 }
 
 void ServerInitWindow::OnTick(wxTimerEvent& timerEvent) {
 	wxWakeUpIdle();
-
-	_timer->Start(1000 / _targetFPS);
+	if (!_server->Serve()) { GoBack(); }
 }

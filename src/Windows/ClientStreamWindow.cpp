@@ -9,7 +9,7 @@ EVT_KEY_UP(ClientStreamWindow::HandleInput)
 EVT_TIMER(1234, ClientStreamWindow::OnTick)
 wxEND_EVENT_TABLE()
 
-ClientStreamWindow::ClientStreamWindow(const std::string& ip, const Ushort localPort,
+ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
@@ -97,7 +97,7 @@ void ClientStreamWindow::ImageBuilder() {
 
 void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 	_render = true;
-	_timer.Start(1000 / _targetFPS);
+	//_timer.Start(1000 / _targetFPS);
 	wxWakeUpIdle();
 }
 

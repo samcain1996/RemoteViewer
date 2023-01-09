@@ -36,6 +36,7 @@ void Server::Listen() {
 
 bool Server::Serve() {
 
+    if (!_connected) { return false; }
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
     Send(packets);
@@ -64,7 +65,7 @@ void Server::Send(PacketList& packets) {
         }
 
         else {
-            packets.pop();
+            packets.erase(packets.begin());
             Send(packets);
         }
 

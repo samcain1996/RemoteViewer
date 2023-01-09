@@ -14,6 +14,9 @@ BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize
 }
 
 BaseWindow::~BaseWindow() {
+
+	CleanUp();
+
 	std::for_each(_windowElements.begin(), _windowElements.end(), [](wxControl* element) {
 		delete element;
 		});
@@ -22,34 +25,50 @@ BaseWindow::~BaseWindow() {
 	
 }
 
-void BaseWindow::GoBack() {
-
-	// Return to the previous window
-	// MEMORY LEAK?? I don't see how this wouldn't cause one...
+BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName) {
 	
-	if (_prevWindows.empty()) { wxExit(); return; }
-	 
-	BaseWindow* previousWindow = nullptr;
+	BaseWindow* newWindow = nullptr;
 
-	switch (_prevWindows.top()) {
+	switch (windowName) {
 
 	case WindowNames::StartUp:
-		previousWindow = new StartUpWindow(GetPosition(), GetSize());
+		newWindow = new StartUpWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::ClientInit:
-		previousWindow = new ClientInitWindow(GetPosition(), GetSize());
+		newWindow = new ClientInitWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::ServerInit:
-		previousWindow = new ServerInitWindow(GetPosition(), GetSize());
+		newWindow = new ServerInitWindow(GetPosition(), GetSize());
 		break;
 	case WindowNames::UNDEFINED:
 	default:
-		previousWindow = new StartUpWindow(GetPosition(), GetSize());
+		newWindow = new StartUpWindow(GetPosition(), GetSize());
 	}
+
+	return newWindow;
+}
+
+void BaseWindow::OpenWindow(const WindowNames windowName) {
+
+	_prevWindows.push(WindowName());
+
+	SpawnWindow(windowName);
+
+	Close(true);
+}
+
+void BaseWindow::GoBack() {
+
+	CleanUp();
+	// Return to the previous window
+	if (_prevWindows.empty()) { wxExit(); return; }
+	 
+	SpawnWindow(_prevWindows.top());
 
 	_prevWindows.pop();
 
 	Close(true);
+
 }
 
 void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
@@ -89,25 +108,18 @@ StartUpWindow::StartUpWindow(const wxPoint& pos, const wxSize& size) : BaseWindo
 
 	_windowElements.emplace_back(_clientButton);
 	_windowElements.emplace_back(_serverButton);
+
+	CenterElements(_windowElements);
 }
 
 StartUpWindow::~StartUpWindow() {}
 
 void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
-
-	_prevWindows.emplace(WindowName());
-
-	ClientInitWindow* clientWindow = new ClientInitWindow(GetPosition(), GetSize());
-
-	Close(true);
+	OpenWindow(WindowNames::ClientInit);
 }
 
 void StartUpWindow::ServerButtonClick(wxCommandEvent& evt) {
-	_prevWindows.emplace(WindowName());
-
-	ServerInitWindow* serverWindow = new ServerInitWindow(GetPosition(), GetSize());
-
-	Close(true);
+	OpenWindow(WindowNames::ServerInit);
 }
 
 
@@ -123,12 +135,10 @@ ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : Bas
 
 	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
 	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
-	_localPortInput = new wxTextCtrl(this, 20003, "10009", wxPoint(100, 550), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
 	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
 
 	_windowElements.emplace_back(_remotePortInput);
-	_windowElements.emplace_back(_localPortInput);
 	_windowElements.emplace_back(_ipInput);
 	_windowElements.emplace_back(_connectButton);
 }
@@ -140,9 +150,8 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
 	
 	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
-	const int localPort  = std::stoi(_localPortInput->GetValue().ToStdString());
 
-	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, localPort, remotePort, GetPosition(), GetSize());
+	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, remotePort, GetPosition(), GetSize());
 	
 	Close(true);
 }

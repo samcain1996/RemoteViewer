@@ -13,6 +13,7 @@ using std::chrono::steady_clock;
 constexpr const int HANDSHAKE_SIZE = 4;
 using HANDSHAKE_MESSAGE_T = std::array<MyByte, HANDSHAKE_SIZE>;
 
+
 class NetAgent {
 
 protected:
@@ -69,6 +70,19 @@ public:
 	void Disconnect();
 
 	bool Connected() const;
+
+	static bool port_in_use(unsigned short port) {
+		using namespace boost::asio;
+		using ip::tcp;
+
+		io_service svc;
+		tcp::acceptor a(svc);
+
+		boost::system::error_code ec;
+		a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), port }, ec);
+
+		return ec == error::address_in_use;
+	}
 
 	virtual ~NetAgent() = default;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseWindow.h"
+#include "Windows/BaseWindow.h"
 
 #include "Messageable.h"
 
@@ -40,7 +40,6 @@ class ClientInitWindow : public BaseWindow {
 private:
 
 	wxTextCtrl* _remotePortInput;
-	wxTextCtrl* _localPortInput;
 	wxTextCtrl* _ipInput;
 	wxButton* _connectButton;
 
@@ -92,7 +91,7 @@ private:
 
 
 public:
-	ClientStreamWindow(const std::string& ip, const Ushort localPort, const Ushort remotePort,
+	ClientStreamWindow(const std::string& ip, const Ushort remotePort,
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 
@@ -102,7 +101,7 @@ public:
 	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
-	void ImageBuilder();  // Assemble image from packet queue, return true if successful
+	void ImageBuilder();  // Assemble image from packet queue
 	
 	void OnPaint(wxPaintEvent& evt);
 	void Resize(const Resolution& resolution);
@@ -123,12 +122,16 @@ public:
 class ServerInitWindow : public BaseWindow {
 
 private:
-	wxTextCtrl* _portTb;
+
+	bool reinit = false;
+	Ushort portToTry = 20000;
+
 	wxButton* _startServerButton;
+	wxTimer _timer;
+	std::thread _listenThr;
 
 	std::unique_ptr<Server> _server = nullptr;
 	
-	wxTimer* _timer;
 	const int _targetFPS = 30;
 
 public:
@@ -143,6 +146,8 @@ public:
 	
 	void StartServer(wxCommandEvent& evt);
 	void BackgroundTask(wxIdleEvent& evt);	
+
+	void CleanUp() override;
 
 	void OnTick(wxTimerEvent& timerEvent);
 	
