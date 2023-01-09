@@ -1,9 +1,14 @@
 #!/bin/sh
 
-project_directory=${1}
+starting_dir=`pwd`
+
+cd ${1}
 
 # Build wxWidgets on mac
 mkdir build-macOS
 cd build-macOS
 ../configure --enable-debug
+make
+
+cd ${starting_dir}
 make

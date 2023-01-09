@@ -1,4 +1,3 @@
-#pragma once
 #include "Logger/Logger.h"
 
 NullableLoggette Logger::getLog(const std::string& name) {

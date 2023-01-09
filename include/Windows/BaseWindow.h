@@ -40,16 +40,7 @@ protected:
 
 	static string GetAssetPath(Asset asset) {
 
-		static const auto GetAssetDirectory = []() {
-			ifstream asset_file("asset_dir.txt");
-
-			string directory = "";
-			asset_file >> directory;
-
-			return directory;
-		};
-
-		static const string AssetDirectory = GetAssetDirectory();
+		static const string AssetDirectory = "assets";
 
 		switch (asset) {
 		case Asset::ICON:

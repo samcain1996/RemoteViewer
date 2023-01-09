@@ -15,9 +15,10 @@ This application relies on:
 
 # Set-up / Installation
 ## Run the following commands in the console from the root folder
-1. Download dependencies 
-  * `chmod +x setup/download_dependencies`
-  * `setup/download_dependencies .`
+1. Build RemoteViewer, navigate back to the root directory of RemoteViewer
+  * `mkdir build`
+  * `cd build`
+  * `cmake ../`
 
 2. Build wxWidgets (windowing system) `cd wxWidgets`
   * Windows:
@@ -30,22 +31,10 @@ This application relies on:
     1. `chmod +x ../setup/build_dependencies_mac ../`
     2. `../setup/build_dependencies_mac ../`
     3. `cd ../`
-  * Linux:
-    1. `mkdir buildgtk`
-    2. `cd buildgtk`
-    3. `../configure --with-gtk`
-    4. `make`
-    5. `sudo make install`
-    6. `sudo ldconfig`
-    7. `cp wx-config ../../`
-    8. `cd ../../`
 
-3. Build RemoteViewer, navigate back to the root directory of RemoteViewer
-  * `mkdir build`
-  * `cd build`
-  * `cmake ../`
-  * (if Linux or macOS ONLY) `make`
-      (if Windows ONLY) Run `explorer .` and open RemoteViewer.sln
+
+3. (if Linux or macOS ONLY) `make`
+   (if Windows ONLY) Run `explorer .` and open RemoteViewer.sln
       * Under the 'Solution Explorer' on the right hand side, 
         right-click RemoteViewer and select 'Set as Startup Project'
       * Run
