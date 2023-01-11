@@ -34,8 +34,7 @@ void ClientStreamWindow::OnConnect() {
 
 	_clientThr = std::thread(&Client::Start, _client);
 
-	const BmpFileHeader header = ConstructBMPHeader(ScreenCapture::DefaultResolution,
-		32, _client->ConnectedOS() != OS);
+	const BmpFileHeader header = ConstructBMPHeader();
 	std::copy(header.begin(), header.end(), _imageData.begin());
 
 	_init = true;
