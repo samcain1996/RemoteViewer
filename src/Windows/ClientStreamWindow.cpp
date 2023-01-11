@@ -18,14 +18,12 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	_popup->Popup();
 
 	_client = std::make_shared<Client>(ip);
-	std::thread([this, remotePort]
-		{
-			Ushort port = remotePort == 0 ? _client->portToTry : remotePort;
-			Action onConnect = std::bind(&ClientStreamWindow::OnConnect, this);
+	Ushort port = remotePort == 0 ? _client->portToTry : remotePort;
+	std::thread([this, port](ClientStreamWindow* caller) mutable {
 			while (!_client->Connected()) {
-				_client->Connect(port++, onConnect);
+				_client->Connect(port++, std::bind(&ClientStreamWindow::OnConnect, caller));
 			}
-		}).detach();
+		}, this).detach();
 
 }
 

@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <boost/container/static_vector.hpp>
 #include "Types.h"
-#include "Capture.h"
+#include "QuickShot/Capture.h"
 
 // Defines related to packets
 
