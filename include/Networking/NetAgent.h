@@ -34,8 +34,10 @@ protected:
 
 #if defined(_WIN32)
 	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = WIN_HANDSHAKE;
-#else
-	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = OTHER_HANDSHAKE;
+#elif defined(__APPLE__)
+	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = MAC_HANDSHAKE;
+#else 
+	constexpr const static HANDSHAKE_MESSAGE_T& HANDSHAKE_MESSAGE = LIN_HANDSHAKE;
 #endif
 
 	constexpr const static HANDSHAKE_MESSAGE_T DISCONNECT_MESSAGE = { 'B', 'Y', 'E', '!' };

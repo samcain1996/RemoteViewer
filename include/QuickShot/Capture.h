@@ -121,7 +121,7 @@ constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = Screen
 
     const int filesize = BMP_HEADER_SIZE + CalculateBMPFileSize(resolution, bitsPerPixel, false);
 
-    const short OS_MODIFIER = upsideDown ? -1 : 1;
+    const short OS_MODIFIER = upsideDown ? 1 : -1;
 
     BmpFileHeader header = BaseHeader();
 
@@ -138,7 +138,7 @@ constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = Screen
     // Encode pixels high
     EncodeAsByte(ByteSpan(heightIter, sizeof(resolution.height)), OS_MODIFIER * resolution.height);
     std::for_each(heightIter, heightIter + sizeof(resolution.height),
-        [upsideDown](MyByte& b) { if (b == '\0' && !upsideDown) { b = (MyByte)MAX_MYBYTE_VAL; } });
+        [upsideDown](MyByte& b) { if (b == '\0' && upsideDown) { b = (MyByte)MAX_MYBYTE_VAL; } });
     header[BMP_HEADER_BPP_OFFSET] = bitsPerPixel;
 
     return header;
