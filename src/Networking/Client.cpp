@@ -7,10 +7,14 @@ Client::Client(const std::string& hostname, const std::chrono::seconds& timeout)
 const void Client::Connect(const Ushort port, const std::function<void()>& onConnect) {
 
     try {
-        _socket.connect(tcp::endpoint(boost::asio::ip::address::from_string(_hostname), port));
+        tcp::endpoint endpoint(boost::asio::ip::address::from_string(_hostname), port);
+        _socket.connect(endpoint);
     }
     catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
+
+        _io_context.reset();
+        _socket = tcp::socket(_io_context);
         return;
     }
 

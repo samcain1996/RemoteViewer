@@ -136,10 +136,9 @@ constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = Screen
     EncodeAsByte(ByteSpan(widthIter, sizeof(resolution.width)), resolution.width);
 
     // Encode pixels high
-    std::for_each(heightIter, heightIter + sizeof(resolution.height),
-        [isWindows](MyByte& b) { if (b == '\0' && !isWindows) { b = (MyByte)MAX_MYBYTE_VAL; } });
     EncodeAsByte(ByteSpan(heightIter, sizeof(resolution.height)), OS_MODIFIER * resolution.height);
-
+    //std::for_each(heightIter, heightIter + sizeof(resolution.height),
+    //    [isWindows](MyByte& b) { if (b == '\0' && !isWindows) { b = (MyByte)MAX_MYBYTE_VAL; } });
     header[BMP_HEADER_BPP_OFFSET] = bitsPerPixel;
 
     return header;

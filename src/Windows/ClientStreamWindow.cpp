@@ -19,11 +19,11 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 
 	_client = std::make_shared<Client>(ip);
 	Ushort port = remotePort == 0 ? _client->portToTry : remotePort;
-	std::thread([this, port](ClientStreamWindow* caller) mutable {
+	std::thread([this, port]() mutable {
 			while (!_client->Connected()) {
-				_client->Connect(port++, std::bind(&ClientStreamWindow::OnConnect, caller));
+				_client->Connect(port++, std::bind(&ClientStreamWindow::OnConnect, this));
 			}
-		}, this).detach();
+		}).detach();
 
 }
 
@@ -35,7 +35,7 @@ void ClientStreamWindow::OnConnect() {
 	_clientThr = std::thread(&Client::Start, _client);
 
 	const BmpFileHeader header = ConstructBMPHeader(ScreenCapture::DefaultResolution,
-		32, _client->ConnectedOS() == OPERATING_SYSTEM::WINDOWS);
+		32, true/*_client->ConnectedOS() == OPERATING_SYSTEM::WINDOWS*/);
 	std::copy(header.begin(), header.end(), _imageData.begin());
 
 	_init = true;
