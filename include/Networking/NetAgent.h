@@ -67,7 +67,7 @@ protected:
 	// virtual void ProcessPacket(const Packet& packet) = 0;
 
 public:
-
+	static inline Ushort portToTry = 20000;
 	void Disconnect();
 
 	bool Connected() const;

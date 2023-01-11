@@ -72,7 +72,7 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPtr> {
 	MessageReader<PacketPtr>*& groupReader = msgReader;  // Queue of packets that can create a complete image
 	
 private:
-	
+	Ushort port;
 	PixelData _imageData{};
 	Resolution _resolution = ScreenCapture::DefaultResolution;
 
@@ -87,6 +87,7 @@ private:
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;
+	std::function<void()> myFunc;
 	MessageReader<PacketPtr>*& packetReader = msgReader;
 
 
@@ -105,6 +106,7 @@ public:
 	
 	void OnPaint(wxPaintEvent& evt);
 	void Resize(const Resolution& resolution);
+	void OnConnect();
 	
 	void PaintNow();
 	void BackgroundTask(wxIdleEvent& evt);
@@ -123,12 +125,10 @@ class ServerInitWindow : public BaseWindow {
 
 private:
 
-	bool reinit = false;
-	Ushort portToTry = 20000;
+	bool doneListening = false;
 
 	wxButton* _startServerButton;
 	wxTimer _timer;
-	std::thread _listenThr;
 
 	std::unique_ptr<Server> _server = nullptr;
 	

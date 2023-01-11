@@ -134,7 +134,7 @@ wxEND_EVENT_TABLE()
 ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
 
 	_ipInput = new wxTextCtrl(this, 20001, "192.168.50.160", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
-	_remotePortInput = new wxTextCtrl(this, 20002, "20009", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
+	_remotePortInput = new wxTextCtrl(this, 20002, "0", wxPoint(100, 400), wxSize(200, 50), 0L, PORT_VALIDATOR);
 	
 	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
 
@@ -148,10 +148,9 @@ ClientInitWindow::~ClientInitWindow() {}
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
-	
-	const int remotePort = std::stoi(_remotePortInput->GetValue().ToStdString());
+	const std::string port = _remotePortInput->GetValue().ToStdString();
 
-	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, remotePort, GetPosition(), GetSize());
+	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, std::stoi(port), GetPosition(), GetSize());
 	
 	Close(true);
 }

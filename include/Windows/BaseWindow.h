@@ -157,6 +157,7 @@ public:
 
 	void OnButton(wxCommandEvent& evt);
 	void OnDismiss() override;
+	void SetText(const std::string& text) {_text = new wxStaticText(this, wxID_ANY, text, wxPoint(0, 0)); }
 
 private:
 	static const inline wxSize POPUP_SIZE = wxSize(300, 200);

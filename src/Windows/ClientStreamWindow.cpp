@@ -13,28 +13,34 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
-	std::string message("Connecting to " + ip + ":" + std::to_string(remotePort));
+	std::string message("Connecting to " + ip);
 	_popup = std::make_unique<PopUp>(this, message);
 	_popup->Popup();
 
 	_client = std::make_shared<Client>(ip);
+	std::thread([this, remotePort]
+		{
+			Ushort port = remotePort == 0 ? _client->portToTry : remotePort;
+			Action onConnect = std::bind(&ClientStreamWindow::OnConnect, this);
+			while (!_client->Connected()) {
+				_client->Connect(port++, onConnect);
+			}
+		}).detach();
 
-	_client->Connect(remotePort, [this]() {
+}
 
-		_popup->Dismiss();
+void ClientStreamWindow::OnConnect() {
+	_popup->Dismiss();
 
-		ConnectMessageables(*this, *_client);
+	ConnectMessageables(*this, *_client);
 
-		_clientThr = std::thread(&Client::Start, _client);
-		_timer.Start(1000 / _targetFPS);
+	_clientThr = std::thread(&Client::Start, _client);
 
-		const BmpFileHeader header = ConstructBMPHeader();
-		std::copy(header.begin(), header.end(), _imageData.begin());
+	const BmpFileHeader header = ConstructBMPHeader(ScreenCapture::DefaultResolution,
+		32, _client->ConnectedOS() == OPERATING_SYSTEM::WINDOWS);
+	std::copy(header.begin(), header.end(), _imageData.begin());
 
-		_init = true;
-
-		});
-
+	_init = true;
 }
 
 ClientStreamWindow::~ClientStreamWindow() {
@@ -61,11 +67,11 @@ void ClientStreamWindow::ImageBuilder() {
 	// Check  if there is a complete image
 	while (!packetReader->Empty() && _client->Connected()) {
 
-		std::shared_ptr<Packet> p = packetReader->ReadMessage();
-		const ImagePacketHeader& header = p->Header();
-		const PacketPayload& imageFragment = p->Payload();
+		const PacketPtr packet = packetReader->ReadMessage();
+		const ImagePacketHeader& header = packet->Header();
+		const PacketPayload& imageFragment = packet->Payload();
 
-		const auto& size = header.Size() - PACKET_HEADER_SIZE;
+		const auto size = header.Size() - PACKET_HEADER_SIZE;
 
 		if (header.Type() == PacketType::Image) {
 
@@ -77,7 +83,7 @@ void ClientStreamWindow::ImageBuilder() {
 			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
 			
 		}
-		if (!Packet::VerifyPacket(*p) || size + offset > expectedSize) {
+		if (!Packet::VerifyPacket(*packet) || size + offset > expectedSize) {
 			offset = 0;
 			continue; 
 		}
@@ -117,8 +123,9 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_init) { return; }
+	else if (!_timer.IsRunning()) { _timer.Start(1000 / _targetFPS); }
 
-	if (_client->Connected()) {
+	else if (_client->Connected()) {
 		
 		if (_render) {
 			PaintNow();
@@ -129,7 +136,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	else if (_clientThr.joinable()) {
 		_clientThr.join();
-		_popup = std::make_unique<PopUp>(this, "Disconnected from server!", [this]() { GoBack(); });
+		_popup = std::make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();
 		
 	}

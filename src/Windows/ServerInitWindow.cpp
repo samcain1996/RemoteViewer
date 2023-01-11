@@ -21,33 +21,36 @@ ServerInitWindow::~ServerInitWindow() {}
 void ServerInitWindow::CleanUp() {
 	_timer.Stop();
 	SetSize(DEFAULT_SIZE);
-	if (_listenThr.joinable()) { _listenThr.join(); }
-	if (_server.get() != nullptr) { _server->Disconnect(); _server.reset(nullptr); }
+	if (_init) { _server->Disconnect(); _server.reset(nullptr); }
 }
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
-	while (NetAgent::port_in_use(portToTry)) { portToTry++; }
+	int port = NetAgent::portToTry;
+	while (NetAgent::port_in_use(port)) { port; }
 
-	_server = std::make_unique<Server>(portToTry, std::chrono::seconds(10));
-	_popup = std::make_unique<PopUp>(this, "Listening on port " + std::to_string(portToTry));
+	_server = std::make_unique<Server>(20003, std::chrono::seconds(10));
+	_popup = std::make_unique<PopUp>(this, "Listening on port " + std::to_string(port));
 	_popup->Popup();
 
-	_listenThr = std::thread([this]() { _server->Listen(); reinit = true; });  // Race condition if reinit modifies after object deletion?
-	_listenThr.detach();
+	std::thread([this] { _server->Listen(); doneListening = true; }).detach();  // Race condition if reinit modifies after object deletion?
 
 	_init = true;
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	if (_init && reinit) {
-		reinit = false;
+	if (_init && doneListening) {
+		doneListening = false;
 		_popup.reset(nullptr);
 
-		if (_server->Connected()) {
+		if  (_server->Connected()) {
 			SetSize({ 100, 100 });
 			_timer.Start(1000 / _targetFPS);
+		}
+		else { 
+			_init = false; 
+			_server.reset(nullptr);
 		}
 	}
 }
