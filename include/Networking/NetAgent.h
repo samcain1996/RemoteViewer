@@ -57,11 +57,14 @@ protected:
 	boost::system::error_code _errcode;
 
 	PacketBuffer _tmpBuffer {}; // Temporary buffer for receiving/sending packets
+	PacketBuffer _other{};
+	int offset = 0;
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
 	virtual void Handshake();
+	virtual 
 	bool IsDisconnectMsg() const;
 
 	virtual void Receive() = 0;

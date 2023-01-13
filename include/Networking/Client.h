@@ -4,7 +4,7 @@
 class Client : public NetAgent, public Messageable<PacketPtr> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
-
+	bool thing = false;
 	MessageWriter<PacketPtr>*& groupWriter = msgWriter;
 
 	/**
@@ -45,6 +45,7 @@ public:
 	 */
 	void Receive() override;
 	void Start();
+	void Process(const PacketBuffer& buf, int size);
 
 	void Send(PacketList& data) override;
 };

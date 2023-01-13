@@ -7,7 +7,7 @@ Application::Application() {}
 Application::~Application() {}
 
 bool Application::OnInit() {
-
+	Logger::newStream("global.log", std::ios_base::binary);
 	ScreenCapture::CalibrateResolution();
 	wxInitAllImageHandlers();
 

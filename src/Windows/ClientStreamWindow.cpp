@@ -73,19 +73,19 @@ void ClientStreamWindow::ImageBuilder() {
 		if (header.Type() == PacketType::Image) {
 
 			// New image
-			if (group != header.Group()) {
-				group = header.Group();
-				offset = 0;
-			}
+			//if (group != header.Group()) {
+			//	group = header.Group();
+			//	offset = 0;
+			//}
 			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
 			
 		}
 		if (!Packet::VerifyPacket(*packet) || size + offset > expectedSize) {
-			offset = 0;
+			//Logger::LogLine("global.log", (char*)packet->RawData().data());
 			continue; 
 		}
 		std::copy(imageFragment.begin(), imageFragment.begin() + size, pixelData + offset);
-		
+		if (offset + size == expectedSize) { return; }
 	}
 
 }
