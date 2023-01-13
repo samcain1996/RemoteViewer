@@ -80,12 +80,11 @@ void ClientStreamWindow::ImageBuilder() {
 			offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
 			
 		}
-		if (!Packet::VerifyPacket(*packet) || size + offset > expectedSize) {
+		if (size + offset > expectedSize) {
 			//Logger::LogLine("global.log", (char*)packet->RawData().data());
 			continue; 
 		}
 		std::copy(imageFragment.begin(), imageFragment.begin() + size, pixelData + offset);
-		if (offset + size == expectedSize) { return; }
 	}
 
 }

@@ -83,7 +83,7 @@ private:
 
 	int group = 0;
 
-	const int _targetFPS = 30;
+	const int _targetFPS = 60;
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;
@@ -132,7 +132,7 @@ private:
 
 	std::unique_ptr<Server> _server = nullptr;
 	
-	const int _targetFPS = 30;
+	const int _targetFPS = 60;
 
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);

@@ -56,7 +56,7 @@ void Client::Receive() {
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
-                
+
                 Process(_tmpBuffer, bytes_transferred);
                 if (IsDisconnectMsg()) { Disconnect(); }
                 else {
@@ -80,7 +80,7 @@ void Client::Process(const PacketBuffer& buf, int size) {
 
     if (hasHeader && packet.Header().Size() - size == 0) {
         current = std::nullopt;
-        msgWriter->WriteMessage(std::make_shared<Packet>(buf));
+        msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf))));
         return;
     }
 
@@ -101,17 +101,18 @@ void Client::Process(const PacketBuffer& buf, int size) {
                     current.value().first.begin() + current.value().second);
             }
         }
+        return;
     }
-    else {
+
 
         if (hasHeader) {
-            int remaining = packet.Header().Size() - size;
+            int remaining = packet.Header().Size() - size
+;
             if (remaining == 0) { msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf)))); }
             else {
                 current = { buf, packet.Header().Size() };
             }
         }
-    }
 }
 
 Client::~Client() {}
