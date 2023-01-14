@@ -14,7 +14,7 @@ constexpr const Uint32 PACKET_HEADER_SIZE = (PACKET_HEADER_ELEMENT_SIZE * PACKET
 
 constexpr const Uint32 MAX_PACKET_PAYLOAD_SIZE = (MAX_PACKET_SIZE - PACKET_HEADER_SIZE);
 
-constexpr const Uint32 PACKET_ENCODED_OFFSET = 0;
+constexpr const Uint32 PACKET_TYPE_OFFSET = 0;
 constexpr const Uint32 PACKET_GROUP_OFFSET = (PACKET_HEADER_ELEMENT_SIZE);
 constexpr const Uint32 PACKET_SEQUENCE_OFFSET = (PACKET_HEADER_ELEMENT_SIZE * 2);
 constexpr const Uint32 PACKET_PAYLOAD_OFFSET = PACKET_HEADER_SIZE;
@@ -23,6 +23,9 @@ using PacketGroup = Uint32;
 using PacketPayload = boost::container::static_vector<MyByte, MAX_PACKET_PAYLOAD_SIZE>;
 using PacketBuffer = std::array<MyByte, MAX_PACKET_SIZE>;
 using PacketMetadata = std::array<MyByte, PACKET_HEADER_SIZE>;
+
+using TempHeader = std::span<const MyByte>;
+//using ConstTempHeader = std::span<const MyByte>;
 
 enum class PacketType : MyByte {
 	Image = static_cast<MyByte>('I'),
@@ -46,6 +49,14 @@ public:
 
 		}
 	}
+	static inline PacketType GetType(TempHeader header) {
+		switch (header.data()[0]) {
+
+		case 'I': return PacketType::Image;
+		default:  return PacketType::Invalid;
+
+		}
+	}
 	PacketHeader();
 
 protected:
@@ -61,6 +72,8 @@ public:
 	PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata);
 	Uint32 Size() const;
 	Uint32 Group() const;
+	static Uint32 Size(const TempHeader&);
+	static Uint32 Group(const TempHeader&);
 
 	PacketType Type() const;
 	explicit operator std::string() const { return std::string((char*)_metadata.data()); }
@@ -80,7 +93,11 @@ struct ImagePacketHeader : public PacketHeader {
 // Packet of data that can be sent over a socket
 class Packet {
 
+	using PacketPtr = std::shared_ptr<Packet>;
+
 public:
+
+	static PacketPtr VerifyPacket(const PacketBuffer& packet);
 	static bool VerifyPacket(const Packet& packet);
 
 private:

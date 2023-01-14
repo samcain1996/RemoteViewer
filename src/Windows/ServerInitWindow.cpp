@@ -29,7 +29,7 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	int port = NetAgent::portToTry;
 	while (NetAgent::port_in_use(port)) { port++; }
 
-	_server = std::make_unique<Server>(20003, std::chrono::seconds(10));
+	_server = std::make_unique<Server>(20000, std::chrono::seconds(10));
 	_popup = std::make_unique<PopUp>(this, "Listening on port " + std::to_string(port));
 	_popup->Popup();
 

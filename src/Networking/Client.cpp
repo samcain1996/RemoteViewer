@@ -55,13 +55,11 @@ void Client::Receive() {
     _socket.async_receive(boost::asio::buffer(_tmpBuffer),
         [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
         {
-            if (ec.value() == 0 && bytes_transferred > 0 && _connected) {
+            if (ec.value() == 0 && bytes_transferred > 0)  {
 
                 Process(_tmpBuffer, bytes_transferred);
                 if (IsDisconnectMsg()) { Disconnect(); }
-                else {
-                    Receive();
-                }
+                else { Receive(); }
             }
             else {
                 Disconnect();
@@ -73,20 +71,19 @@ void Client::Receive() {
 void Client::Process(const PacketBuffer& buf, int size) {
     static std::optional<std::pair<PacketBuffer, int>> current = std::nullopt;
     
-    const Packet packet(buf);
-    const bool hasHeader = Packet::VerifyPacket(packet);
+    const PacketPtr packet = Packet::VerifyPacket(buf);
 
-    if (size == MAX_PACKET_SIZE && !hasHeader) { return; }
+    if (size == MAX_PACKET_SIZE && packet == nullptr) { return; }
 
-    if (hasHeader && packet.Header().Size() - size == 0) {
+    if (packet != nullptr && packet->Header().Size() - size == 0) {
         current = std::nullopt;
         msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf))));
         return;
     }
 
     if (current.has_value()) {
-        if (hasHeader) {
-            current = { buf, packet.Header().Size() };
+        if (packet != nullptr) {
+            current = { buf, packet->Header().Size() };
         }
         else {
             const Packet& currentPacket = current.value().first;
@@ -105,12 +102,12 @@ void Client::Process(const PacketBuffer& buf, int size) {
     }
 
 
-        if (hasHeader) {
-            int remaining = packet.Header().Size() - size
+        if (packet != nullptr) {
+            int remaining = packet->Header().Size() - size
 ;
             if (remaining == 0) { msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf)))); }
             else {
-                current = { buf, packet.Header().Size() };
+                current = { buf, packet->Header().Size() };
             }
         }
 }

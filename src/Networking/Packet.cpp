@@ -1,14 +1,25 @@
 #include "Networking/Packet.h"
 #include "QuickShot/Capture.h"
 
+PacketPtr Packet::VerifyPacket(const PacketBuffer& packet) {
+	TempHeader header = TempHeader{ packet }.subspan(0, PACKET_HEADER_SIZE);
+
+	bool match = PacketHeader::GetType(header) != PacketType::Invalid;
+	if (match &= PacketHeader::Size(header) <= MAX_PACKET_SIZE) {
+		return std::make_shared<Packet>(packet);
+	}
+	return nullptr;
+}
+
 bool Packet::VerifyPacket(const Packet& packet) {
-	const PacketHeader header = packet.Header();
 
-	bool match = header.Type() != PacketType::Invalid;
-	match &= header.Size() <= MAX_PACKET_SIZE;
-	//match &= packet.Payload().size() == header.Size() - PACKET_HEADER_SIZE;
+	TempHeader header = TempHeader{ packet.RawData() }.subspan(0, PACKET_HEADER_SIZE);
 
-	return match;
+	bool match = PacketHeader::GetType(header) != PacketType::Invalid;
+	
+	if (!(match &= PacketHeader::Size(header) <= MAX_PACKET_SIZE)) { return false; }
+
+	return packet.Payload().size() == PacketHeader::Size(header) - PACKET_HEADER_SIZE;
 }
 
 Packet::Packet() : _header(PacketHeader()), _payload() {}
@@ -22,15 +33,11 @@ Packet::Packet(Packet&& other) noexcept : _header(other.Header()) {
 	_payload = std::move(other._payload);
 }
 
-Packet::Packet(const PacketBuffer& packetData) //:
-	//_header(packetData) 
-{
-	//if (VerifyPacket(packetData)) {
-		//auto end = packetData.begin() + _header.Size();
-		//std::copy(packetData.begin() + PACKET_HEADER_SIZE, end, std::back_inserter(_payload));
-	//}
-	std::memcpy(&_header._metadata[0], packetData.data(), PACKET_HEADER_SIZE);
-	std::copy(packetData.begin() + PACKET_HEADER_SIZE, packetData.end(), std::back_inserter(_payload));
+Packet::Packet(const PacketBuffer& packetData) {
+	std::copy(packetData.begin(), packetData.begin() + PACKET_HEADER_SIZE, _header._metadata.begin());
+
+	auto end = packetData.begin() + _header.Size();
+	std::copy(packetData.begin() + PACKET_HEADER_SIZE, end, std::back_inserter(_payload));
 }
 
 Packet::Packet(const PacketHeader& header, const PacketPayload& payload) {
@@ -78,24 +85,25 @@ Uint32 ImagePacketHeader::Position() const {
 	return DecodeAsByte(&_metadata.data()[POSITION_OFFSET]);
 }
 
-//Uint32 ImagePacketHeader::Size() const {
-//	return PacketHeader::Size();
-//}
-//
-//Uint32 ImagePacketHeader::Group() const {
-//	return PacketHeader::Group();
-//}
-
 Uint32 PacketHeader::Size() const {
-	return DecodeAsByte(&_metadata.data()[SIZE_OFFSET]);
+	return PacketHeader::Size(_metadata);
 }
 
 Uint32 PacketHeader::Group() const {
-	return DecodeAsByte(&_metadata.data()[GROUP_OFFSET]);
+	return PacketHeader::Group(_metadata);
 }
 
+Uint32 PacketHeader::Group(const TempHeader& header) {
+	return DecodeAsByte(&header.data()[GROUP_OFFSET]);
+}
+
+Uint32 PacketHeader::Size(const TempHeader& header) {
+	return DecodeAsByte(&header.data()[SIZE_OFFSET]);
+}
+
+
 PacketType PacketHeader::Type() const {
-	return GetType(*this);
+	return PacketHeader::GetType(_metadata);
 }
 
 PacketHeader::PacketHeader(const PacketBuffer& packetBuffer) {

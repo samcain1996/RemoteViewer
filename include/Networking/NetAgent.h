@@ -64,7 +64,6 @@ protected:
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
 	virtual void Handshake();
-	virtual 
 	bool IsDisconnectMsg() const;
 
 	virtual void Receive() = 0;
