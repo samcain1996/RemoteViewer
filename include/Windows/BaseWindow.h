@@ -8,7 +8,7 @@
 #include "wx/popupwin.h"
 
 #include "QuickShot/Capture.h"
-
+#include <tuple>
 enum class WindowNames {
 	StartUp,
 	ClientInit,
@@ -23,15 +23,78 @@ using std::ios;
 
 using WindowStack = std::stack<WindowNames>;
 using ElementList = std::vector<wxControl*>;
-using SizeAndPos = std::pair<wxPoint, wxSize>;
+using Bounds = std::tuple<int, int, int, int>;
 
 class PopUp;
 using PopUpPtr = std::unique_ptr<PopUp>;
 
+static Bounds GetRelativeBounds(const ElementList& elements) {
+
+	// Element furthest left
+	const auto minX = std::min_element(elements.begin(), elements.end(), [](const auto& element, const auto& other) {
+		return element->GetPosition().x < other->GetPosition().x;
+	});
+
+	// Element furthest up
+	const auto minY = std::min_element(elements.begin(), elements.end(), [](const auto& element, const auto& other) {
+		return element->GetPosition().y < other->GetPosition().y;
+	});
+
+	// Element furthest right
+	const auto maxX = std::max_element(elements.begin(), elements.end(), [](const auto& element, const auto& other) {
+		return element->GetPosition().x + element->GetSize().GetWidth() < other->GetPosition().x + other->GetSize().GetWidth();
+	});
+
+	// Element furthest down
+	const auto maxY = std::max_element(elements.begin(), elements.end(), [](const auto& element, const auto& other) {
+		return element->GetPosition().y + element->GetSize().GetHeight() < other->GetPosition().y + other->GetSize().GetHeight();
+	});
+
+	return Bounds
+	{
+		(*minX)->GetPosition().x,								   // min X
+		(*maxX)->GetPosition().x + (*maxX)->GetSize().GetWidth(),  // max X
+		(*minY)->GetPosition().y,								   // min Y
+		(*maxY)->GetPosition().y + (*maxY)->GetSize().GetHeight() // max Y
+	};
+}
+
+static void CenterElements(ElementList& elements, const wxSize& padding = wxSize(0, 0)) {
+
+	if (elements.empty()) { return; }
+
+	const wxSize PARENT_SIZE = elements.front()->GetParent()->GetSize();
+
+	// Amount of screen covered by elements
+	const auto [left, right, top, bottom] = GetRelativeBounds(elements);
+
+	// Margin between window edges and position of elements
+	const wxPoint OFFSET 
+	{ 
+		( PARENT_SIZE.GetWidth() - (right - left) ) / 2,
+		( PARENT_SIZE.GetHeight() - (bottom - top) ) / 2
+	};
+
+	std::for_each(elements.begin(), elements.end(), [&](auto& element) {
+		
+		const wxPoint RELATIVE_OFFSET
+		{
+			// Distance this element is to the one that is furthest left
+			element->GetPosition().x - left - element->GetSize().GetWidth() / 4,
+
+			// Distance this element is to the one that is furthest up
+			element->GetPosition().y - top - element->GetSize().GetHeight() / 4
+		};
+
+		// Top left corner of this element should be OFFSET + RELATIVE_OFFSET
+		element->SetPosition(OFFSET + RELATIVE_OFFSET);
+
+	});
+}
+
 class BaseWindow : public wxFrame
 {
-
-	BaseWindow* SpawnWindow(const WindowNames windowName);
+	
 
 protected:
 
@@ -40,6 +103,8 @@ protected:
 	enum class Asset {
 		ICON
 	};
+
+	BaseWindow* SpawnWindow(const WindowNames windowName, const std::string& ip = "", const std::string& port = "");
 
 	static string GetAssetPath(Asset asset) {
 
@@ -69,37 +134,7 @@ protected:
 		return GetIcon();
 	}
 
-	static void CenterElements(ElementList& elements) {
-
-		if (elements.empty()) { return; }
-
-		const wxSize parentSize = elements[0]->GetParent()->GetSize();
-
-		const int minX = (*std::min_element(elements.begin(), elements.end(), [](const auto& control, const auto& otherControl) {
-			return control->GetPosition().x < otherControl->GetPosition().x;
-			}))->GetPosition().x;
-		const int minY = (*std::min_element(elements.begin(), elements.end(), [](const auto& control, const auto& otherControl) {
-			return control->GetPosition().y < otherControl->GetPosition().y;
-			}))->GetPosition().y;
-
-		const int maxX = (*std::max_element(elements.begin(), elements.end(), [](const auto& control, const auto& otherControl) {
-			return control->GetPosition().x + control->GetSize().GetWidth() > otherControl->GetPosition().x + otherControl->GetSize().GetWidth();
-			}))->GetPosition().x;
-		const int maxY = (*std::max_element(elements.begin(), elements.end(), [](const auto& control, const auto& otherControl) {
-			return control->GetPosition().y + control->GetSize().GetHeight() > otherControl->GetPosition().y + otherControl->GetSize().GetHeight();
-			}))->GetPosition().y;
-
-		const int targetX = 0.5 * parentSize.GetWidth() - 0.5 * (maxX - minX);
-		const int targetY = 0.5 * parentSize.GetHeight() - 0.5 * (maxY - minY);
-
-		std::for_each(elements.begin(), elements.end(), [=](auto& control) {
-			int diffX = control->GetPosition().x - minX;
-			int diffY = control->GetPosition().y - minY;
-
-			control->Move(targetX - diffX, targetY - diffY);
-			});
-
-	}
+	
 	
 public:
 
@@ -115,6 +150,7 @@ protected:
 	
 	// Previous Windows
 	static inline WindowStack _prevWindows {};
+	static inline const wxSize MINIMIZED_SIZE = wxSize(100, 100);
 	static inline const wxSize DEFAULT_SIZE = wxSize(ScreenCapture::DefaultResolution.width, ScreenCapture::DefaultResolution.height);
 	static inline const wxPoint DEFAULT_POS = wxPoint(ScreenCapture::NativeResolution().width / 2 - DEFAULT_SIZE.GetWidth() / 2,
 		ScreenCapture::NativeResolution().height / 2 - DEFAULT_SIZE.GetHeight() / 2);
@@ -128,7 +164,7 @@ protected:
 	BaseWindow& operator=(const BaseWindow&) = delete;
 	BaseWindow& operator=(BaseWindow&&) = delete;
 
-	// All Window controls on the current window
+	// All Window elements on the current window
 	ElementList _windowElements;
 	const int _windowId = -1;
 
@@ -146,7 +182,7 @@ class PopUp : public wxPopupTransientWindow {
 
 public:
 
-	PopUp(BaseWindow* parent, const std::string& message, Action&& OnClose = []() {});
+	PopUp(BaseWindow* parent, const std::string& message = std::string(), const Action& OnClose = []() {});
 	~PopUp();
 
 	// Delete copy and move constructors and assignment operators
@@ -157,14 +193,15 @@ public:
 
 	void OnButton(wxCommandEvent& evt);
 	void OnDismiss() override;
-	void SetText(const std::string& text) {_text = new wxStaticText(this, wxID_ANY, text, wxPoint(0, 0)); }
+	void SetText(const std::string& text) { _text->Clear(); _text->AppendText(text); };
 
 private:
-	static const inline wxSize POPUP_SIZE = wxSize(300, 200);
+	static const inline wxSize POPUP_SIZE = wxSize(RES_480.width, RES_480.height);
 	
 	Action onClose;
 
-	wxStaticText* _text;
+	//wxStaticText* _text;
+	wxTextCtrl* _text;
 	wxButton* _dismissButton;
 
 	wxDECLARE_ABSTRACT_CLASS(PopUp);

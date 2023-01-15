@@ -26,36 +26,39 @@ void ServerInitWindow::CleanUp() {
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
+	// Find a port to listen on
 	int port = NetAgent::portToTry;
 	while (NetAgent::port_in_use(port)) { port++; }
 
-	_server = std::make_unique<Server>(20000, std::chrono::seconds(10));
-	_popup = std::make_unique<PopUp>(this, "Listening on port " + std::to_string(port));
+	// Start server on port and launch pop-up
+	_server = std::make_unique<Server>(port);
+	_popup->SetText("Listening on port " + std::to_string(port));
 	_popup->Popup();
 
-	std::thread([this] { _server->Listen(); doneListening = true; }).detach();  // Race condition if reinit modifies after object deletion?
+	// Listen on separate thread so window is still responsive
+	std::thread([this] { 
+		_init = false;
+		_server->Listen();
+		_init = true;
+	}).detach();  // Race condition if reinit modifies after object deletion?
 
-	_init = true;
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	if (_init && doneListening) {
-		doneListening = false;
-		_popup.reset(nullptr);
+	if (!_init || _timer.IsRunning()) { return; }
 
-		if  (_server->Connected()) {
-			SetSize({ 100, 100 });
-			_timer.Start(1000 / _targetFPS);
-		}
-		else { 
-			_init = false; 
-			_server.reset(nullptr);
-		}
+	if (_server->Connected()) {
+		SetSize(MINIMIZED_SIZE);
+		_timer.Start(1000 / _targetFPS);
 	}
+	else {
+		_server.reset(nullptr);
+		_init = false;
+	}
+
 }
 
 void ServerInitWindow::OnTick(wxTimerEvent& timerEvent) {
-	wxWakeUpIdle();
 	if (!_server->Serve()) { GoBack(); }
 }

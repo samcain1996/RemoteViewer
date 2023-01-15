@@ -8,7 +8,7 @@ BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize
 	SetIcon(FetchIcon());
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
 
-	_windowElements.clear();
+	_popup = std::make_unique<PopUp>(this);
 
 	Show(show);
 }
@@ -25,8 +25,11 @@ BaseWindow::~BaseWindow() {
 	
 }
 
-BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName) {
-	
+BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName, const std::string& ip,
+	const std::string& port) {
+
+	_prevWindows.push(WindowName());
+
 	BaseWindow* newWindow = nullptr;
 
 	switch (windowName) {
@@ -40,6 +43,9 @@ BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName) {
 	case WindowNames::ServerInit:
 		newWindow = new ServerInitWindow(GetPosition(), GetSize());
 		break;
+	case WindowNames::ClientStream:
+		newWindow = new ClientStreamWindow(ip, std::stoi(port), GetPosition(), GetSize());
+		break;
 	case WindowNames::UNDEFINED:
 	default:
 		newWindow = new StartUpWindow(GetPosition(), GetSize());
@@ -49,8 +55,6 @@ BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName) {
 }
 
 void BaseWindow::OpenWindow(const WindowNames windowName) {
-
-	_prevWindows.push(WindowName());
 
 	SpawnWindow(windowName);
 
@@ -150,8 +154,8 @@ void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
 	const std::string port = _remotePortInput->GetValue().ToStdString();
 
-	ClientStreamWindow* clientStreamWindow = new ClientStreamWindow(ipAddress, std::stoi(port), GetPosition(), GetSize());
-	
+	SpawnWindow(WindowNames::ClientStream, ipAddress, port);
+
 	Close(true);
 }
 /*------------Pop Up------------*/
@@ -162,10 +166,11 @@ wxBEGIN_EVENT_TABLE(PopUp, wxPopupTransientWindow)
 	EVT_BUTTON(90, PopUp::OnButton)
 wxEND_EVENT_TABLE()
 
-PopUp::PopUp(BaseWindow* parent, const std::string& message, Action&& OnClose) : 
+PopUp::PopUp(BaseWindow* parent, const std::string& message, const Action& OnClose) : 
 	wxPopupTransientWindow(parent, wxBORDER_NONE | wxPU_CONTAINS_CONTROLS), onClose(OnClose) {
 
-	_text = new wxStaticText(this, wxID_ANY, message, wxPoint(0, 0));
+	_text = new wxTextCtrl(this, wxID_ANY, message, wxPoint(0, 0), wxSize(300, 50));
+	_text->SetEditable(false);
 	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(0, 100));
 
 	SetClientSize(POPUP_SIZE);
@@ -173,6 +178,8 @@ PopUp::PopUp(BaseWindow* parent, const std::string& message, Action&& OnClose) :
 	const wxPoint centerOfParent = parent->GetPosition() + wxPoint(parent->GetSize().GetWidth() / 2, parent->GetSize().GetHeight() / 2);
 	SetPosition(centerOfParent - wxPoint(GetSize().GetWidth() / 2, GetSize().GetHeight() / 2));
 	
+	_text->SetPosition(_text->GetPosition() + wxPoint(GetSize().GetWidth() / 2 - _text->GetSize().GetWidth() / 2, GetSize().GetHeight() / 2 - _text->GetSize().GetHeight() / 2));
+	_dismissButton->SetPosition(_dismissButton->GetPosition() + wxPoint(GetSize().GetWidth() / 2 - _dismissButton->GetSize().GetWidth() / 2, GetSize().GetHeight() / 2 - _dismissButton->GetSize().GetHeight() / 2));
 }
 
 PopUp::~PopUp() {

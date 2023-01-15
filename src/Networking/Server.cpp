@@ -58,7 +58,7 @@ void Server::Send(PacketList& packets) {
     const auto size = packet.Header().Size();
 
     _socket.async_send(boost::asio::buffer(data, size),
-        [this, &packets](std::error_code error, size_t bytes_transferred) {
+        [this, &packets](std    ::error_code error, size_t bytes_transferred) {
         if (error) {
             std::cerr << "async_write: " << error.message() << std::endl;
             Disconnect();

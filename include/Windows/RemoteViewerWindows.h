@@ -76,7 +76,7 @@ private:
 	PixelData _imageData{};
 	Resolution _resolution = ScreenCapture::DefaultResolution;
 
-	bool _render = false;
+	bool doneConnecting = false;
 	
 	std::shared_ptr<Client> _client;
 	std::thread _clientThr;
@@ -107,6 +107,7 @@ public:
 	void OnPaint(wxPaintEvent& evt);
 	void Resize(const Resolution& resolution);
 	void OnConnect();
+	void CleanUp() override;
 	
 	void PaintNow();
 	void BackgroundTask(wxIdleEvent& evt);
