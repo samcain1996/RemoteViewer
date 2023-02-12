@@ -16,7 +16,6 @@ using boost::asio::io_context;
 
 using std::make_unique;
 
-constexpr const int HANDSHAKE_SIZE = 4;
 constexpr const int IMAGE_THREADS = 1;
 constexpr const int SEND_THREADS = 1;  // KEEP AT 1, WILL BREAK AT ANYTHING ELSE
 
@@ -30,12 +29,14 @@ struct Connection {
 	static constexpr inline Ushort SERVER_BASE_PORT = BASE_PORT + 1000;
 	static constexpr inline Ushort CLIENT_BASE_PORT = BASE_PORT + 2000;
 
-	bool connected = false;
 	seconds timeout { 30 };
-	PacketBuffer buffer {};
-	error_code errorcode {};
+	bool connected = false;
+
 	Ushort remotePort = 0;
-	Ushort localPort = 0;
+	Ushort localPort  = 0;
+
+	PacketBuffer buffer  {};
+	error_code errorcode {};
 
 	IOContPtr pIO_cont;
 	SocketPtr pSocket;

@@ -7,6 +7,8 @@ class Server : public NetAgent {
 
 private:
 
+	static inline NullableLoggette log = Logger::newStream("Server.log").value();
+
 	ScreenCapture _screen;
 
 	void Send(PacketList& packets, ConnectionPtr& pConnection) override;

@@ -120,7 +120,7 @@ static const inline BmpFileHeader ConstructBMPHeader(const Resolution& resolutio
 
     const int filesize = BMP_HEADER_SIZE + CalculateBMPFileSize(resolution, bitsPerPixel);
 
-    const int OS_MODIFIER = OS == OPERATING_SYSTEM::MAC ? 1 : -1;
+    const int OS_MODIFIER = OS == OperatingSystem::MAC ? 1 : -1;
 
     BmpFileHeader header = BaseHeader();
 
@@ -137,7 +137,7 @@ static const inline BmpFileHeader ConstructBMPHeader(const Resolution& resolutio
     // Encode pixels high
     EncodeAsByte(ByteSpan(heightIter, sizeof(resolution.height)), OS_MODIFIER * resolution.height);
 
-    if (OS == OPERATING_SYSTEM::MAC) {  // Window bitmaps are stored upside down
+    if (OS == OperatingSystem::MAC) {  // Window bitmaps are stored upside down
 
         std::for_each(heightIter, heightIter + sizeof(resolution.height),
             [](MyByte& b) { if (b == '\0') { b = (MyByte)MAX_MYBYTE_VAL; } });

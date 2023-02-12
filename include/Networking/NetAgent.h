@@ -3,6 +3,7 @@
 
 #include "Networking/Connection.h"
 
+constexpr const int HANDSHAKE_SIZE = 4;
 using HANDSHAKE_MESSAGE_T = std::array<MyByte, HANDSHAKE_SIZE>;
 
 class NetAgent {
@@ -44,11 +45,13 @@ protected:
 	NetAgent& operator=(const NetAgent&) = delete;
 	NetAgent& operator=(NetAgent&&) = delete;
 
-	OPERATING_SYSTEM _connectedOS = OPERATING_SYSTEM::NA;
+	OperatingSystem _connectedOS = OperatingSystem::NA;
 
 	bool IsDisconnectMsg(const PacketBuffer& pConnection) const;
 
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
+
+	// Authenticates connecting computer
 	virtual void Handshake(ConnectionPtr& pConnection);
 
 	virtual void Receive(ConnectionPtr& pConnection) = 0;

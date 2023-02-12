@@ -3,10 +3,17 @@
 
 class Client : public NetAgent, public Messageable<PacketPtr> {
 private:
-	std::string _hostname{};  // Hostname of computer to connect to
 
-	MessageWriter<PacketPtr>*& groupWriter = msgWriter;
+	static inline Loggette log = Logger::newStream("Client.log").value();
 
+	std::string _hostname {};  // Hostname of computer to connect to
+	MessageWriter<PacketPtr>*& groupWriter = msgWriter;  // Alias for message queue
+
+	/**
+	 * @brief Authenticates connecting computer
+	 *
+	 * @param pConnection 	The connection
+	 */
 	void Handshake(ConnectionPtr& pConnection) override;
 
 public:
@@ -33,7 +40,20 @@ public:
 	const void Connect(const Ushort remotePort, const Action& onConnect);
 
 	void Receive(ConnectionPtr& pConnection) override;
-	void Start(ConnectionPtr& pConnection);
-	void Process(const PacketBuffer& buf, int size);
 	void Send(PacketList& data, ConnectionPtr& pConnection) override;
+
+	/**
+	 * @brief Starts a connection that has already connected
+	 *
+	 * @param pConnection 	The connection
+	 */
+	void Start(ConnectionPtr& pConnection);
+
+	/**
+	 * @brief Starts a connection that has already connected
+	 *
+	 * @param buf 	Buffer holding packet to process
+	 * @param size  The amount of data transfered
+	 */
+	void Process(const PacketBuffer& buf, const int size);
 };

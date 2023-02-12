@@ -27,7 +27,7 @@ static constexpr OPERATING_SYSTEM OS = OPERATING_SYSTEM::MAC;
 static constexpr OPERATING_SYSTEM OS = OPERATING_SYSTEM::LINUX;
 #else
 
-static constexpr OPERATING_SYSTEM OS = OPERATING_SYSTEM::WINDOWS;
+static constexpr OperatingSystem OS = OperatingSystem::WINDOWS;
 
 #endif
 

@@ -9,8 +9,7 @@ Client::Client(const std::string& hostname) {
 
 const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
 
-    const int idx = connections.size() - 1;
-    ConnectionPtr& pConnection = connections[idx];
+    ConnectionPtr& pConnection = connections[connections.size() - 1];
     pConnection->remotePort = remotePort;
 
     try {
@@ -18,11 +17,10 @@ const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
         pConnection->pSocket->connect(endpoint);
     }
     catch (std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        log.WriteLine(e.what());
 
-        pConnection->pIO_cont->reset();
-        pConnection->pSocket.reset(new tcp::socket(*(pConnection->pIO_cont)));
-        return;
+        Logger::closeStream(log.name);
+        std::terminate();
     }
    
     Handshake(pConnection);
@@ -55,9 +53,9 @@ void Client::Handshake(ConnectionPtr& pConnection) {
 void Client::Send(PacketList& data, ConnectionPtr& pConnection) {}
 
 void Client::Start(ConnectionPtr& pConnection) {
-
     Receive(pConnection);
     pConnection->pIO_cont->run();
+
 }
 
 void Client::Receive(ConnectionPtr& pConnection) {
@@ -82,48 +80,45 @@ void Client::Receive(ConnectionPtr& pConnection) {
 }
 
 // TODO: CLEAN THIS UP
-void Client::Process(const PacketBuffer& buf, int size) {
+void Client::Process(const PacketBuffer& buf, const int size) {
     static std::optional<std::pair<PacketBuffer, int>> current = std::nullopt;
     
     const PacketPtr packet = Packet::VerifyPacket(buf);
 
-    if (size == MAX_PACKET_SIZE && packet == nullptr) { return; }
+    if ( packet == nullptr || size > MAX_PACKET_SIZE ) { return; }
 
-    if (packet != nullptr && packet->Header().Size() - size == 0) {
+    // Full Packet
+    if ( packet->Header().Size() - size == 0 ) {
         current = std::nullopt;
         msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf))));
         return;
     }
 
+    // Split Packet
     if (current.has_value()) {
-        if (packet != nullptr) {
-            current = { buf, packet->Header().Size() };
+
+        const Packet& currentPacket = current.value().first;
+        const int remaining = currentPacket.Header().Size() - current.value().second - size;
+
+        if (remaining == 0) { 
+            std::copy(buf.begin(), buf.begin() + size,
+                current.value().first.begin() + current.value().second);
+            msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(current.value().first)))); 
         }
-        else {
-            const Packet& currentPacket = current.value().first;
-            const int remaining = currentPacket.Header().Size() - current.value().second - size;
-            if (remaining == 0) { 
-                std::copy(buf.begin(), buf.begin() + size,
-                    current.value().first.begin() + current.value().second);
-                msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(current.value().first)))); 
-            }
-            else if (remaining > 0) {
-                std::copy(buf.begin(), buf.begin() + size,
-                    current.value().first.begin() + current.value().second);
-            }
+
+        else if (remaining > 0) {
+            std::copy(buf.begin(), buf.begin() + size,
+                current.value().first.begin() + current.value().second);
         }
+
         return;
     }
 
-
-        if (packet != nullptr) {
-            int remaining = packet->Header().Size() - size
-;
-            if (remaining == 0) { msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf)))); }
-            else {
-                current = { buf, packet->Header().Size() };
-            }
-        }
+    int remaining = packet->Header().Size() - size;
+    if (remaining == 0) { msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf)))); }
+    else {
+        current = { buf, packet->Header().Size() };
+    }
 }
 
 Client::~Client() {}

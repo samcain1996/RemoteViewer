@@ -31,7 +31,7 @@ using DWORD = std::uint32_t;
 
 #endif
 
-enum class OPERATING_SYSTEM : char {
+enum class OperatingSystem : char {
     WINDOWS = 'W',
     LINUX = 'L',
     MAC = 'M',

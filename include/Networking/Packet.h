@@ -6,7 +6,7 @@
 
 // Defines related to packets
 
-constexpr const Uint32 MAX_PACKET_SIZE = 1024;
+constexpr const Uint32 MAX_PACKET_SIZE = 4096;
 
 constexpr const Uint32 PACKET_HEADER_COUNT = 3;
 constexpr const Uint32 PACKET_HEADER_ELEMENT_SIZE = 4;

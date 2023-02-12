@@ -18,6 +18,8 @@ bool NetAgent::portAvailable(unsigned short port) {
 
 }
 
+void NetAgent::Receive(ConnectionPtr& pConnection) {}
+
 void NetAgent::Handshake(ConnectionPtr& pConnection) {
 
     // Determine operating system
@@ -25,9 +27,9 @@ void NetAgent::Handshake(ConnectionPtr& pConnection) {
     const bool isLinux   = std::memcmp(pConnection->buffer.data(), LIN_HANDSHAKE.data(), LIN_HANDSHAKE.size()) == 0;
     const bool isWindows = std::memcmp(pConnection->buffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
 
-    if (isMac) { _connectedOS = OPERATING_SYSTEM::MAC; }
-    else if (isLinux) { _connectedOS = OPERATING_SYSTEM::LINUX; }
-    else if (isWindows) { _connectedOS = OPERATING_SYSTEM::WINDOWS; }
+    if (isMac) { _connectedOS = OperatingSystem::MAC; }
+    else if (isLinux) { _connectedOS = OperatingSystem::LINUX; }
+    else if (isWindows) { _connectedOS = OperatingSystem::WINDOWS; }
 
     // Connected if one of the following operating systems was connected to
     pConnection->connected = ( isMac || isLinux || isWindows );
