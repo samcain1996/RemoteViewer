@@ -47,5 +47,5 @@ public:
 	void Start(ConnectionPtr&);
 	void Process(const PacketBuffer& buf, int size);
 
-	void Send(PacketList& data, int) override;
+	void Send(PacketList& data, ConnectionPtr&) override;
 };

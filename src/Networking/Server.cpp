@@ -1,6 +1,6 @@
 #include "Networking/Server.h"
 
-Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) : _screen() {
+Server::Server(const Ushort listenPort) : _screen() {
 
     ConnectionPtr pConnection = make_unique<Connection>(listenPort, true);
     connections.emplace_back(std::move(pConnection));
@@ -50,14 +50,14 @@ bool Server::Serve() {
 
     for (int threadIndex = 0; threadIndex < SEND_THREADS; ++threadIndex) {
 
-        const ConnectionPtr& pConnection = connections[threadIndex];
+        ConnectionPtr& pConnection = connections[threadIndex];
 
         const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
         const auto& end = (threadIndex == SEND_THREADS - 1) ? packets.end() : packets.begin() + (threadIndex * PACKETS_PER_THREAD);
 
         PacketList list(begin, end);
 
-        Send(list, threadIndex);
+        Send(list, pConnection);
 
         pConnection->pIO_cont->run_until(steady_clock::now() + pConnection->timeout);
         pConnection->pIO_cont->restart();
@@ -70,7 +70,7 @@ bool Server::Serve() {
 
 void Server::Receive(ConnectionPtr&) {}
 
-void Server::Send(PacketList& packets, int idx) {
+void Server::Send(PacketList& packets, ConnectionPtr& pConnection) {
 
     if (packets.size() <= 0) { return; }
 
@@ -78,16 +78,16 @@ void Server::Send(PacketList& packets, int idx) {
     const auto data = packet.RawData();
     const auto size = packet.Header().Size();
 
-    connections[idx]->pSocket->async_send(boost::asio::buffer(data, size),
-        [this, &packets, idx](const error_code& error, size_t bytes_transferred) {
+    pConnection->pSocket->async_send(boost::asio::buffer(data, size),
+        [this, &packets, &pConnection](const error_code& error, size_t bytes_transferred) {
         if (error) {
             std::cerr << "async_write: " << error.message() << std::endl;
-            Disconnect(connections[idx]);
+            Disconnect(pConnection);
         }
 
         else {
             packets.erase(packets.begin());
-            Send(packets, idx);
+            Send(packets, pConnection);
         }
 
     });

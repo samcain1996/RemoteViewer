@@ -3,7 +3,7 @@
 Client::Client(const std::string& hostname) {
     _hostname = hostname;
     
-    ConnectionPtr pConnection = make_unique<Connection>(Connection::BASE_PORT + Connection::CLIENT_PORT_OFFSET);
+    ConnectionPtr pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT);
     connections.emplace_back(std::move(pConnection));
 }
 
@@ -52,7 +52,7 @@ void Client::Handshake(ConnectionPtr& pConnection) {
 
 }
 
-void Client::Send(PacketList& data, int idx) {}
+void Client::Send(PacketList& data, ConnectionPtr& pConnection) {}
 
 void Client::Start(ConnectionPtr& pConnection) {
 

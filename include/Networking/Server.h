@@ -10,7 +10,7 @@ private:
 	ScreenCapture _screen;
 
 	// Send a buffer of bytes to the client
-	void Send(PacketList&, int) override;
+	void Send(PacketList&, ConnectionPtr&) override;
 
 	void Receive(ConnectionPtr&) override;
 
@@ -23,7 +23,7 @@ public:
 	Server(const Server&) = delete;
 	Server(Server&&) = delete;
 
-	Server(const Ushort listenPort, const std::chrono::seconds timeout = std::chrono::seconds(30));
+	Server(const Ushort listenPort);
 
 	Server& operator=(const Server&) = delete;
 	Server& operator=(Server&&) = delete;

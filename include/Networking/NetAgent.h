@@ -53,7 +53,7 @@ protected:
 	bool IsDisconnectMsg(const PacketBuffer&) const;
 
 	virtual void Receive(ConnectionPtr&) = 0;
-	virtual void Send(PacketList&, int) = 0;
+	virtual void Send(PacketList&, ConnectionPtr&) = 0;
 
 
 	virtual ~NetAgent() = default;
