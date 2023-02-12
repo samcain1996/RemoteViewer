@@ -4,18 +4,17 @@
 #include "QuickShot/Capture.h"
 
 class Server : public NetAgent {
+
 private:
+
 	ScreenCapture _screen;
-	tcp::acceptor _acceptor;
-	Ushort _localport;
 
 	// Send a buffer of bytes to the client
-	void Send(PacketList&) override ;
-	void Send2(std::span<Packet>);
+	void Send(PacketList&, int) override;
 
-	void Receive() override;
+	void Receive(ConnectionPtr&) override;
 
-	void Handshake() override;
+	void Handshake(ConnectionPtr&) override;
 
 public:
 
@@ -31,7 +30,7 @@ public:
 
 	// Serve content to client
 	bool Serve();
-	void Listen();
+	void Listen(ConnectionPtr&);
 
 	~Server();
 };

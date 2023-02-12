@@ -1,40 +1,43 @@
 #include "Networking/NetAgent.h"
 
-std::random_device NetAgent::rd{};
+std::random_device NetAgent::rd {};
 
 std::mt19937 NetAgent::randomGenerator(rd());
 
-NetAgent::NetAgent(const std::chrono::seconds& timeout) : _socket(_io_context), _timeout(timeout) {
-    std::fill(_tmpBuffer.begin(), _tmpBuffer.end(), '\0');
-}
+NetAgent::NetAgent(const std::chrono::seconds& timeout) {}
 
-bool NetAgent::IsDisconnectMsg() const {
+bool NetAgent::IsDisconnectMsg(const PacketBuffer& buffer) const {
 
-    return std::memcmp(_tmpBuffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;
+    return std::memcmp(buffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;
 
 }
 
-void NetAgent::Handshake() {
+void NetAgent::Handshake(ConnectionPtr& pConnection) {
 
-    const bool isMac = std::memcmp(_tmpBuffer.data(), MAC_HANDSHAKE.data(), MAC_HANDSHAKE.size()) == 0;
-    const bool isLinux = std::memcmp(_tmpBuffer.data(), LIN_HANDSHAKE.data(), LIN_HANDSHAKE.size()) == 0;
-    const bool isWindows = std::memcmp(_tmpBuffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
+    // Determine operating system
+    const bool isMac     = std::memcmp(pConnection->buffer.data(), MAC_HANDSHAKE.data(), MAC_HANDSHAKE.size()) == 0;
+    const bool isLinux   = std::memcmp(pConnection->buffer.data(), LIN_HANDSHAKE.data(), LIN_HANDSHAKE.size()) == 0;
+    const bool isWindows = std::memcmp(pConnection->buffer.data(), WIN_HANDSHAKE.data(), WIN_HANDSHAKE.size()) == 0;
 
     if (isMac) { _connectedOS = OPERATING_SYSTEM::MAC; }
     else if (isLinux) { _connectedOS = OPERATING_SYSTEM::LINUX; }
     else if (isWindows) { _connectedOS = OPERATING_SYSTEM::WINDOWS; }
 
-    _connected = (isMac || isLinux || isWindows);
+    // Connected if one of the following operating systems was connected to
+    pConnection->connected = ( isMac || isLinux || isWindows );
 
 }
 
-void NetAgent::Disconnect() {
-    _connected = false;
-    if (_socket.is_open()) {
-        _socket.write_some(boost::asio::buffer(DISCONNECT_MESSAGE), _errcode);
-        _socket.cancel();
+void NetAgent::Disconnect(ConnectionPtr& pConnection) {
+
+    const auto& pSocket = pConnection->pSocket;
+
+    // Disconnect
+    if (pSocket->is_open()) {
+        pSocket->write_some(boost::asio::buffer(DISCONNECT_MESSAGE), pConnection->errorcode);
+        pSocket->cancel();
     }
-    //_socket.close();
+    pConnection->connected = false;
 }
 
 PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& packetType)
@@ -70,6 +73,4 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
     return packets;
 }
 
-bool NetAgent::Connected() const { return _connected; }
-
-OPERATING_SYSTEM NetAgent::ConnectedOS() const { return _connectedOS; }
+bool NetAgent::Connected(int index) const { return connections[index]->connected; }

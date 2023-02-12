@@ -14,7 +14,7 @@ private:
     // Header needed to create a valid bitmap file
     BmpFileHeader _header{};
 
-    // Buffer holding screen capture 
+    // Bufferhoklbh holding screen capture 
     PixelData _pixelData{};
 
     Uint32 _captureSize = 0;
@@ -113,15 +113,14 @@ constexpr Uint32 CalculateBMPFileSize(const Resolution& resolution = ScreenCaptu
         ((resolution.width * bitsPerPixel + 31) / 32) * NUM_COLOR_CHANNELS * resolution.height;
 };
 
-// Create a simple BITMAPFILEHEADER and BITMAPINFOHEADER as 1, 54-byte array
-constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = ScreenCapture::DefaultResolution, 
+static const inline BmpFileHeader ConstructBMPHeader(const Resolution& resolution = ScreenCapture::DefaultResolution,
     const Ushort bitsPerPixel = 32) {
 
     using HeaderIter = BmpFileHeader::iterator;
 
-    const int filesize = BMP_HEADER_SIZE + CalculateBMPFileSize(resolution, bitsPerPixel, false);
+    const int filesize = BMP_HEADER_SIZE + CalculateBMPFileSize(resolution, bitsPerPixel);
 
-    const short OS_MODIFIER = OS == OPERATING_SYSTEM::WINDOWS ? -1 : 1;
+    const int OS_MODIFIER = OS == OPERATING_SYSTEM::MAC ? 1 : -1;
 
     BmpFileHeader header = BaseHeader();
 
@@ -136,10 +135,16 @@ constexpr BmpFileHeader ConstructBMPHeader(const Resolution& resolution = Screen
     EncodeAsByte(ByteSpan(widthIter, sizeof(resolution.width)), resolution.width);
 
     // Encode pixels high
-    EncodeAsByte(ByteSpan(heightIter, sizeof(resolution.height)), -resolution.height);
- 
+    EncodeAsByte(ByteSpan(heightIter, sizeof(resolution.height)), OS_MODIFIER * resolution.height);
+
+    if (OS == OPERATING_SYSTEM::MAC) {  // Window bitmaps are stored upside down
+
+        std::for_each(heightIter, heightIter + sizeof(resolution.height),
+            [](MyByte& b) { if (b == '\0') { b = (MyByte)MAX_MYBYTE_VAL; } });
+
+    }
+
     header[BMP_HEADER_BPP_OFFSET] = bitsPerPixel;
 
     return header;
-
 }

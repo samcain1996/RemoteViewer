@@ -1,55 +1,66 @@
 #include "Networking/Server.h"
 
 Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) :
-    NetAgent(timeout), _localport(listenPort), _screen(), _acceptor(_io_context, tcp::endpoint(tcp::v4(), listenPort))
-{}
+    NetAgent(timeout), _screen() {
 
-void Server::Handshake() {
+    ConnectionPtr pConnection = make_unique<Connection>(listenPort, true);
+    connections.emplace_back(std::move(pConnection));
+}
 
-    _socket.async_send(boost::asio::buffer(HANDSHAKE_MESSAGE),
-        [this](const boost::system::error_code& ec, std::size_t bytesTransferred) {
+void Server::Handshake(ConnectionPtr& pConnection) {
+
+    // Send handshake message based on operating system
+    pConnection->pSocket->async_send(boost::asio::buffer(HANDSHAKE_MESSAGE),
+        [this, &pConnection](const error_code& ec, std::size_t bytesTransferred) {
 
             if (!ec) {
-
-                _socket.receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()), 0, _errcode);
-
-                NetAgent::Handshake();
+                
+                // If successfully send, read response and perform handhsake
+                pConnection->pSocket->receive(boost::asio::buffer(pConnection->buffer, HANDSHAKE_MESSAGE.size()),
+                    0, pConnection->errorcode);
+                
+                NetAgent::Handshake(pConnection);
             }
         }
     );
 
 }
 
-void Server::Listen() {
+void Server::Listen (ConnectionPtr& pConnection) {
 
-    _acceptor.async_accept(_socket, [this](boost::system::error_code ec)
+    const SocketPtr& pSocket     = pConnection->pSocket;
+    const AccptrPtr& pAcceptor   = pConnection->pAcceptor;
+    const IOContPtr& pIO_context = pConnection->pIO_cont;
+
+    pAcceptor->async_accept(*pSocket, [this, &pConnection](const error_code& ec)
         {
             if (!ec) {
-                Handshake();
+                Handshake(pConnection);
             }
         });
 
-    _io_context.run_until(std::chrono::steady_clock::now() + _timeout);
-    _io_context.restart();
+    pIO_context->run_until(steady_clock::now() + pConnection->timeout);
+    pIO_context->restart();
 
 }
 
 bool Server::Serve() {
 
-    if (!_connected) { return false; }
+    if (!connections[0]->connected) { return false; }
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
-    Send(packets);
 
-    _io_context.run();
-    _io_context.restart();
+    Send(packets, 0);
+    connections[0]->pIO_cont->run_until(steady_clock::now() + connections[0]->timeout);
+    connections[0]->pIO_cont->restart();
+    if (!connections[0]->connected) { return false; }
 
-    return _connected;
+    return true;
 }
 
-void Server::Receive() {}
+void Server::Receive(ConnectionPtr&) {}
 
-void Server::Send(PacketList& packets) {
+void Server::Send(PacketList& packets, int idx) {
 
     if (packets.size() <= 0) { return; }
 
@@ -57,16 +68,16 @@ void Server::Send(PacketList& packets) {
     const auto data = packet.RawData();
     const auto size = packet.Header().Size();
 
-    _socket.async_send(boost::asio::buffer(data, size),
-        [this, &packets](std    ::error_code error, size_t bytes_transferred) {
+    connections[idx]->pSocket->async_send(boost::asio::buffer(data, size),
+        [this, &packets, idx](const error_code error, size_t bytes_transferred) {
         if (error) {
             std::cerr << "async_write: " << error.message() << std::endl;
-            Disconnect();
+            Disconnect(connections[idx]);
         }
 
         else {
             packets.erase(packets.begin());
-            Send(packets);
+            Send(packets, idx);
         }
 
     });

@@ -21,13 +21,23 @@ ServerInitWindow::~ServerInitWindow() {}
 void ServerInitWindow::CleanUp() {
 	_timer.Stop();
 	SetSize(DEFAULT_SIZE);
-	if (_init) { _server->Disconnect(); _server.reset(nullptr); }
+
+	if (_init) {
+		std::for_each(_server->connections.begin(), _server->connections.end(),
+			[this](ConnectionPtr& pConnection) {
+
+				if (pConnection->connected) {
+					_server->Disconnect(pConnection);
+				}
+			});
+	}
+
 }
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
 	// Find a port to listen on
-	int port = NetAgent::portToTry;
+	int port = Connection::DEFUALT_PORT + Connection::SERVER_PORT_OFFSET;
 	while (NetAgent::port_in_use(port)) { port++; }
 
 	// Start server on port and launch pop-up
@@ -36,10 +46,12 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	_popup->Popup();
 
 	// Listen on separate thread so window is still responsive
-	std::thread([this] { 
+	std::jthread([this] { 
+
 		_init = false;
-		_server->Listen();
+		_server->Listen(_server->connections[0]);
 		_init = true;
+
 	}).detach();  // Race condition if reinit modifies after object deletion?
 
 }
@@ -48,7 +60,7 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_init || _timer.IsRunning()) { return; }
 
-	if (_server->Connected()) {
+	if (_server->Connected(0)) {
 		SetSize(MINIMIZED_SIZE);
 		_timer.Start(1000 / _targetFPS);
 	}

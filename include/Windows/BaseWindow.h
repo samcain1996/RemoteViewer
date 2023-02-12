@@ -80,10 +80,10 @@ static void CenterElements(ElementList& elements, const wxSize& padding = wxSize
 		const wxPoint RELATIVE_OFFSET
 		{
 			// Distance this element is to the one that is furthest left
-			element->GetPosition().x - left - element->GetSize().GetWidth() / 4,
+			element->GetPosition().x - left,
 
 			// Distance this element is to the one that is furthest up
-			element->GetPosition().y - top - element->GetSize().GetHeight() / 4
+			element->GetPosition().y - top
 		};
 
 		// Top left corner of this element should be OFFSET + RELATIVE_OFFSET
@@ -150,8 +150,9 @@ protected:
 	
 	// Previous Windows
 	static inline WindowStack _prevWindows {};
-	static inline const wxSize MINIMIZED_SIZE = wxSize(100, 100);
+	
 	static inline const wxSize DEFAULT_SIZE = wxSize(ScreenCapture::DefaultResolution.width, ScreenCapture::DefaultResolution.height);
+	static inline const wxSize MINIMIZED_SIZE = DEFAULT_SIZE * 0.25;
 	static inline const wxPoint DEFAULT_POS = wxPoint(ScreenCapture::NativeResolution().width / 2 - DEFAULT_SIZE.GetWidth() / 2,
 		ScreenCapture::NativeResolution().height / 2 - DEFAULT_SIZE.GetHeight() / 2);
 

@@ -1,73 +1,87 @@
 #include "Networking/Client.h"
 
-Client::Client(const std::string& hostname, const std::chrono::seconds& timeout) : NetAgent(timeout) {
+Client::Client(const std::string& hostname, const seconds& timeout) : NetAgent(timeout) {
     _hostname = hostname;
+    
+    ConnectionPtr pConnection = make_unique<Connection>(Connection::DEFUALT_PORT + Connection::CLIENT_PORT_OFFSET);
+    connections.emplace_back(std::move(pConnection));
 }
 
-const void Client::Connect(const Ushort port, const std::function<void()>& onConnect) {
+const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
+
+    const int idx = connections.size() - 1;
+    ConnectionPtr& pConnection = connections[idx];
+    pConnection->remotePort = remotePort;
 
     try {
-        tcp::endpoint endpoint(boost::asio::ip::address::from_string(_hostname), port);
-        _socket.connect(endpoint);
+        tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
+        pConnection->pSocket->connect(endpoint);
     }
     catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
 
-        _io_context.reset();
-        _socket = tcp::socket(_io_context);
+        pConnection->pIO_cont->reset();
+        pConnection->pSocket.reset(new tcp::socket(*(pConnection->pIO_cont)));
         return;
     }
+   
+    Handshake(pConnection);
 
-    Handshake();
+    pConnection->pIO_cont->run_until(steady_clock::now() + pConnection->timeout);
+    pConnection->pIO_cont->restart();
 
-    _io_context.run_until(steady_clock::now() + _timeout);
-    _io_context.restart();
-
-    if (_connected) { onConnect(); }
+    if (pConnection->connected) { onConnect(); }
 
 }
 
-void Client::Handshake() {
+void Client::Handshake(ConnectionPtr& pConnection) {
 
-    _socket.async_receive(boost::asio::buffer(_tmpBuffer, HANDSHAKE_MESSAGE.size()),
-        [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
+    const auto& pSocket = pConnection->pSocket;
+    auto& buffer = pConnection->buffer;
+
+    pSocket->async_receive(boost::asio::buffer(buffer, HANDSHAKE_MESSAGE.size()),
+        [this, &pSocket, &pConnection](const error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0) {
 
-                _socket.write_some(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), _errcode);
+                pSocket->write_some(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), pConnection->errorcode);
 
-                NetAgent::Handshake();
+                NetAgent::Handshake(pConnection);
             }
         });
 
 }
 
-void Client::Send(PacketList& data) {}
+void Client::Send(PacketList& data, int idx) {}
 
-void Client::Start() {
+void Client::Start(int idx) {
 
-    Receive();
-    _io_context.run();
+    Receive(connections[idx]);
+    connections[idx]->pIO_cont->run();
 }
 
-void Client::Receive() {
+void Client::Receive(ConnectionPtr& pConnection) {
 
-    _socket.async_receive(boost::asio::buffer(_tmpBuffer),
-        [this](const boost::system::error_code& ec, std::size_t bytes_transferred)
+    const SocketPtr& pSocket = pConnection->pSocket;
+    PacketBuffer& buffer    = pConnection->buffer;
+
+    pSocket->async_receive(boost::asio::buffer(buffer),
+        [this, &pConnection, &buffer](const error_code& ec, std::size_t bytes_transferred)
         {
             if (ec.value() == 0 && bytes_transferred > 0)  {
 
-                Process(_tmpBuffer, bytes_transferred);
-                if (IsDisconnectMsg()) { Disconnect(); }
-                else { Receive(); }
+                Process(buffer, bytes_transferred);
+                if (IsDisconnectMsg(buffer)) { Disconnect(pConnection); }
+                else { Receive(pConnection); }
             }
             else {
-                Disconnect();
+                Disconnect(pConnection);
             }
         });
 
 }
 
+// TODO: CLEAN THIS UP
 void Client::Process(const PacketBuffer& buf, int size) {
     static std::optional<std::pair<PacketBuffer, int>> current = std::nullopt;
     

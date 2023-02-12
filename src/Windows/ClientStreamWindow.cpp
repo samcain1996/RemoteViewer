@@ -1,4 +1,5 @@
 #include "Windows/RemoteViewerWindows.h"
+#include "GetInput.h"
 
 /*----------------------Client Streaming Window-----------------------*/
 
@@ -14,38 +15,44 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
 	// Create client to receive data from other computer
-	_client = std::make_shared<Client>(ip);
+	_client = make_shared<Client>(ip);
 
-	// Use the port the user entered, otherwise default to what the client is set to
-	Ushort port = remotePort == 0 ? _client->portToTry : remotePort;
+	_popup->Popup();
 
-	// Attempt to connect to other computer on separate thread so
-	// program is still responsive
-	std::thread([this, port, ip](const int attempts = 5) mutable {
+	std::for_each(_client->connections.begin(), _client->connections.end(), [counter = 0, this] (auto& pConnection) mutable {
 
-		_popup->Popup();
+		// Attempt to connect to other computer on separate thread so
+		// program is still responsive
+		std::jthread([this, &pConnection, counter](const int attempts = 5) mutable {
 
-		// Repeatedly try to connect until maximum number of attempts have been reached
-		// or the system has successfully connected
-		for (int attempt = 0; attempt < attempts && !_client->Connected(); attempt++, port++) {
-			// Display ip and port on pop-up window
-			_popup->SetText("Connecting to " + ip + ":" + std::to_string(port));
+			Ushort portToConnectTo = Connection::DEFUALT_PORT + Connection::SERVER_PORT_OFFSET + counter;
 
-			_client->Connect(port, std::bind(&ClientStreamWindow::OnConnect, this));
-		}
+			// Repeatedly try to connect until maximum number of attempts have been reached
+			// or the system has successfully connected
+			for (int attempt = 0; attempt < attempts && !pConnection->connected; attempt++, portToConnectTo++) {
 
-		doneConnecting = true;
+				if (counter == 0) {
+					_client->Connect(portToConnectTo, std::bind(&ClientStreamWindow::OnConnect, this));
+				}
+			}
 
-	}).detach();
+			doneConnecting = true;
+
+		}).detach();
+
+		counter++;
+
+	});
 }
 
+// What happens when connection to server is made
 void ClientStreamWindow::OnConnect() {
 	_popup->Dismiss();
 
 	ConnectMessageables(*this, *_client);
 
 	// Start receiving data on separate thread
-	_clientThr = std::thread(&Client::Start, _client);
+	_clientThr = std::thread(&Client::Start, _client, 0);
 
 	const BmpFileHeader header = ConstructBMPHeader();
 	std::copy(header.begin(), header.end(), _imageData.begin());
@@ -54,19 +61,25 @@ void ClientStreamWindow::OnConnect() {
 }
 
 void ClientStreamWindow::CleanUp() {
-	if (_client->Connected()) {
-		_client->Disconnect();
-		if (_clientThr.joinable()) { _clientThr.join(); }
-	}
 
+	// Disconnect each connection
+	std::for_each(_client->connections.begin(), _client->connections.end(),
+		[this](ConnectionPtr& pConnection) {
+
+			if (pConnection->connected) {
+				_client->Disconnect(pConnection);
+			}
+		});
+
+	if (_clientThr.joinable()) { _clientThr.join(); }
 	if (HAS_BEEN_CONNECTED) { packetReader->Clear(); }
 }
 
 ClientStreamWindow::~ClientStreamWindow() {}
 
-void ClientStreamWindow::Resize(const Resolution& resolution) { 
+void ClientStreamWindow::Resize(const Resolution& resolution) {
 	_resolution = resolution;
-	_imageData.reserve(CalculateBMPFileSize(_resolution)); 
+	_imageData.reserve(CalculateBMPFileSize(_resolution));
 }
 
 void ClientStreamWindow::ImageBuilder() {
@@ -75,7 +88,7 @@ void ClientStreamWindow::ImageBuilder() {
 	const Uint32 expectedSize = CalculateBMPFileSize(_resolution, 32, false);
 
 	// Check  if there is a complete image
-	while (!packetReader->Empty() && _client->Connected()) {
+	while (!packetReader->Empty() && _client->Connected(0)) {
 
 		const PacketPtr packet = packetReader->ReadMessage();
 		const ImagePacketHeader& header = packet->Header();
@@ -94,7 +107,7 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 
 void ClientStreamWindow::PaintNow() {
 
-	if (!_init || !_client->Connected()) { return; }
+	if (!_init || !_client->Connected(0)) { return; }
 
 	ImageBuilder();
 
@@ -110,19 +123,19 @@ void ClientStreamWindow::PaintNow() {
 void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 
 	// Do not paint until connected because no data is sent until then.
-	if (!_client->Connected()) { evt.Skip(); }
+	if (!_client->Connected(0)) { evt.Skip(); }
 	else { PaintNow(); }
 }
 
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	if (!_init) { 
+	if (!_init) {
 		if (doneConnecting) { GoBack(); }
-		return; 
+		return;
 	}
 	else if (!_timer.IsRunning()) { _timer.Start(1000 / _targetFPS); }
 
-	else if (!_client->Connected() && _clientThr.joinable()) {
+	else if (!_client->Connected(0) && _clientThr.joinable()) {
 		_clientThr.join();
 		_popup = std::make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();

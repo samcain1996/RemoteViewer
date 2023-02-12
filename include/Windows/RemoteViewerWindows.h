@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Windows/BaseWindow.h"
-
+#include <coroutine>
 #include "Messageable.h"
 
 #include "Networking/Client.h"
@@ -70,6 +70,8 @@ public:
 class ClientStreamWindow : public BaseWindow, public Messageable<PacketPtr> {
 
 	MessageReader<PacketPtr>*& groupReader = msgReader;  // Queue of packets that can create a complete image
+
+
 	
 private:
 	Ushort port;

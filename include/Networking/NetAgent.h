@@ -8,16 +8,63 @@
 #include "Messages.h"
 
 using boost::asio::ip::tcp;
+using boost::asio::ip::address;
+using boost::asio::io_context;
+using boost::system::error_code;
 using std::chrono::steady_clock;
+using std::chrono::seconds;
+using std::make_unique;
 
 constexpr const int HANDSHAKE_SIZE = 4;
+constexpr const int IMAGE_THREADS = 1;
+
 using HANDSHAKE_MESSAGE_T = std::array<MyByte, HANDSHAKE_SIZE>;
 
+using SocketPtr = std::unique_ptr<tcp::socket>;
+using IOContPtr = std::unique_ptr<io_context>;
+using AccptrPtr = std::unique_ptr<tcp::acceptor>;
+
+struct Connection {
+
+	static constexpr inline Ushort DEFUALT_PORT	      = 20000;
+	static constexpr inline Ushort SERVER_PORT_OFFSET = 1000;
+	static constexpr inline Ushort CLIENT_PORT_OFFSET = 2000;
+
+	bool connected = false;
+	seconds timeout { 30 };
+	PacketBuffer buffer {};
+	error_code errorcode {};
+
+	Ushort localPort;
+	Ushort remotePort;
+
+	IOContPtr pIO_cont;
+	SocketPtr pSocket;
+	AccptrPtr pAcceptor;
+
+	Connection(const Ushort localPort = 0, const bool listen = false) : localPort(localPort) {
+
+		pIO_cont = make_unique<io_context>();
+		pSocket  = make_unique<tcp::socket>(*pIO_cont);
+
+		if (listen) {
+			pAcceptor = make_unique<tcp::acceptor>(*pIO_cont, tcp::endpoint(tcp::v4(), localPort));
+		}
+	};
+
+	Connection(const Connection&) = delete;
+	Connection(Connection&&) = delete;
+
+	~Connection() {};
+};
+
+using ConnectionPtr = std::unique_ptr<Connection>;
 
 class NetAgent {
 
 protected:
-	NetAgent(const std::chrono::seconds& timeout = std::chrono::seconds(30));
+
+	NetAgent(const seconds& timeout = seconds(30));
 
 	// NetAgents shouldn't be instantiated with no arguemnts,
 	// nor copied/moved from another NetAgent
@@ -46,36 +93,25 @@ protected:
 	static std::random_device rd;
 	static std::mt19937 randomGenerator;
 
-	bool _connected = false;
 	OPERATING_SYSTEM _connectedOS = OPERATING_SYSTEM::NA;
-	std::chrono::seconds _timeout;
-
-	boost::asio::io_context _io_context;  // Used for I/O
-
+public:
+	std::vector<ConnectionPtr> connections;
+protected:
 	std::mutex _mutex;
-	tcp::socket _socket;
-	boost::system::error_code _errcode;
-
-	PacketBuffer _tmpBuffer {}; // Temporary buffer for receiving/sending packets
-	PacketBuffer _other{};
-	int offset = 0;
 
 	// Converts an arbitrarily long array of bytes
 	// into a group of packets
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
-	virtual void Handshake();
-	bool IsDisconnectMsg() const;
+	virtual void Handshake(ConnectionPtr&);
+	bool IsDisconnectMsg(const PacketBuffer&) const;
 
-	virtual void Receive() = 0;
-	virtual void Send(PacketList&) = 0;
-	// virtual void ProcessPacket(const Packet& packet) = 0;
+	virtual void Receive(ConnectionPtr&) = 0;
+	virtual void Send(PacketList&, int) = 0;
 
 public:
-	static inline Ushort portToTry = 20000;
-	void Disconnect();
+	void Disconnect(ConnectionPtr&);
 
-	bool Connected() const;
-	OPERATING_SYSTEM ConnectedOS() const;
+	bool Connected(int) const;
 
 	static bool port_in_use(unsigned short port) {
 		using namespace boost::asio;
@@ -84,7 +120,7 @@ public:
 		io_service svc;
 		tcp::acceptor a(svc);
 
-		boost::system::error_code ec;
+		error_code ec;
 		a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), port }, ec);
 
 		return ec == error::address_in_use;

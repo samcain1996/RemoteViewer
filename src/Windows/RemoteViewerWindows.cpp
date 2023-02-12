@@ -152,9 +152,9 @@ ClientInitWindow::~ClientInitWindow() {}
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
-	const std::string port = _remotePortInput->GetValue().ToStdString();
+	//const std::string port = _remotePortInput->GetValue().ToStdString();
 
-	SpawnWindow(WindowNames::ClientStream, ipAddress, port);
+	SpawnWindow(WindowNames::ClientStream, ipAddress, "21000");
 
 	Close(true);
 }

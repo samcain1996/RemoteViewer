@@ -4,7 +4,7 @@
 class Client : public NetAgent, public Messageable<PacketPtr> {
 private:
 	std::string _hostname{};  // Hostname of computer to connect to
-	bool thing = false;
+
 	MessageWriter<PacketPtr>*& groupWriter = msgWriter;
 
 	/**
@@ -15,8 +15,11 @@ private:
 	 *
 	 */
 
-	void Handshake() override;
-
+	void Handshake(ConnectionPtr&) override;
+	void NewConnection(const std::string hostname, Ushort localPort, Ushort remotePort) {
+		ConnectionPtr con = std::make_unique<Connection>(localPort, remotePort);
+		connections.emplace_back(std::move(con));
+	}
 public:
 
 	// Constructors
@@ -30,6 +33,7 @@ public:
 	Client& operator=(const Client&) = delete;
 	Client& operator=(Client&&) = delete;
 
+
 	/**
 	 * @brief Connects to a server via a udp socket
 	 *
@@ -37,15 +41,15 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	const void Connect(const Ushort port, const std::function<void()>& onConnect);
+	const void Connect(const Ushort remotePort, const Action& onConnect);
 
 	/**
 	 * @brief Receive data from server
 	 *
 	 */
-	void Receive() override;
-	void Start();
+	void Receive(ConnectionPtr&) override;
+	void Start(int idx);
 	void Process(const PacketBuffer& buf, int size);
 
-	void Send(PacketList& data) override;
+	void Send(PacketList& data, int) override;
 };
