@@ -27,7 +27,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 		// program is still responsive
 		std::jthread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) mutable {
 
-			Ushort portToConnectTo = Connection::BASE_PORT + Connection::SERVER_BASE_PORT + counter;
+			Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter;
 
 			// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
 			// or the system has successfully connected
@@ -91,7 +91,7 @@ void ClientStreamWindow::ImageBuilder() {
 	const Uint32 expectedSize = CalculateBMPFileSize(_resolution, 32, false);
 
 	// Check  if there is a complete image
-	while (!packetReader->Empty() && _client->Connected(0)) {
+	while (!packetReader->Empty() && _client->Connected()) {
 
 		const PacketPtr packet = packetReader->ReadMessage();
 		const ImagePacketHeader& header = packet->Header();
@@ -110,7 +110,7 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 
 void ClientStreamWindow::PaintNow() {
 
-	if (!_init || !_client->Connected(0)) { return; }
+	if (!_init || !_client->Connected()) { return; }
 
 	ImageBuilder();
 
@@ -126,7 +126,7 @@ void ClientStreamWindow::PaintNow() {
 void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 
 	// Do not paint until connected because no data is sent until then.
-	if (!_client->Connected(0)) { evt.Skip(); }
+	if (!_client->Connected()) { evt.Skip(); }
 	else { PaintNow(); }
 }
 
@@ -138,7 +138,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 	}
 	else if (!_timer.IsRunning()) { _timer.Start(1000 / _targetFPS); }
 
-	else if (!_client->Connected(0) && _clientThr.joinable()) {
+	else if (!_client->Connected() && _clientThr.joinable()) {
 		_clientThr.join();
 		_popup = std::make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();

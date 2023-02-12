@@ -18,7 +18,7 @@ using std::make_unique;
 
 constexpr const int HANDSHAKE_SIZE = 4;
 constexpr const int IMAGE_THREADS = 1;
-constexpr const int SEND_THREADS = 1;
+constexpr const int SEND_THREADS = 1;  // KEEP AT 1, WILL BREAK AT ANYTHING ELSE
 
 using SocketPtr = std::unique_ptr<tcp::socket>;
 using IOContPtr = std::unique_ptr<io_context>;
@@ -31,19 +31,17 @@ struct Connection {
 	static constexpr inline Ushort CLIENT_BASE_PORT = BASE_PORT + 2000;
 
 	bool connected = false;
-	seconds timeout{ 30 };
+	seconds timeout { 30 };
 	PacketBuffer buffer {};
 	error_code errorcode {};
-
-	Ushort localPort;
-	Ushort remotePort;
+	Ushort remotePort = 0;
+	Ushort localPort = 0;
 
 	IOContPtr pIO_cont;
 	SocketPtr pSocket;
 	AccptrPtr pAcceptor;
 
-	Connection(const Ushort localPort = 0, const bool listen = false) : 
-		localPort(localPort), remotePort(0) {
+	Connection(const Ushort localPort = 0, const bool listen = false) {
 
 		pIO_cont = make_unique<io_context>();
 		pSocket = make_unique<tcp::socket>(*pIO_cont);
@@ -60,3 +58,4 @@ struct Connection {
 };
 
 using ConnectionPtr = std::unique_ptr<Connection>;
+using ConnectionList = std::vector<ConnectionPtr>;

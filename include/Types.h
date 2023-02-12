@@ -31,11 +31,11 @@ using DWORD = std::uint32_t;
 
 #endif
 
-enum class OPERATING_SYSTEM {
-    WINDOWS = 0,
-    LINUX = 1,
-    MAC = 2,
-    NA = -1
+enum class OPERATING_SYSTEM : char {
+    WINDOWS = 'W',
+    LINUX = 'L',
+    MAC = 'M',
+    NA = '\0'
 };
 
 using Uint32 = std::uint32_t;

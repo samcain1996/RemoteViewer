@@ -13,7 +13,6 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Server Initialization", pos, size), _timer(this, 9123) {
 
 	_startServerButton = new wxButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50));
-
 }
 
 ServerInitWindow::~ServerInitWindow() {}
@@ -37,8 +36,8 @@ void ServerInitWindow::CleanUp() {
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
 	// Find a port to listen on
-	Ushort port = Connection::BASE_PORT + Connection::SERVER_BASE_PORT;
-	while (NetAgent::port_in_use(port)) { port++; }
+	Ushort port = Connection::SERVER_BASE_PORT;
+	while (!NetAgent::portAvailable(port)) { port++; }
 
 	// Start server on port and launch pop-up
 	_server = std::make_unique<Server>(port);
@@ -60,7 +59,7 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_init || _timer.IsRunning()) { return; }
 
-	if (_server->Connected(0)) {
+	if (_server->Connected()) {
 		SetSize(MINIMIZED_SIZE);
 		_timer.Start(1000 / _targetFPS);
 	}

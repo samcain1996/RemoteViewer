@@ -1,16 +1,12 @@
 #include "Networking/NetAgent.h"
 
-std::random_device NetAgent::rd {};
-
-std::mt19937 NetAgent::randomGenerator(rd());
+bool NetAgent::Connected() const { return connections.empty() ? false : connections[0]->connected; };
 
 bool NetAgent::IsDisconnectMsg(const PacketBuffer& buffer) const {
-
     return std::memcmp(buffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;
-
 }
 
-bool NetAgent::port_in_use(unsigned short port) {
+bool NetAgent::portAvailable(unsigned short port) {
 
     io_context context;
     tcp::acceptor a(context);
@@ -18,7 +14,7 @@ bool NetAgent::port_in_use(unsigned short port) {
     error_code ec;
     a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), port }, ec);
 
-    return ec == boost::asio::error::address_in_use;
+    return ec != boost::asio::error::address_in_use;
 
 }
 
@@ -82,5 +78,3 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
 
     return packets;
 }
-
-bool NetAgent::Connected(int index) const { return connections[index]->connected; }

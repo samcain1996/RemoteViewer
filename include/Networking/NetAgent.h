@@ -1,25 +1,19 @@
 
 #pragma once
 
-#include "Connection.h"
+#include "Networking/Connection.h"
 
 using HANDSHAKE_MESSAGE_T = std::array<MyByte, HANDSHAKE_SIZE>;
 
 class NetAgent {
 
+public:
+	// Remove this maybe
+	ConnectionList connections;
+
 protected:
 
-	NetAgent() {};
-
-	// NetAgents shouldn't be instantiated with no arguemnts,
-	// nor copied/moved from another NetAgent
-	NetAgent(NetAgent&&) noexcept = delete;
-	NetAgent(const NetAgent&) = delete;
-
-	NetAgent& operator=(const NetAgent&) = delete;
-	NetAgent& operator=(NetAgent&&) = delete;
-
-
+	static inline std::mt19937 randomGenerator{ std::random_device()() };
 	constexpr const static HANDSHAKE_MESSAGE_T WIN_HANDSHAKE = { 'W', 'I', 'N', '!' };
 	constexpr const static HANDSHAKE_MESSAGE_T MAC_HANDSHAKE = { 'M', 'A', 'C', '!' };
 	constexpr const static HANDSHAKE_MESSAGE_T LIN_HANDSHAKE = { 'L', 'N', 'X', '!' };
@@ -36,33 +30,34 @@ protected:
 
 public:
 
-	static bool port_in_use(unsigned short port);
+	static bool portAvailable(unsigned short port);
 
 protected:
 
-	std::mutex _mutex;
-	static std::random_device rd;
-	static std::mt19937 randomGenerator;
+	NetAgent() {};
+
+	// NetAgents shouldn't be instantiated with no arguemnts,
+	// nor copied/moved from another NetAgent
+	NetAgent(NetAgent&&) noexcept = delete;
+	NetAgent(const NetAgent&) = delete;
+
+	NetAgent& operator=(const NetAgent&) = delete;
+	NetAgent& operator=(NetAgent&&) = delete;
 
 	OPERATING_SYSTEM _connectedOS = OPERATING_SYSTEM::NA;
 
-	// Converts an arbitrarily long array of bytes
-	// into a group of packets
+	bool IsDisconnectMsg(const PacketBuffer& pConnection) const;
+
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
-	virtual void Handshake(ConnectionPtr&);
-	bool IsDisconnectMsg(const PacketBuffer&) const;
+	virtual void Handshake(ConnectionPtr& pConnection);
 
-	virtual void Receive(ConnectionPtr&) = 0;
-	virtual void Send(PacketList&, ConnectionPtr&) = 0;
-
+	virtual void Receive(ConnectionPtr& pConnection) = 0;
+	virtual void Send(PacketList& packets, ConnectionPtr& pConnection) = 0;
 
 	virtual ~NetAgent() = default;
 
 public:
 
-	void Disconnect(ConnectionPtr&);
-	bool Connected(int) const;
-
-	// Remove this maybe
-	std::vector<ConnectionPtr> connections;
+	void Disconnect(ConnectionPtr& pConnection);
+	bool Connected() const;
 };

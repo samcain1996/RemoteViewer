@@ -9,12 +9,9 @@ private:
 
 	ScreenCapture _screen;
 
-	// Send a buffer of bytes to the client
-	void Send(PacketList&, ConnectionPtr&) override;
-
-	void Receive(ConnectionPtr&) override;
-
-	void Handshake(ConnectionPtr&) override;
+	void Send(PacketList& packets, ConnectionPtr& pConnection) override;
+	void Receive(ConnectionPtr& pConnection) override;
+	void Handshake(ConnectionPtr& pConnection) override;
 
 public:
 
@@ -30,7 +27,7 @@ public:
 
 	// Serve content to client
 	bool Serve();
-	void Listen(ConnectionPtr&);
+	void Listen(ConnectionPtr& pConnection);
 
 	~Server();
 };

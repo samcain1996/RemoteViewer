@@ -7,15 +7,8 @@ private:
 
 	MessageWriter<PacketPtr>*& groupWriter = msgWriter;
 
-	/**
-	 * @brief Processes data from packets and stores them in the
-	 * 		  appropriate priority queue.
-	 *
-	 * @param const Packet		Packet to process
-	 *
-	 */
+	void Handshake(ConnectionPtr& pConnection) override;
 
-	void Handshake(ConnectionPtr&) override;
 public:
 
 	// Constructors
@@ -39,13 +32,8 @@ public:
 	 */
 	const void Connect(const Ushort remotePort, const Action& onConnect);
 
-	/**
-	 * @brief Receive data from server
-	 *
-	 */
-	void Receive(ConnectionPtr&) override;
-	void Start(ConnectionPtr&);
+	void Receive(ConnectionPtr& pConnection) override;
+	void Start(ConnectionPtr& pConnection);
 	void Process(const PacketBuffer& buf, int size);
-
-	void Send(PacketList& data, ConnectionPtr&) override;
+	void Send(PacketList& data, ConnectionPtr& pConnection) override;
 };
