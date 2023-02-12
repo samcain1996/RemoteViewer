@@ -17,19 +17,21 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	// Create client to receive data from other computer
 	_client = make_shared<Client>(ip);
 
+	_popup->SetText("Connecting to " + ip);
 	_popup->Popup();
 
-	std::for_each(_client->connections.begin(), _client->connections.end(), [counter = 0, this] (auto& pConnection) mutable {
+	std::for_each(_client->connections.begin(), _client->connections.end(), 
+		[this, counter = 0] (ConnectionPtr& pConnection) mutable {
 
 		// Attempt to connect to other computer on separate thread so
 		// program is still responsive
-		std::jthread([this, &pConnection, counter](const int attempts = 5) mutable {
+		std::jthread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) mutable {
 
-			Ushort portToConnectTo = Connection::DEFUALT_PORT + Connection::SERVER_PORT_OFFSET + counter;
+			Ushort portToConnectTo = Connection::BASE_PORT + Connection::SERVER_BASE_PORT + counter;
 
-			// Repeatedly try to connect until maximum number of attempts have been reached
+			// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
 			// or the system has successfully connected
-			for (int attempt = 0; attempt < attempts && !pConnection->connected; attempt++, portToConnectTo++) {
+			for (int attempt = 0; attempt < MAX_ATTEMPTS && !pConnection->connected; attempt++, portToConnectTo++) {
 
 				if (counter == 0) {
 					_client->Connect(portToConnectTo, std::bind(&ClientStreamWindow::OnConnect, this));
@@ -47,12 +49,13 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 
 // What happens when connection to server is made
 void ClientStreamWindow::OnConnect() {
+
 	_popup->Dismiss();
 
 	ConnectMessageables(*this, *_client);
 
 	// Start receiving data on separate thread
-	_clientThr = std::thread(&Client::Start, _client, 0);
+	_clientThr = std::jthread(&Client::Start, _client, std::ref(_client->connections[0]));
 
 	const BmpFileHeader header = ConstructBMPHeader();
 	std::copy(header.begin(), header.end(), _imageData.begin());

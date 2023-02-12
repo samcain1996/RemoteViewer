@@ -1,7 +1,6 @@
 #include "Networking/Server.h"
 
-Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) :
-    NetAgent(timeout), _screen() {
+Server::Server(const Ushort listenPort, const std::chrono::seconds timeout) : _screen() {
 
     ConnectionPtr pConnection = make_unique<Connection>(listenPort, true);
     connections.emplace_back(std::move(pConnection));
@@ -45,15 +44,26 @@ void Server::Listen (ConnectionPtr& pConnection) {
 }
 
 bool Server::Serve() {
-
-    if (!connections[0]->connected) { return false; }
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
+    const int PACKETS_PER_THREAD = packets.size() / SEND_THREADS;
 
-    Send(packets, 0);
-    connections[0]->pIO_cont->run_until(steady_clock::now() + connections[0]->timeout);
-    connections[0]->pIO_cont->restart();
-    if (!connections[0]->connected) { return false; }
+    for (int threadIndex = 0; threadIndex < SEND_THREADS; ++threadIndex) {
+
+        const ConnectionPtr& pConnection = connections[threadIndex];
+
+        const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
+        const auto& end = (threadIndex == SEND_THREADS - 1) ? packets.end() : packets.begin() + (threadIndex * PACKETS_PER_THREAD);
+
+        PacketList list(begin, end);
+
+        Send(list, threadIndex);
+
+        pConnection->pIO_cont->run_until(steady_clock::now() + pConnection->timeout);
+        pConnection->pIO_cont->restart();
+
+        if (!pConnection->connected) { return false; }
+    }
 
     return true;
 }
@@ -69,7 +79,7 @@ void Server::Send(PacketList& packets, int idx) {
     const auto size = packet.Header().Size();
 
     connections[idx]->pSocket->async_send(boost::asio::buffer(data, size),
-        [this, &packets, idx](const error_code error, size_t bytes_transferred) {
+        [this, &packets, idx](const error_code& error, size_t bytes_transferred) {
         if (error) {
             std::cerr << "async_write: " << error.message() << std::endl;
             Disconnect(connections[idx]);

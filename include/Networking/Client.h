@@ -16,10 +16,6 @@ private:
 	 */
 
 	void Handshake(ConnectionPtr&) override;
-	void NewConnection(const std::string hostname, Ushort localPort, Ushort remotePort) {
-		ConnectionPtr con = std::make_unique<Connection>(localPort, remotePort);
-		connections.emplace_back(std::move(con));
-	}
 public:
 
 	// Constructors
@@ -27,7 +23,7 @@ public:
 	Client(const Client&) = delete;
 	Client(Client&&) noexcept = delete;
 
-	Client(const std::string& hostname, const std::chrono::seconds& timeout = std::chrono::seconds(5));
+	Client(const std::string& hostname);
 	~Client();
 
 	Client& operator=(const Client&) = delete;
@@ -48,7 +44,7 @@ public:
 	 *
 	 */
 	void Receive(ConnectionPtr&) override;
-	void Start(int idx);
+	void Start(ConnectionPtr&);
 	void Process(const PacketBuffer& buf, int size);
 
 	void Send(PacketList& data, int) override;

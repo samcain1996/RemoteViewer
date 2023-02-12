@@ -37,7 +37,7 @@ void ServerInitWindow::CleanUp() {
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 
 	// Find a port to listen on
-	int port = Connection::DEFUALT_PORT + Connection::SERVER_PORT_OFFSET;
+	Ushort port = Connection::BASE_PORT + Connection::SERVER_BASE_PORT;
 	while (NetAgent::port_in_use(port)) { port++; }
 
 	// Start server on port and launch pop-up

@@ -1,9 +1,9 @@
 #include "Networking/Client.h"
 
-Client::Client(const std::string& hostname, const seconds& timeout) : NetAgent(timeout) {
+Client::Client(const std::string& hostname) {
     _hostname = hostname;
     
-    ConnectionPtr pConnection = make_unique<Connection>(Connection::DEFUALT_PORT + Connection::CLIENT_PORT_OFFSET);
+    ConnectionPtr pConnection = make_unique<Connection>(Connection::BASE_PORT + Connection::CLIENT_PORT_OFFSET);
     connections.emplace_back(std::move(pConnection));
 }
 
@@ -54,10 +54,10 @@ void Client::Handshake(ConnectionPtr& pConnection) {
 
 void Client::Send(PacketList& data, int idx) {}
 
-void Client::Start(int idx) {
+void Client::Start(ConnectionPtr& pConnection) {
 
-    Receive(connections[idx]);
-    connections[idx]->pIO_cont->run();
+    Receive(pConnection);
+    pConnection->pIO_cont->run();
 }
 
 void Client::Receive(ConnectionPtr& pConnection) {

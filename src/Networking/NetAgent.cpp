@@ -4,11 +4,21 @@ std::random_device NetAgent::rd {};
 
 std::mt19937 NetAgent::randomGenerator(rd());
 
-NetAgent::NetAgent(const std::chrono::seconds& timeout) {}
-
 bool NetAgent::IsDisconnectMsg(const PacketBuffer& buffer) const {
 
     return std::memcmp(buffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;
+
+}
+
+bool NetAgent::port_in_use(unsigned short port) {
+
+    io_context context;
+    tcp::acceptor a(context);
+
+    error_code ec;
+    a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), port }, ec);
+
+    return ec == boost::asio::error::address_in_use;
 
 }
 

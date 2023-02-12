@@ -81,7 +81,7 @@ private:
 	bool doneConnecting = false;
 	
 	std::shared_ptr<Client> _client;
-	std::thread _clientThr;
+	std::jthread _clientThr;
 
 	int group = 0;
 
