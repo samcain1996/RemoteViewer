@@ -40,7 +40,7 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	while (!NetAgent::portAvailable(port)) { port++; }
 
 	// Start server on port and launch pop-up
-	_server = std::make_unique<Server>(port);
+	_server = make_unique<Server>(port);
 	_popup->SetText("Listening on port " + std::to_string(port));
 	_popup->Popup();
 

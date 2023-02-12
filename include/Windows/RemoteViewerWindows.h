@@ -83,13 +83,10 @@ private:
 	std::shared_ptr<Client> _client;
 	std::jthread _clientThr;
 
-	int group = 0;
-
 	const int _targetFPS = 60;
 	int _timeSinceLastFrame = 0;
 
 	wxTimer _timer;
-	std::function<void()> myFunc;
 	MessageReader<PacketPtr>*& packetReader = msgReader;
 
 
@@ -128,12 +125,10 @@ class ServerInitWindow : public BaseWindow {
 
 private:
 
-	bool doneListening = false;
-
 	wxButton* _startServerButton;
 	wxTimer _timer;
 
-	std::unique_ptr<Server> _server = nullptr;
+	std::unique_ptr<Server> _server;
 	
 	const int _targetFPS = 60;
 

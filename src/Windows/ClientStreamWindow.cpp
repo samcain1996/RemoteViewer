@@ -25,7 +25,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 
 		// Attempt to connect to other computer on separate thread so
 		// program is still responsive
-		std::jthread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) mutable {
+		std::jthread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) {
 
 			Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter;
 
@@ -140,7 +140,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	else if (!_client->Connected() && _clientThr.joinable()) {
 		_clientThr.join();
-		_popup = std::make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
+		_popup = make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();
 	}
 

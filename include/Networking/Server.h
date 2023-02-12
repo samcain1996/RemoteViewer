@@ -7,7 +7,7 @@ class Server : public NetAgent {
 
 private:
 
-	static inline NullableLoggette log = Logger::newStream("Server.log").value();
+	static inline Loggette log = Logger::newStream("Server.log").value();
 
 	ScreenCapture _screen;
 

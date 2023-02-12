@@ -18,8 +18,6 @@ bool NetAgent::portAvailable(unsigned short port) {
 
 }
 
-void NetAgent::Receive(ConnectionPtr& pConnection) {}
-
 void NetAgent::Handshake(ConnectionPtr& pConnection) {
 
     // Determine operating system

@@ -37,8 +37,6 @@ protected:
 
 	NetAgent() {};
 
-	// NetAgents shouldn't be instantiated with no arguemnts,
-	// nor copied/moved from another NetAgent
 	NetAgent(NetAgent&&) noexcept = delete;
 	NetAgent(const NetAgent&) = delete;
 
@@ -49,10 +47,9 @@ protected:
 
 	bool IsDisconnectMsg(const PacketBuffer& pConnection) const;
 
-	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
-
 	// Authenticates connecting computer
 	virtual void Handshake(ConnectionPtr& pConnection);
+	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
 
 	virtual void Receive(ConnectionPtr& pConnection) = 0;
 	virtual void Send(PacketList& packets, ConnectionPtr& pConnection) = 0;
