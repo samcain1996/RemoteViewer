@@ -77,7 +77,7 @@ void Server::Send(PacketList& packets, ConnectionPtr& pConnection) {
     const Packet& packet = packets.front();
 
     pConnection->pSocket->async_send(boost::asio::buffer(packet.RawData(), packet.Header().Size()),
-        [this, &packets, &pConnection](const error_code& error, const size_t bytes_transferred) {
+        [this, &packets, &pConnection](const error_code& error, const size_t size) {
         if (error) {
             log.WriteLine("async_write: " + error.message());
             Disconnect();

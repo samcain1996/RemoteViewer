@@ -12,16 +12,10 @@ const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
     ConnectionPtr& pConnection = connections[connections.size() - 1];
     pConnection->remotePort = remotePort;
 
-    try {
-        tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
-        pConnection->pSocket->connect(endpoint);
-    }
-    catch (std::exception& e) {
-        log.WriteLine(e.what());
+    tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
+    pConnection->pSocket->connect(endpoint, pConnection->errorcode);
 
-        Logger::closeStream(log.name);
-        std::terminate();
-    }
+    if (pConnection->errorcode.value() != 0) { std::terminate(); }
    
     Handshake(pConnection);
 
@@ -38,9 +32,9 @@ void Client::Handshake(ConnectionPtr& pConnection) {
     auto& buffer = pConnection->buffer;
 
     pSocket->async_receive(boost::asio::buffer(buffer, HANDSHAKE_MESSAGE.size()),
-        [this, &pSocket, &pConnection](const error_code& ec, std::size_t bytes_transferred)
+        [this, &pSocket, &pConnection](const error_code& ec, const size_t size)
         {
-            if (ec.value() == 0 && bytes_transferred > 0) {
+            if (ec.value() == 0 && size > 0) {
 
                 pSocket->write_some(boost::asio::buffer(HANDSHAKE_MESSAGE, HANDSHAKE_MESSAGE.size()), pConnection->errorcode);
 
@@ -58,14 +52,12 @@ void Client::Receive(ConnectionPtr& pConnection) {
     PacketBuffer& buffer    = pConnection->buffer;
 
     pSocket->async_receive(boost::asio::buffer(buffer),
-        [this, &pConnection, &buffer](const error_code& ec, std::size_t bytes_transferred)
+        [this, &pConnection, &buffer](const error_code& ec, const size_t size)
         {
-            if (pConnection->connected && ec.value() == 0 && bytes_transferred > 0) {
+            if (pConnection->connected && ec.value() == 0 && size > 0) {
 
-                AdjustForPacketLoss(buffer, bytes_transferred);
-                if (IsDisconnectMsg(buffer)) { 
-                    Disconnect(); 
-                }
+                AdjustForPacketLoss(buffer, size);
+                if (IsDisconnectMsg(buffer)) { Disconnect(); }
                 else { Receive(pConnection); }
             }
             else {
