@@ -1,4 +1,5 @@
 #pragma once
+
 #include <unordered_map>
 #include <boost/container/static_vector.hpp>
 #include "Types.h"

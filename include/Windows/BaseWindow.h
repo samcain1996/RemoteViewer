@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <tuple>
 
 #include "wx/wx.h"
 #include "wx/filesys.h"
@@ -8,7 +9,7 @@
 #include "wx/popupwin.h"
 
 #include "QuickShot/Capture.h"
-#include <tuple>
+
 enum class WindowNames {
 	StartUp,
 	ClientInit,
@@ -22,7 +23,9 @@ using std::string;
 using std::ios;
 
 using WindowStack = std::stack<WindowNames>;
-using ElementList = std::vector<wxControl*>;
+
+using Element = wxControl;
+using ElementList = std::vector<Element*>;
 using Bounds = std::tuple<int, int, int, int>;
 
 class PopUp;
@@ -75,15 +78,15 @@ static void CenterElements(ElementList& elements, const wxSize& padding = wxSize
 		( PARENT_SIZE.GetHeight() - (bottom - top) ) / 2
 	};
 
-	std::for_each(elements.begin(), elements.end(), [&](auto& element) {
+	std::for_each(elements.begin(), elements.end(), [x_1 = left, y_1 = top, OFFSET](auto& element) {
 		
 		const wxPoint RELATIVE_OFFSET
 		{
 			// Distance this element is to the one that is furthest left
-			element->GetPosition().x - left,
+			element->GetPosition().x - x_1,
 
 			// Distance this element is to the one that is furthest up
-			element->GetPosition().y - top
+			element->GetPosition().y - y_1
 		};
 
 		// Top left corner of this element should be OFFSET + RELATIVE_OFFSET
@@ -98,13 +101,11 @@ class BaseWindow : public wxFrame
 
 protected:
 
-	bool _init = false;
+	bool _initialized = false;
 
 	enum class Asset {
 		ICON
 	};
-
-	BaseWindow* SpawnWindow(const WindowNames windowName, const std::string& ip = "");
 
 	static string GetAssetPath(Asset asset) {
 
@@ -138,7 +139,7 @@ protected:
 	
 public:
 
-	void OpenWindow(const WindowNames windowName);
+	void OpenWindow(const WindowNames windowName, const std::string& ip = "", const bool close = true);
 
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
@@ -174,7 +175,10 @@ protected:
 
 	void GoBack();
 
-	virtual void CleanUp() {};
+	virtual void CleanUp() {
+
+		_windowElements.clear();
+	};
 	virtual constexpr const WindowNames WindowName() = 0;
 
 };
@@ -197,11 +201,11 @@ public:
 	void SetText(const std::string& text) { _text->Clear(); _text->AppendText(text); };
 
 private:
-	static const inline wxSize POPUP_SIZE = wxSize(RES_480.width, RES_480.height);
+
+	static const inline wxSize DEF_POPUP_SIZE = wxSize(RES_480.width, RES_480.height);
 	
 	Action onClose;
 
-	//wxStaticText* _text;
 	wxTextCtrl* _text;
 	wxButton* _dismissButton;
 

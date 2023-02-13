@@ -22,9 +22,9 @@
 #endif
 
 #if defined(__APPLE__)
-static constexpr OPERATING_SYSTEM OS = OPERATING_SYSTEM::MAC;
+static constexpr OperatingSystem OS = OperatingSystem::MAC;
 #elif defined(__linux__)
-static constexpr OPERATING_SYSTEM OS = OPERATING_SYSTEM::LINUX;
+static constexpr OperatingSystem OS = OperatingSystem::LINUX;
 #else
 
 static constexpr OperatingSystem OS = OperatingSystem::WINDOWS;

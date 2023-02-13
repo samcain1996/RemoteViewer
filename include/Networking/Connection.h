@@ -4,7 +4,6 @@
 #include <thread>
 #include <random>
 #include <iostream>
-#include <coroutine>
 #include "Networking/Packet.h"
 #include "Messages.h"
 

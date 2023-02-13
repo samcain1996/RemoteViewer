@@ -1,5 +1,4 @@
 #include "Windows/RemoteViewerWindows.h"
-#include "GetInput.h"
 
 /*----------------------Client Streaming Window-----------------------*/
 
@@ -25,7 +24,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const wxPoint& pos
 
 		// Attempt to connect to other computer on separate thread so
 		// program is still responsive
-		std::jthread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) {
+		std::thread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) {
 
 			// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
 			// or the system has successfully connected
@@ -58,7 +57,7 @@ void ClientStreamWindow::OnConnect(ConnectionPtr& pConnection) {
 	ConnectMessageables(*this, *_client);
 
 	// Start receiving data on separate thread
-	_clientThr = std::jthread([this, &pConnection] {
+	_clientThr = std::thread([this, &pConnection] {
 
 		_client->Receive(pConnection);
 		pConnection->pIO_cont->run();
@@ -69,7 +68,7 @@ void ClientStreamWindow::OnConnect(ConnectionPtr& pConnection) {
 	const BmpFileHeader header = ConstructBMPHeader();
 	std::copy(header.begin(), header.end(), _imageData.begin());
 
-	_init = true;
+	_initialized = true;
 }
 
 void ClientStreamWindow::CleanUp() {
@@ -81,6 +80,8 @@ void ClientStreamWindow::CleanUp() {
 	if (HAS_BEEN_CONNECTED) { packetReader->Clear(); }
 
 	_client->connections.clear();
+
+	BaseWindow::CleanUp();
 }
 
 void ClientStreamWindow::Resize(const Resolution& resolution) {
@@ -113,7 +114,7 @@ void ClientStreamWindow::OnTick(wxTimerEvent& timerEvent) {
 
 void ClientStreamWindow::PaintNow() {
 
-	if (!_init || !_client->Connected()) { return; }
+	if (!_initialized || !_client->Connected()) { return; }
 
 	ImageBuilder();
 
@@ -135,7 +136,7 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	if (!_init) {
+	if (!_initialized) {
 		if (doneConnecting) { GoBack(); }
 		return;
 	}

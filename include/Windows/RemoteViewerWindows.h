@@ -2,7 +2,6 @@
 
 #include "Windows/BaseWindow.h"
 #include "Messageable.h"
-
 #include "Networking/Client.h"
 #include "Networking/Server.h"
 
@@ -10,11 +9,14 @@
 //--------------Start Up Window Class-----------------------------//
 
 class StartUpWindow : public BaseWindow {
+
 private:
-	wxButton* _clientButton;
-	wxButton* _serverButton;
+
+	wxButton _clientButton;
+	wxButton _serverButton;
 
 public:
+
 	StartUpWindow(const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~StartUpWindow();
 
@@ -38,10 +40,11 @@ class ClientInitWindow : public BaseWindow {
 
 private:
 
-	wxTextCtrl* _ipInput;
-	wxButton* _connectButton;
+	wxTextCtrl _ipInput;
+	wxButton _connectButton;
 
 public:
+
 	ClientInitWindow(const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientInitWindow();
 
@@ -77,7 +80,7 @@ private:
 	bool doneConnecting = false;
 	
 	std::shared_ptr<Client> _client;
-	std::jthread _clientThr;
+	std::thread _clientThr;
 
 	const int TARGET_FRAME_TIME = 1000 / 60;
 
@@ -118,7 +121,7 @@ class ServerInitWindow : public BaseWindow {
 
 private:
 
-	wxButton* _startServerButton;
+	wxButton _startServerButton;
 	wxTimer _timer;
 
 	std::unique_ptr<Server> _server;

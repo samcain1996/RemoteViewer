@@ -16,17 +16,14 @@ BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize
 BaseWindow::~BaseWindow() {
 
 	CleanUp();
-
-	std::for_each(_windowElements.begin(), _windowElements.end(), [](wxControl* element) {
-		delete element;
-		});
-
 	_windowElements.clear();
 	
 }
 
-BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName, const std::string& ip) {
+void BaseWindow::OpenWindow(const WindowNames windowName, const std::string& ip,
+	const bool close) {
 
+	// Don't allow a ClientStream window because user should reconnect anyways
 	if (WindowName() != WindowNames::ClientStream) {
 		_prevWindows.push(WindowName());
 	}
@@ -52,46 +49,26 @@ BaseWindow* BaseWindow::SpawnWindow(const WindowNames windowName, const std::str
 		newWindow = new StartUpWindow(GetPosition(), GetSize());
 	}
 
-	return newWindow;
-}
+	if (close) { Close(true); }
 
-void BaseWindow::OpenWindow(const WindowNames windowName) {
-
-	SpawnWindow(windowName);
-
-	Close(true);
 }
 
 void BaseWindow::GoBack() {
 
 	CleanUp();
+	
 	// Return to the previous window
 	if (_prevWindows.empty()) { wxExit(); return; }
 	 
-	SpawnWindow(_prevWindows.top());
+	OpenWindow(_prevWindows.top());
 
 	_prevWindows.pop();
-
-	Close(true);
 
 }
 
 void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 
 	int keycode = keyEvent.GetKeyCode();
-
-	// Move between controls on form 
-	
-	//if (keycode == WXK_TAB) {
-	//	
-	//	for (int index = 0; index < _windowElements.size(); ++index) {
-	//		if (_windowElements[index]->HasFocus()) {
-	//			_windowElements[(index + 1) % _windowElements.size()]->SetFocus();
-	//			break;
-	//		}
-	//	}
-	//	
-	//}
 
 	if (keycode == WXK_BACK) { GoBack(); }
 }
@@ -104,15 +81,12 @@ wxBEGIN_EVENT_TABLE(StartUpWindow, BaseWindow)
 	EVT_KEY_UP(StartUpWindow::HandleInput)
 wxEND_EVENT_TABLE()
 
-StartUpWindow::StartUpWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer", pos, size) {
+StartUpWindow::StartUpWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Remote Viewer", pos, size),
+	_clientButton(this, 10001, "Client", wxPoint(200, 200), wxSize(150, 50)),
+	_serverButton(this, 10002, "Server", wxPoint(400, 200), wxSize(150, 50)) {
 
-	_windowElements.clear();
-
-	_clientButton = new wxButton(this, 10001, "Client", wxPoint(200, 200), wxSize(150, 50));
-	_serverButton = new wxButton(this, 10002, "Server", wxPoint(400, 200), wxSize(150, 50));
-
-	_windowElements.emplace_back(_clientButton);
-	_windowElements.emplace_back(_serverButton);
+	_windowElements.emplace_back(&_clientButton);
+	_windowElements.emplace_back(&_serverButton);
 
 	CenterElements(_windowElements);
 }
@@ -136,24 +110,19 @@ wxBEGIN_EVENT_TABLE(ClientInitWindow, BaseWindow)
 wxEND_EVENT_TABLE()
 
 
-ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size) {
+ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : BaseWindow("Client Initialization", pos, size),
+	_ipInput(this, 20001, "127.0.0.1", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR),
+	_connectButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50)) {
 
-	_ipInput = new wxTextCtrl(this, 20001, "127.0.0.1", wxPoint(100, 200), wxSize(500, 50), 0L, IP_VALIDATOR);
-	_connectButton = new wxButton(this, 20004, "Connect", wxPoint(400, 400), wxSize(200, 50));
-
-	_windowElements.emplace_back(_ipInput);
-	_windowElements.emplace_back(_connectButton);
+	_windowElements.emplace_back(&_ipInput);
+	_windowElements.emplace_back(&_connectButton);
 }
 
 ClientInitWindow::~ClientInitWindow() {}
 
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
-	
-	const std::string ipAddress = _ipInput->GetValue().ToStdString();
 
-	SpawnWindow(WindowNames::ClientStream, ipAddress);
-
-	Close(true);
+	OpenWindow(WindowNames::ClientStream, _ipInput.GetValue().ToStdString());
 }
 /*------------Pop Up------------*/
 
@@ -168,19 +137,18 @@ PopUp::PopUp(BaseWindow* parent, const std::string& message, const Action& OnClo
 
 	_text = new wxTextCtrl(this, wxID_ANY, message, wxPoint(0, 0), wxSize(300, 50));
 	_text->SetEditable(false);
+
 	_dismissButton = new wxButton(this, 90, "Dismiss", wxPoint(0, 100));
 
-	SetClientSize(POPUP_SIZE);
-
 	const wxPoint centerOfParent = parent->GetPosition() + wxPoint(parent->GetSize().GetWidth() / 2, parent->GetSize().GetHeight() / 2);
+
+	SetClientSize(DEF_POPUP_SIZE);
 	SetPosition(centerOfParent - wxPoint(GetSize().GetWidth() / 2, GetSize().GetHeight() / 2));
-	
 	_text->SetPosition(_text->GetPosition() + wxPoint(GetSize().GetWidth() / 2 - _text->GetSize().GetWidth() / 2, GetSize().GetHeight() / 2 - _text->GetSize().GetHeight() / 2));
 	_dismissButton->SetPosition(_dismissButton->GetPosition() + wxPoint(GetSize().GetWidth() / 2 - _dismissButton->GetSize().GetWidth() / 2, GetSize().GetHeight() / 2 - _dismissButton->GetSize().GetHeight() / 2));
 }
 
 PopUp::~PopUp() {
-	
 	delete _text;
 	delete _dismissButton;
 }
