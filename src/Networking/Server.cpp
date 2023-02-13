@@ -10,7 +10,7 @@ void Server::Handshake(ConnectionPtr& pConnection) {
 
     // Send handshake message based on operating system
     pConnection->pSocket->async_send(boost::asio::buffer(HANDSHAKE_MESSAGE),
-        [this, &pConnection](const error_code& ec, std::size_t bytesTransferred) {
+        [this, &pConnection](const error_code& ec, const size_t bytesTransferred) {
 
             if (!ec) {
                 
@@ -27,7 +27,7 @@ void Server::Handshake(ConnectionPtr& pConnection) {
 
 void Server::Listen (ConnectionPtr& pConnection) {
 
-    const SocketPtr& pSocket     = pConnection->pSocket;
+    SocketPtr& pSocket     = pConnection->pSocket;
     const AccptrPtr& pAcceptor   = pConnection->pAcceptor;
     const IOContPtr& pIO_context = pConnection->pIO_cont;
 
@@ -68,21 +68,19 @@ bool Server::Serve() {
     return true;
 }
 
-void Server::Receive(ConnectionPtr&) {}
+void Server::Receive(ConnectionPtr& pConnection) {}
 
 void Server::Send(PacketList& packets, ConnectionPtr& pConnection) {
 
     if (packets.size() <= 0) { return; }
 
     const Packet& packet = packets.front();
-    const auto data = packet.RawData();
-    const auto size = packet.Header().Size();
 
-    pConnection->pSocket->async_send(boost::asio::buffer(data, size),
-        [this, &packets, &pConnection](const error_code& error, size_t bytes_transferred) {
+    pConnection->pSocket->async_send(boost::asio::buffer(packet.RawData(), packet.Header().Size()),
+        [this, &packets, &pConnection](const error_code& error, const size_t bytes_transferred) {
         if (error) {
-            std::cerr << "async_write: " << error.message() << std::endl;
-            Disconnect(pConnection);
+            log.WriteLine("async_write: " + error.message());
+            Disconnect();
         }
 
         else {

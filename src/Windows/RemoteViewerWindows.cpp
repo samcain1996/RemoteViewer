@@ -8,7 +8,7 @@ BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize
 	SetIcon(FetchIcon());
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
 
-	_popup = std::make_unique<PopUp>(this);
+	_popup = make_unique<PopUp>(this);
 
 	Show(show);
 }
@@ -152,9 +152,9 @@ ClientInitWindow::~ClientInitWindow() {}
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
 	
 	const std::string ipAddress = _ipInput->GetValue().ToStdString();
-	//const std::string port = _remotePortInput->GetValue().ToStdString();
+	const std::string port = _remotePortInput->GetValue().ToStdString();
 
-	SpawnWindow(WindowNames::ClientStream, ipAddress, "21000");
+	SpawnWindow(WindowNames::ClientStream, ipAddress, port);
 
 	Close(true);
 }

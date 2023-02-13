@@ -45,15 +45,8 @@ public:
 	/**
 	 * @brief Starts a connection that has already connected
 	 *
-	 * @param pConnection 	The connection
-	 */
-	void Start(ConnectionPtr& pConnection);
-
-	/**
-	 * @brief Starts a connection that has already connected
-	 *
 	 * @param buf 	Buffer holding packet to process
 	 * @param size  The amount of data transfered
 	 */
-	void Process(const PacketBuffer& buf, const int size);
+	void AdjustForPacketLoss(const PacketBuffer& buf, const int size);
 };

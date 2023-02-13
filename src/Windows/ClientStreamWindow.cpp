@@ -20,6 +20,7 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	_popup->SetText("Connecting to " + ip);
 	_popup->Popup();
 
+	// Set up data streams
 	std::for_each(_client->connections.begin(), _client->connections.end(), 
 		[this, counter = 0] (ConnectionPtr& pConnection) mutable {
 
@@ -27,14 +28,14 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 		// program is still responsive
 		std::jthread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) {
 
-			Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter;
-
 			// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
 			// or the system has successfully connected
-			for (int attempt = 0; attempt < MAX_ATTEMPTS && !pConnection->connected; attempt++, portToConnectTo++) {
+			for (int attempt = 0; attempt < MAX_ATTEMPTS && !pConnection->connected; attempt++) {
+
+				const Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter + attempt;
 
 				if (counter == 0) {
-					_client->Connect(portToConnectTo, std::bind(&ClientStreamWindow::OnConnect, this));
+					_client->Connect(portToConnectTo, std::bind(&ClientStreamWindow::OnConnect, this, std::ref(pConnection)));
 				}
 			}
 
@@ -47,16 +48,25 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip,
 	});
 }
 
+ClientStreamWindow::~ClientStreamWindow() {}
+
 // What happens when connection to server is made
-void ClientStreamWindow::OnConnect() {
+void ClientStreamWindow::OnConnect(ConnectionPtr& pConnection) {
 
 	_popup->Dismiss();
 
+	// Allows this window and the client to communicate across threads
 	ConnectMessageables(*this, *_client);
 
 	// Start receiving data on separate thread
-	_clientThr = std::jthread(&Client::Start, _client, std::ref(_client->connections[0]));
+	_clientThr = std::jthread([this, &pConnection] {
 
+		_client->Receive(pConnection);
+		pConnection->pIO_cont->run();
+
+		});
+
+	// Initialize image header
 	const BmpFileHeader header = ConstructBMPHeader();
 	std::copy(header.begin(), header.end(), _imageData.begin());
 
@@ -66,19 +76,13 @@ void ClientStreamWindow::OnConnect() {
 void ClientStreamWindow::CleanUp() {
 
 	// Disconnect each connection
-	std::for_each(_client->connections.begin(), _client->connections.end(),
-		[this](ConnectionPtr& pConnection) {
-
-			if (pConnection->connected) {
-				_client->Disconnect(pConnection);
-			}
-		});
+	if (_client->Connected()) { _client->Disconnect(); }
 
 	if (_clientThr.joinable()) { _clientThr.join(); }
 	if (HAS_BEEN_CONNECTED) { packetReader->Clear(); }
-}
 
-ClientStreamWindow::~ClientStreamWindow() {}
+	_client->connections.clear();
+}
 
 void ClientStreamWindow::Resize(const Resolution& resolution) {
 	_resolution = resolution;
@@ -136,7 +140,7 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 		if (doneConnecting) { GoBack(); }
 		return;
 	}
-	else if (!_timer.IsRunning()) { _timer.Start(1000 / _targetFPS); }
+	else if (!_timer.IsRunning()) { _timer.Start(TARGET_FRAME_TIME); }
 
 	else if (!_client->Connected() && _clientThr.joinable()) {
 		_clientThr.join();

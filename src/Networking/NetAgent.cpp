@@ -34,16 +34,21 @@ void NetAgent::Handshake(ConnectionPtr& pConnection) {
 
 }
 
-void NetAgent::Disconnect(ConnectionPtr& pConnection) {
+void NetAgent::Disconnect() {
 
-    const auto& pSocket = pConnection->pSocket;
+    std::for_each(connections.begin(), connections.end(), [](auto& pConnection) {
 
-    // Disconnect
-    if (pSocket->is_open()) {
-        pSocket->write_some(boost::asio::buffer(DISCONNECT_MESSAGE), pConnection->errorcode);
-        pSocket->cancel();
-    }
-    pConnection->connected = false;
+        auto& pSocket = pConnection->pSocket;
+
+        // Disconnect
+        if (pSocket->is_open()) {
+            pSocket->write_some(boost::asio::buffer(DISCONNECT_MESSAGE), pConnection->errorcode);
+            pSocket->cancel();
+        }
+
+        pConnection->connected = false;
+
+    });
 }
 
 PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& packetType)

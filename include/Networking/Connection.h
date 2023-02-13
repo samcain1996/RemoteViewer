@@ -4,15 +4,16 @@
 #include <thread>
 #include <random>
 #include <iostream>
+#include <coroutine>
 #include "Networking/Packet.h"
 #include "Messages.h"
 
 using std::chrono::seconds;
+using boost::asio::ip::tcp;
+using boost::asio::io_context;
+using boost::asio::ip::address;
 using std::chrono::steady_clock;
 using boost::system::error_code;
-using boost::asio::ip::tcp;
-using boost::asio::ip::address;
-using boost::asio::io_context;
 
 using std::make_unique;
 

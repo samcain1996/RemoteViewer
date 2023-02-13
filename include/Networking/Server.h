@@ -5,9 +5,9 @@
 
 class Server : public NetAgent {
 
-private:
-
 	static inline Loggette log = Logger::newStream("Server.log").value();
+
+private:
 
 	ScreenCapture _screen;
 
@@ -17,12 +17,11 @@ private:
 
 public:
 
-	// Servers should only be instantiated with a port number
+	Server(const Ushort listenPort);
+
 	Server() = delete;
 	Server(const Server&) = delete;
 	Server(Server&&) = delete;
-
-	Server(const Ushort listenPort);
 
 	Server& operator=(const Server&) = delete;
 	Server& operator=(Server&&) = delete;

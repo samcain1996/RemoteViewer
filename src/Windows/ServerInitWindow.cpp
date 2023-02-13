@@ -18,17 +18,12 @@ ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) :
 ServerInitWindow::~ServerInitWindow() {}
 
 void ServerInitWindow::CleanUp() {
+
 	_timer.Stop();
 	SetSize(DEFAULT_SIZE);
 
 	if (_init) {
-		std::for_each(_server->connections.begin(), _server->connections.end(),
-			[this](ConnectionPtr& pConnection) {
-
-				if (pConnection->connected) {
-					_server->Disconnect(pConnection);
-				}
-			});
+		_server->Disconnect();
 	}
 
 }
@@ -61,7 +56,7 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (_server->Connected()) {
 		SetSize(MINIMIZED_SIZE);
-		_timer.Start(1000 / _targetFPS);
+		_timer.Start(TARGET_FRAME_TIME);
 	}
 	else {
 		_server.reset(nullptr);

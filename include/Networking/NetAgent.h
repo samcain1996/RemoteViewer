@@ -58,6 +58,6 @@ protected:
 
 public:
 
-	void Disconnect(ConnectionPtr& pConnection);
+	void Disconnect();
 	bool Connected() const;
 };

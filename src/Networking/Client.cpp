@@ -52,12 +52,6 @@ void Client::Handshake(ConnectionPtr& pConnection) {
 
 void Client::Send(PacketList& data, ConnectionPtr& pConnection) {}
 
-void Client::Start(ConnectionPtr& pConnection) {
-    Receive(pConnection);
-    pConnection->pIO_cont->run();
-
-}
-
 void Client::Receive(ConnectionPtr& pConnection) {
 
     const SocketPtr& pSocket = pConnection->pSocket;
@@ -66,21 +60,25 @@ void Client::Receive(ConnectionPtr& pConnection) {
     pSocket->async_receive(boost::asio::buffer(buffer),
         [this, &pConnection, &buffer](const error_code& ec, std::size_t bytes_transferred)
         {
-            if (ec.value() == 0 && bytes_transferred > 0)  {
+            if (pConnection->connected && ec.value() == 0 && bytes_transferred > 0) {
 
-                Process(buffer, bytes_transferred);
-                if (IsDisconnectMsg(buffer)) { Disconnect(pConnection); }
+                AdjustForPacketLoss(buffer, bytes_transferred);
+                if (IsDisconnectMsg(buffer)) { 
+                    Disconnect(); 
+                }
                 else { Receive(pConnection); }
             }
             else {
-                Disconnect(pConnection);
+                Disconnect();
             }
         });
 
 }
 
+
 // TODO: CLEAN THIS UP
-void Client::Process(const PacketBuffer& buf, const int size) {
+void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
+
     static std::optional<std::pair<PacketBuffer, int>> current = std::nullopt;
     
     const PacketPtr packet = Packet::VerifyPacket(buf);

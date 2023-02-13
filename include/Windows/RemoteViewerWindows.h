@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Windows/BaseWindow.h"
-#include <coroutine>
 #include "Messageable.h"
 
 #include "Networking/Client.h"
@@ -69,13 +68,11 @@ public:
 
 class ClientStreamWindow : public BaseWindow, public Messageable<PacketPtr> {
 
-	MessageReader<PacketPtr>*& groupReader = msgReader;  // Queue of packets that can create a complete image
+	MessageReader<PacketPtr>*& packetReader = msgReader;
 
-
-	
 private:
-	Ushort port;
-	PixelData _imageData{};
+
+	PixelData _imageData {};
 	Resolution _resolution = ScreenCapture::DefaultResolution;
 
 	bool doneConnecting = false;
@@ -83,11 +80,9 @@ private:
 	std::shared_ptr<Client> _client;
 	std::jthread _clientThr;
 
-	const int _targetFPS = 60;
-	int _timeSinceLastFrame = 0;
+	const int TARGET_FRAME_TIME = 1000 / 60;
 
 	wxTimer _timer;
-	MessageReader<PacketPtr>*& packetReader = msgReader;
 
 
 public:
@@ -95,7 +90,6 @@ public:
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 
-	// Delete copy and move constructors and assignment operators
 	ClientStreamWindow(const ClientStreamWindow&) = delete;
 	ClientStreamWindow(ClientStreamWindow&&) = delete;
 	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
@@ -105,7 +99,7 @@ public:
 	
 	void OnPaint(wxPaintEvent& evt);
 	void Resize(const Resolution& resolution);
-	void OnConnect();
+	void OnConnect(ConnectionPtr& pConnection);
 	void CleanUp() override;
 	
 	void PaintNow();
@@ -130,7 +124,7 @@ private:
 
 	std::unique_ptr<Server> _server;
 	
-	const int _targetFPS = 60;
+	const int TARGET_FRAME_TIME = 1000 / 60;
 
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);
