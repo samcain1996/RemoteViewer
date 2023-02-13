@@ -104,7 +104,7 @@ protected:
 		ICON
 	};
 
-	BaseWindow* SpawnWindow(const WindowNames windowName, const std::string& ip = "", const std::string& port = "");
+	BaseWindow* SpawnWindow(const WindowNames windowName, const std::string& ip = "");
 
 	static string GetAssetPath(Asset asset) {
 
@@ -138,12 +138,13 @@ protected:
 	
 public:
 
+	void OpenWindow(const WindowNames windowName);
+
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
 
 	// Textbox validators used
 	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
-	wxTextValidator PORT_VALIDATOR = wxTextValidator(wxFILTER_DIGITS);
 	virtual ~BaseWindow();
 
 protected:
@@ -172,7 +173,6 @@ protected:
 	PopUpPtr _popup;
 
 	void GoBack();
-	void OpenWindow(const WindowNames windowName);
 
 	virtual void CleanUp() {};
 	virtual constexpr const WindowNames WindowName() = 0;

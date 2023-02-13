@@ -10,8 +10,7 @@ EVT_KEY_UP(ClientStreamWindow::HandleInput)
 EVT_TIMER(1234, ClientStreamWindow::OnTick)
 wxEND_EVENT_TABLE()
 
-ClientStreamWindow::ClientStreamWindow(const std::string& ip,
-	const Ushort remotePort, const wxPoint& pos, const wxSize& size) :
+ClientStreamWindow::ClientStreamWindow(const std::string& ip, const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
 	// Create client to receive data from other computer

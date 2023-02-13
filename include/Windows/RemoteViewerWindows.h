@@ -38,7 +38,6 @@ class ClientInitWindow : public BaseWindow {
 
 private:
 
-	wxTextCtrl* _remotePortInput;
 	wxTextCtrl* _ipInput;
 	wxButton* _connectButton;
 
@@ -86,7 +85,7 @@ private:
 
 
 public:
-	ClientStreamWindow(const std::string& ip, const Ushort remotePort,
+	ClientStreamWindow(const std::string& ip, 
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 

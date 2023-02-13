@@ -55,7 +55,7 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 	if (!_init || _timer.IsRunning()) { return; }
 
 	if (_server->Connected()) {
-		SetSize(MINIMIZED_SIZE);
+		//SetSize(MINIMIZED_SIZE);
 		_timer.Start(TARGET_FRAME_TIME);
 	}
 	else {
