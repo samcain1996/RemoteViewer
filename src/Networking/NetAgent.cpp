@@ -1,6 +1,12 @@
 #include "Networking/NetAgent.h"
 
-bool NetAgent::Connected() const { return connections.empty() ? false : connections[0]->connected; };
+bool NetAgent::Connected() const {
+    return connections.empty() ? false : std::all_of(connections.begin(), connections.end(), 
+        [](const ConnectionPtr& pConnection) {
+            return pConnection->connected;
+        }
+    ); 
+};
 
 bool NetAgent::IsDisconnectMsg(const PacketBuffer& buffer) const {
     return std::memcmp(buffer.data(), DISCONNECT_MESSAGE.data(), DISCONNECT_MESSAGE.size()) == 0;

@@ -140,6 +140,7 @@ public:
 	
 	void StartServer(wxCommandEvent& evt);
 	void BackgroundTask(wxIdleEvent& evt);	
+	void Listen();
 
 	void CleanUp() override;
 

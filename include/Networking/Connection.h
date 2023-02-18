@@ -16,8 +16,7 @@ using boost::system::error_code;
 
 using std::make_unique;
 
-constexpr const int IMAGE_THREADS = 1;
-constexpr const int SEND_THREADS = 1;  // KEEP AT 1, WILL BREAK AT ANYTHING ELSE
+constexpr const int VIDEO_THREADS = 1;
 
 using SocketPtr = std::unique_ptr<tcp::socket>;
 using IOContPtr = std::unique_ptr<io_context>;

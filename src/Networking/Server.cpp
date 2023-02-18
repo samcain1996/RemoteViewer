@@ -46,14 +46,14 @@ void Server::Listen (ConnectionPtr& pConnection) {
 bool Server::Serve() {
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
-    const int PACKETS_PER_THREAD = packets.size() / SEND_THREADS;
+    const int PACKETS_PER_THREAD = packets.size() / VIDEO_THREADS;
 
-    for (int threadIndex = 0; threadIndex < SEND_THREADS; ++threadIndex) {
+    for (int threadIndex = 0; threadIndex < VIDEO_THREADS; ++threadIndex) {
 
         ConnectionPtr& pConnection = connections[threadIndex];
 
         const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
-        const auto& end = (threadIndex == SEND_THREADS - 1) ? packets.end() : packets.begin() + (threadIndex * PACKETS_PER_THREAD);
+        const auto& end = (threadIndex == VIDEO_THREADS - 1) ? packets.end() : packets.begin() + (threadIndex * PACKETS_PER_THREAD);
 
         PacketList list(begin, end);
 
