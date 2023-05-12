@@ -153,6 +153,11 @@ public:
 	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
 	virtual ~BaseWindow();
 
+	virtual constexpr const WindowNames WindowName() = 0;
+	virtual void CleanUp() {
+
+		_windowElements.clear();
+	};
 protected:
 	
 	// Previous Windows
@@ -180,11 +185,7 @@ protected:
 
 	void GoBack();
 
-	virtual void CleanUp() {
 
-		_windowElements.clear();
-	};
-	virtual constexpr const WindowNames WindowName() = 0;
 
 };
 

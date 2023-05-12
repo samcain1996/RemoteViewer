@@ -3,8 +3,11 @@
 
 Server::Server(const Ushort listenPort) : _screen() {
 
-    ConnectionPtr pConnection = make_unique<Connection>(listenPort, true);
-    connections.emplace_back(move(pConnection));
+    for (int i = 0; i < VIDEO_THREADS; ++i) {
+        ConnectionPtr pConnection = make_unique<Connection>(listenPort + i, true);
+        connections.emplace_back(move(pConnection));
+    }
+
 }
 
 void Server::Handshake(ConnectionPtr& pConnection) {
@@ -28,7 +31,7 @@ void Server::Handshake(ConnectionPtr& pConnection) {
 
 void Server::Listen (ConnectionPtr& pConnection) {
 
-    SocketPtr& pSocket     = pConnection->pSocket;
+    SocketPtr& pSocket           = pConnection->pSocket;
     const AccptrPtr& pAcceptor   = pConnection->pAcceptor;
     const IOContPtr& pIO_context = pConnection->pIO_cont;
 
@@ -57,7 +60,7 @@ bool Server::Serve() {
         ConnectionPtr& pConnection = connections[threadIndex];
 
         const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
-        const auto& end = (threadIndex == VIDEO_THREADS - 1) ? packets.end() : packets.begin() + (threadIndex * PACKETS_PER_THREAD);
+        const auto& end   = begin + PACKETS_PER_THREAD;
 
         _packetGroups[threadIndex] = move(PacketList(begin, end));
         stillConnected.push_back(async(std::launch::async, &Server::ThreadFunction, 

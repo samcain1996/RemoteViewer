@@ -18,7 +18,6 @@ BaseWindow::BaseWindow(const string& name, const wxPoint& pos, const wxSize& siz
 BaseWindow::~BaseWindow() {
 
 	CleanUp();
-	_windowElements.clear();
 	
 }
 

@@ -47,7 +47,8 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 }
 
 void ServerInitWindow::Listen() {
-	_server->Listen(_server->connections[0]);
+	for_each(_server->connections.begin(), _server->connections.end(),
+		[this](ConnectionPtr& pCon) { _server->Listen(pCon); });
 	
 	_initialized = _server->Connected();
 }

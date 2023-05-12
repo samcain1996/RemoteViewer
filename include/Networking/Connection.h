@@ -14,7 +14,7 @@ using boost::asio::ip::address;
 using std::chrono::steady_clock;
 using boost::system::error_code;
 
-constexpr const int VIDEO_THREADS = 1;
+constexpr const int VIDEO_THREADS = 2;
 
 using SocketPtr = unique_ptr<tcp::socket>;
 using IOContPtr = unique_ptr<io_context>;

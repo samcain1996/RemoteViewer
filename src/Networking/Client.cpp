@@ -3,11 +3,10 @@
 Client::Client(const string& hostname) {
     _hostname = hostname;
     
-    ConnectionPtr pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT);
-    connections.emplace_back(move(pConnection));
-
-    //pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT + 1);
-    //connections.emplace_back(move(pConnection));
+    for (int i = 0; i < VIDEO_THREADS; ++i) {
+        ConnectionPtr pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT + i);
+        connections.emplace_back(move(pConnection));
+    }
 }
 
 const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
@@ -60,7 +59,7 @@ void Client::Receive(ConnectionPtr& pConnection) {
         [this, &pConnection, &buffer](const error_code& ec, const size_t size)
         {
             if (pConnection->connected && ec.value() == 0 && size > 0) {
-
+                //msgWriter->WriteMessage(make_shared<Packet>(buffer));
                 AdjustForPacketLoss(buffer, size);
                 if (IsDisconnectMsg(buffer)) { Disconnect(); }
                 else { Receive(pConnection); }

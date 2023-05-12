@@ -80,7 +80,9 @@ private:
 	bool doneConnecting = false;
 	
 	std::shared_ptr<Client> _client;
-	std::thread _clientThr;
+	//std::thread _clientThr;
+	std::vector<std::thread> _clientThrs;
+	std::vector<std::future<bool>> connectionResults;
 
 	const int TARGET_FRAME_TIME = 1000 / 60;
 
@@ -104,7 +106,7 @@ public:
 	void OnConnect(ConnectionPtr& pConnection);
 	void CleanUp() override;
 	
-	void Connect(ConnectionPtr&, atomic<int>&);
+	bool Connect(ConnectionPtr&, int);
 	void PaintNow();
 	void BackgroundTask(wxIdleEvent& evt);
 
