@@ -59,7 +59,7 @@ void Client::Receive(ConnectionPtr& pConnection) {
         [this, &pConnection, &buffer](const error_code& ec, const size_t size)
         {
             if (pConnection->connected && ec.value() == 0 && size > 0) {
-                //msgWriter->WriteMessage(make_shared<Packet>(buffer));
+                
                 AdjustForPacketLoss(buffer, size);
                 if (IsDisconnectMsg(buffer)) { Disconnect(); }
                 else { Receive(pConnection); }
@@ -75,7 +75,7 @@ void Client::Receive(ConnectionPtr& pConnection) {
 // TODO: CLEAN THIS UP
 void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
 
-    static std::optional<std::pair<PacketBuffer, int>> current = std::nullopt;
+    static std::pair<PacketBuffer, int>* current = nullptr;
     
     const PacketPtr packet = Packet::VerifyPacket(buf);
 
@@ -83,26 +83,26 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
 
     // Full Packet
     if ( packet->Header().Size() - size == 0 ) {
-        current = std::nullopt;
+        current = nullptr;
         msgWriter->WriteMessage(make_shared<Packet>(move(Packet(buf))));
         return;
     }
 
     // Split Packet
-    if (current.has_value()) {
+    if (current != nullptr) {
 
-        const Packet& currentPacket = current.value().first;
-        const int remaining = currentPacket.Header().Size() - current.value().second - size;
+        const Packet& currentPacket = current->first;
+        const int remaining = currentPacket.Header().Size() - current->second - size;
 
         if (remaining == 0) { 
             std::copy(buf.begin(), buf.begin() + size,
-                current.value().first.begin() + current.value().second);
-            msgWriter->WriteMessage(make_shared<Packet>(move(Packet(current.value().first)))); 
+                current->first.begin() + current->second);
+            msgWriter->WriteMessage(make_shared<Packet>(move(Packet(current->first)))); 
         }
 
         else if (remaining > 0) {
             std::copy(buf.begin(), buf.begin() + size,
-                current.value().first.begin() + current.value().second);
+                current->first.begin() + current->second);
         }
 
         return;
@@ -111,7 +111,7 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
     int remaining = packet->Header().Size() - size;
     if (remaining == 0) { msgWriter->WriteMessage(make_shared<Packet>(move(Packet(buf)))); }
     else {
-        current = { buf, packet->Header().Size() };
+        *current = { buf, packet->Header().Size() };
     }
 }
 

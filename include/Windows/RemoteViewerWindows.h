@@ -76,11 +76,8 @@ private:
 
 	PixelData _imageData {};
 	Resolution _resolution = ScreenCapture::DefaultResolution;
-
-	bool doneConnecting = false;
 	
 	std::shared_ptr<Client> _client;
-	//std::thread _clientThr;
 	std::vector<std::thread> _clientThrs;
 	std::vector<std::future<bool>> connectionResults;
 

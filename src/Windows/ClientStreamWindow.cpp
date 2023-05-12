@@ -38,9 +38,7 @@ bool ClientStreamWindow::Connect(ConnectionPtr& pConnection, int counter) {
 
 		const Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter + attempt;
 
-		//if (counter == 0) {
 		_client->Connect(portToConnectTo, bind(&ClientStreamWindow::OnConnect, this, ref(pConnection)));
-		//}
 	}
 
 	
@@ -52,20 +50,6 @@ ClientStreamWindow::~ClientStreamWindow() {}
 // What happens when connection to server is made
 void ClientStreamWindow::OnConnect(ConnectionPtr& pConnection) {
 
-
-	static bool once = true;
-	if (once) {
-		once = false;
-
-		// Allows this window and the client to communicate across threads
-		ConnectMessageables(*this, *_client);
-
-		// Initialize image header
-		const BmpFileHeader header = ConstructBMPHeader();
-		std::copy(header.begin(), header.end(), _imageData.begin());
-
-
-	}
 
 	// Start receiving data on separate thread
 	_clientThrs.push_back(thread([this, &pConnection] {
@@ -142,7 +126,16 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_initialized) {
-		if (connectionResults.size() == VIDEO_THREADS) { _initialized = true; }
+		if (connectionResults.size() == VIDEO_THREADS) { 
+			
+			// Allows this window and the client to communicate across threads
+			ConnectMessageables(*this, *_client);
+
+			// Initialize image header
+			const BmpFileHeader header = ConstructBMPHeader();
+			std::copy(header.begin(), header.end(), _imageData.begin());
+			_initialized = true; 
+		}
 		return;
 	}
 
