@@ -42,7 +42,7 @@ void NetAgent::Handshake(ConnectionPtr& pConnection) {
 
 void NetAgent::Disconnect() {
 
-    std::for_each(connections.begin(), connections.end(), [](auto& pConnection) {
+    for_each(connections.begin(), connections.end(), [](auto& pConnection) {
 
         auto& pSocket = pConnection->pSocket;
 

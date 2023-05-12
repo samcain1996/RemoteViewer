@@ -11,8 +11,12 @@ private:
 
 	ScreenCapture _screen;
 
+	std::vector<PacketList> _packetGroups{};
+	std::vector<std::promise<bool>> _threads;
+	bool ThreadFunction(PacketList&, ConnectionPtr&);
+
 	void Send(PacketList& packets, ConnectionPtr& pConnection) override;
-	void Receive(ConnectionPtr& pConnection) override;
+	void Receive(ConnectionPtr& pConnection) override {};
 	void Handshake(ConnectionPtr& pConnection) override;
 
 public:

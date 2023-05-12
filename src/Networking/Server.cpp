@@ -1,9 +1,10 @@
 #include "Networking/Server.h"
+#include <future>
 
 Server::Server(const Ushort listenPort) : _screen() {
 
     ConnectionPtr pConnection = make_unique<Connection>(listenPort, true);
-    connections.emplace_back(std::move(pConnection));
+    connections.emplace_back(move(pConnection));
 }
 
 void Server::Handshake(ConnectionPtr& pConnection) {
@@ -41,11 +42,14 @@ void Server::Listen (ConnectionPtr& pConnection) {
     pIO_context->run_until(steady_clock::now() + pConnection->timeout);
     pIO_context->restart();
 
+    if (pConnection->connected) { _packetGroups.push_back(PacketList()); }
+
 }
 
 bool Server::Serve() {
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
+    vector<std::future<bool>> stillConnected;
     const int PACKETS_PER_THREAD = packets.size() / VIDEO_THREADS;
 
     for (int threadIndex = 0; threadIndex < VIDEO_THREADS; ++threadIndex) {
@@ -55,20 +59,20 @@ bool Server::Serve() {
         const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
         const auto& end = (threadIndex == VIDEO_THREADS - 1) ? packets.end() : packets.begin() + (threadIndex * PACKETS_PER_THREAD);
 
-        PacketList list(begin, end);
-
-        Send(list, pConnection);
-
-        pConnection->pIO_cont->run_until(steady_clock::now() + pConnection->timeout);
-        pConnection->pIO_cont->restart();
-
-        if (!pConnection->connected) { return false; }
+        _packetGroups[threadIndex] = move(PacketList(begin, end));
+        stillConnected.push_back(async(std::launch::async, &Server::ThreadFunction, 
+            this, ref(_packetGroups[threadIndex]), ref(pConnection)));
     }
-
-    return true;
+    
+    return std::all_of(stillConnected.begin(), stillConnected.end(), [](auto& x) { return x.get(); });
 }
 
-void Server::Receive(ConnectionPtr& pConnection) {}
+bool Server::ThreadFunction(PacketList& packets, ConnectionPtr& pConn) {    
+    Send(packets, pConn);
+    pConn->pIO_cont->run_until(steady_clock::now() + pConn->timeout);
+    pConn->pIO_cont->restart();
+    return pConn->connected;
+}
 
 void Server::Send(PacketList& packets, ConnectionPtr& pConnection) {
 

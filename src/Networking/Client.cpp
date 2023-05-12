@@ -1,15 +1,19 @@
 #include "Networking/Client.h"
 
-Client::Client(const std::string& hostname) {
+Client::Client(const string& hostname) {
     _hostname = hostname;
     
     ConnectionPtr pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT);
-    connections.emplace_back(std::move(pConnection));
+    connections.emplace_back(move(pConnection));
+
+    //pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT + 1);
+    //connections.emplace_back(move(pConnection));
 }
 
 const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
 
-    ConnectionPtr& pConnection = connections[connections.size() - 1];
+    static int idx = 0;
+    ConnectionPtr& pConnection = connections[idx++];
     pConnection->remotePort = remotePort;
 
     tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
@@ -23,6 +27,7 @@ const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
     pConnection->pIO_cont->restart();
 
     if (pConnection->connected) { onConnect(); }
+
 
 }
 
@@ -80,7 +85,7 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
     // Full Packet
     if ( packet->Header().Size() - size == 0 ) {
         current = std::nullopt;
-        msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf))));
+        msgWriter->WriteMessage(make_shared<Packet>(move(Packet(buf))));
         return;
     }
 
@@ -93,7 +98,7 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
         if (remaining == 0) { 
             std::copy(buf.begin(), buf.begin() + size,
                 current.value().first.begin() + current.value().second);
-            msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(current.value().first)))); 
+            msgWriter->WriteMessage(make_shared<Packet>(move(Packet(current.value().first)))); 
         }
 
         else if (remaining > 0) {
@@ -105,7 +110,7 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
     }
 
     int remaining = packet->Header().Size() - size;
-    if (remaining == 0) { msgWriter->WriteMessage(std::make_shared<Packet>(std::move(Packet(buf)))); }
+    if (remaining == 0) { msgWriter->WriteMessage(make_shared<Packet>(move(Packet(buf)))); }
     else {
         current = { buf, packet->Header().Size() };
     }

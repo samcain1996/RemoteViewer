@@ -104,6 +104,7 @@ public:
 	void OnConnect(ConnectionPtr& pConnection);
 	void CleanUp() override;
 	
+	void Connect(ConnectionPtr&, atomic<int>&);
 	void PaintNow();
 	void BackgroundTask(wxIdleEvent& evt);
 

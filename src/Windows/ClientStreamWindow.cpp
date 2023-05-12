@@ -9,7 +9,7 @@ EVT_KEY_UP(ClientStreamWindow::HandleInput)
 EVT_TIMER(1234, ClientStreamWindow::OnTick)
 wxEND_EVENT_TABLE()
 
-ClientStreamWindow::ClientStreamWindow(const std::string& ip, const wxPoint& pos, const wxSize& size) :
+ClientStreamWindow::ClientStreamWindow(const string& ip, const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Remote Viewer - Master", pos, size), _imageData(CalculateBMPFileSize()), _timer(this, 1234) {
 
 	// Create client to receive data from other computer
@@ -18,32 +18,35 @@ ClientStreamWindow::ClientStreamWindow(const std::string& ip, const wxPoint& pos
 	_popup->SetText("Connecting to " + ip);
 	_popup->Popup();
 
+	atomic<int> counter = 0;
 	// Set up data streams
-	std::for_each(_client->connections.begin(), _client->connections.end(), 
-		[this, counter = 0] (ConnectionPtr& pConnection) mutable {
+	for_each(_client->connections.begin(), _client->connections.end(),
+		[this, &counter](ConnectionPtr& pConnection) {
 
-		// Attempt to connect to other computer on separate thread so
-		// program is still responsive
-		std::thread([this, &pConnection, counter](const int MAX_ATTEMPTS = 5) {
+			// Attempt to connect to other computer on separate thread so
+			// program is still responsive
+			async(std::launch::async, &ClientStreamWindow::Connect, this, ref(pConnection), ref(counter));
+		});
 
-			// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
-			// or the system has successfully connected
-			for (int attempt = 0; attempt < MAX_ATTEMPTS && !pConnection->connected; attempt++) {
 
-				const Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter + attempt;
 
-				if (counter == 0) {
-					_client->Connect(portToConnectTo, std::bind(&ClientStreamWindow::OnConnect, this, std::ref(pConnection)));
-				}
-			}
+}
 
-			doneConnecting = true;
+void ClientStreamWindow::Connect(ConnectionPtr& pConnection, atomic<int>& counter) {
+	// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
+// or the system has successfully connected
+	for (int attempt = 0; attempt < 5 && !pConnection->connected; attempt++) {
 
-		}).detach();
+		const Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter + attempt;
 
-		counter++;
+		//if (counter == 0) {
+		_client->Connect(portToConnectTo, bind(&ClientStreamWindow::OnConnect, this, ref(pConnection)));
+		//}
+	}
 
-	});
+	doneConnecting = true;
+
+	counter++;
 }
 
 ClientStreamWindow::~ClientStreamWindow() {}
@@ -51,24 +54,29 @@ ClientStreamWindow::~ClientStreamWindow() {}
 // What happens when connection to server is made
 void ClientStreamWindow::OnConnect(ConnectionPtr& pConnection) {
 
-	_popup->Dismiss();
 
-	// Allows this window and the client to communicate across threads
-	ConnectMessageables(*this, *_client);
+	static bool once = true;
+	if (once) {
+		once = false;
+		//_popup->Dismiss();
 
-	// Start receiving data on separate thread
-	_clientThr = std::thread([this, &pConnection] {
+		// Allows this window and the client to communicate across threads
+		ConnectMessageables(*this, *_client);
 
-		_client->Receive(pConnection);
-		pConnection->pIO_cont->run();
+		// Start receiving data on separate thread
+		_clientThr = thread([this, &pConnection] {
 
-		});
+			_client->Receive(pConnection);
+			pConnection->pIO_cont->run();
 
-	// Initialize image header
-	const BmpFileHeader header = ConstructBMPHeader();
-	std::copy(header.begin(), header.end(), _imageData.begin());
+			});
 
-	_initialized = true;
+		// Initialize image header
+		const BmpFileHeader header = ConstructBMPHeader();
+		std::copy(header.begin(), header.end(), _imageData.begin());
+
+		_initialized = true;
+	}
 }
 
 void ClientStreamWindow::CleanUp() {

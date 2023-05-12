@@ -54,6 +54,21 @@ constexpr const MyByte MAX_MYBYTE_VAL = static_cast<MyByte>(255);
 
 using ThreadLock = std::lock_guard<std::mutex>;
 
+using std::for_each;
+using std::atomic;
+using std::string;
+using std::thread;
+using std::vector;
+using std::make_shared;
+using std::shared_ptr;
+using std::make_unique;
+using std::unique_ptr;
+using std::queue;
+using std::function;
+using std::bind;
+using std::ref;
+using std::move;
+
 /*----------------FUNCTIONS--------------------*/
 
 constexpr void EncodeAsByte(MyByte encodedNumber[4], const Uint32 numberToEncode) {
@@ -72,4 +87,4 @@ constexpr Uint32 DecodeAsByte(const MyByte encodedNumber[4]) {
 
 }
 
-using Action = std::function<void()>;
+using Action = function<void()>;

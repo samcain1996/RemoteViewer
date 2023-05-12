@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
+#include "Types.h"
 
 using LogStream = std::ofstream;
 using LogStreamPtr = std::shared_ptr<std::ofstream>;

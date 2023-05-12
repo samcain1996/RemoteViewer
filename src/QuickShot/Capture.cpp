@@ -184,17 +184,17 @@ const PixelData& ScreenCapture::CaptureScreen() {
     return _pixelData;
 }
 
-void ScreenCapture::SaveToFile(const PixelData& imageAndHeader, std::string filename) {
+void ScreenCapture::SaveToFile(const PixelData& imageAndHeader, string filename) {
     // Add file extension if not present
-    if (filename.find(".bmp") == std::string::npos) {
+    if (filename.find(".bmp") == string::npos) {
         filename += ".bmp";
     }
 
     std::ofstream(filename, std::ios::binary).write((char*)imageAndHeader.data(), imageAndHeader.size());
 }
 
-void ScreenCapture::SaveToFile(const PixelData& image, const BmpFileHeader& header, std::string filename) {
-    if (filename.find(".bmp") == std::string::npos) {
+void ScreenCapture::SaveToFile(const PixelData& image, const BmpFileHeader& header, string filename) {
+    if (filename.find(".bmp") == string::npos) {
         filename += ".bmp";
     }
 
@@ -203,10 +203,10 @@ void ScreenCapture::SaveToFile(const PixelData& image, const BmpFileHeader& head
     outputFile.write((char*)image.data(), image.size());
 }
 
-void ScreenCapture::SaveToFile(const PixelData& image, const Resolution& resolution, std::string filename) {
+void ScreenCapture::SaveToFile(const PixelData& image, const Resolution& resolution, string filename) {
     SaveToFile(image, ConstructBMPHeader(resolution), filename);
 }
 
-void ScreenCapture::SaveToFile(const std::string& filename) const {
+void ScreenCapture::SaveToFile(const string& filename) const {
     SaveToFile(_pixelData, _resolution, filename);
 }

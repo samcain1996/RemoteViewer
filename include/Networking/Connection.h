@@ -14,13 +14,11 @@ using boost::asio::ip::address;
 using std::chrono::steady_clock;
 using boost::system::error_code;
 
-using std::make_unique;
-
 constexpr const int VIDEO_THREADS = 1;
 
-using SocketPtr = std::unique_ptr<tcp::socket>;
-using IOContPtr = std::unique_ptr<io_context>;
-using AccptrPtr = std::unique_ptr<tcp::acceptor>;
+using SocketPtr = unique_ptr<tcp::socket>;
+using IOContPtr = unique_ptr<io_context>;
+using AccptrPtr = unique_ptr<tcp::acceptor>;
 
 struct Connection {
 
@@ -57,5 +55,5 @@ struct Connection {
 	~Connection() {};
 };
 
-using ConnectionPtr = std::unique_ptr<Connection>;
-using ConnectionList = std::vector<ConnectionPtr>;
+using ConnectionPtr = unique_ptr<Connection>;
+using ConnectionList = vector<ConnectionPtr>;

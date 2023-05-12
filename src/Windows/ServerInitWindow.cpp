@@ -41,7 +41,7 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	_popup->Popup();
 
 	// Listen on separate thread so window is still responsive
-	std::thread(&ServerInitWindow::Listen, this).detach();
+	thread(&ServerInitWindow::Listen, this).detach();
 	// Race condition if reinit modifies after object deletion?
 
 }

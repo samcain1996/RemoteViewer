@@ -97,11 +97,16 @@ static void CenterElements(ElementList& elements, const wxSize& padding = wxSize
 
 class BaseWindow : public wxFrame
 {
-	
+
+private:
+
+	static inline int _nextIdPrefix = 0;
 
 protected:
 
 	bool _initialized = false;
+
+	int _idPrefix = 0;
 
 	enum class Asset {
 		ICON

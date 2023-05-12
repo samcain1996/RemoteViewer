@@ -6,7 +6,7 @@ PacketPtr Packet::VerifyPacket(const PacketBuffer& packet) {
 
 	bool match = PacketHeader::GetType(header) != PacketType::Invalid;
 	if (match &= PacketHeader::Size(header) <= MAX_PACKET_SIZE) {
-		return std::make_shared<Packet>(packet);
+		return make_shared<Packet>(packet);
 	}
 	return nullptr;
 }
@@ -30,7 +30,7 @@ Packet::Packet(const Packet& other) : _header(other.Header()) {
 }
 
 Packet::Packet(Packet&& other) noexcept : _header(other.Header()) {
-	_payload = std::move(other._payload);
+	_payload = move(other._payload);
 }
 
 Packet::Packet(const PacketBuffer& packetData) {
@@ -56,8 +56,8 @@ Packet& Packet::operator=(const Packet& other) {
 }
 
 Packet& Packet::operator=(Packet&& other) noexcept {
-	_header._metadata = std::move(other._header._metadata);
-	_payload = std::move(other._payload);
+	_header._metadata = move(other._header._metadata);
+	_payload = move(other._payload);
 
 	return *this;
 }
@@ -119,7 +119,7 @@ PacketHeader::PacketHeader(const PacketHeader& header) {
 }
 
 PacketHeader::PacketHeader(PacketHeader&& header) {
-	_metadata = std::move(header._metadata);
+	_metadata = move(header._metadata);
 }
 
 PacketHeader::PacketHeader(const PacketPayload& payload, const PacketMetadata& metadata) {

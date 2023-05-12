@@ -2,8 +2,10 @@
 
 /*---------------Abstract Base Window------------------*/
 
-BaseWindow::BaseWindow(const std::string& name, const wxPoint& pos, const wxSize& size, const bool show) : 
+BaseWindow::BaseWindow(const string& name, const wxPoint& pos, const wxSize& size, const bool show) : 
 	wxFrame(nullptr, wxID_ANY, name, pos, size) {
+
+	_idPrefix = _nextIdPrefix++;
 
 	SetIcon(FetchIcon());
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
@@ -20,7 +22,7 @@ BaseWindow::~BaseWindow() {
 	
 }
 
-void BaseWindow::OpenWindow(const WindowNames windowName, const std::string& ip,
+void BaseWindow::OpenWindow(const WindowNames windowName, const string& ip,
 	const bool close) {
 
 	// Don't allow a ClientStream window because user should reconnect anyways
@@ -132,7 +134,7 @@ wxBEGIN_EVENT_TABLE(PopUp, wxPopupTransientWindow)
 	EVT_BUTTON(90, PopUp::OnButton)
 wxEND_EVENT_TABLE()
 
-PopUp::PopUp(BaseWindow* parent, const std::string& message, const Action& OnClose) : 
+PopUp::PopUp(BaseWindow* parent, const string& message, const Action& OnClose) : 
 	wxPopupTransientWindow(parent, wxBORDER_NONE | wxPU_CONTAINS_CONTROLS), onClose(OnClose) {
 
 	_text = new wxTextCtrl(this, wxID_ANY, message, wxPoint(0, 0), wxSize(300, 50));
