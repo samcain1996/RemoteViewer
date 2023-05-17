@@ -118,7 +118,7 @@ PacketHeader::PacketHeader(const PacketHeader& header) {
 	_metadata = header._metadata;
 }
 
-PacketHeader::PacketHeader(PacketHeader&& header) {
+PacketHeader::PacketHeader(PacketHeader&& header) noexcept {
 	_metadata = move(header._metadata);
 }
 

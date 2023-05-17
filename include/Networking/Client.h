@@ -37,7 +37,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	const void Connect(const Ushort remotePort, const Action& onConnect);
+	void Connect(const Ushort remotePort, ConnectionPtr& pConnection, const Action& onConnect);
 
 	void Receive(ConnectionPtr& pConnection) override;
 	void Send(PacketList& data, ConnectionPtr& pConnection) override;

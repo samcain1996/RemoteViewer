@@ -11,7 +11,7 @@ bool Logger::streamExists(const string& name) {
 
 NullableLoggette Logger::openStream(const string& name, const std::ios::openmode mode) {
 
-	if (streamExists(name)) { return std::nullopt; }
+	if (streamExists(name)) { return getLog(name); }
 
 	LogStreamPtr stream = make_shared<LogStream>(name, mode);
 	Loggette loggette(name, stream);

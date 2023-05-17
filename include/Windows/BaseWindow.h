@@ -8,7 +8,7 @@
 #include "wx/mstream.h"
 #include "wx/popupwin.h"
 
-#include "QuickShot/Capture.h"
+#include "Config.h"
 
 enum class WindowNames {
 	StartUp,
@@ -58,7 +58,7 @@ static Bounds GetRelativeBounds(const ElementList& elements) {
 		(*minX)->GetPosition().x,								   // min X
 		(*maxX)->GetPosition().x + (*maxX)->GetSize().GetWidth(),  // max X
 		(*minY)->GetPosition().y,								   // min Y
-		(*maxY)->GetPosition().y + (*maxY)->GetSize().GetHeight() // max Y
+		(*maxY)->GetPosition().y + (*maxY)->GetSize().GetHeight()  // max Y
 	};
 }
 
@@ -74,7 +74,7 @@ static void CenterElements(ElementList& elements, const wxSize& padding = wxSize
 	// Margin between window edges and position of elements
 	const wxPoint OFFSET 
 	{ 
-		( PARENT_SIZE.GetWidth() - (right - left) ) / 2,
+		( PARENT_SIZE.GetWidth()  - (right - left) ) / 2,
 		( PARENT_SIZE.GetHeight() - (bottom - top) ) / 2
 	};
 
@@ -125,19 +125,15 @@ protected:
 
 	static wxIcon FetchIcon() {
 
-		static const auto GetIcon = []() {
-
-			wxFSInputStream inputStream(GetAssetPath(Asset::ICON));
-			wxImage image(inputStream);
-			wxBitmap bitmap(image);
+		wxFSInputStream inputStream(GetAssetPath(Asset::ICON));
+		wxImage image(inputStream);
+		wxBitmap bitmap(image);
 
 
-			wxIcon icon;
-			icon.CopyFromBitmap(bitmap);
-			return icon;
-		};
+		wxIcon icon;
+		icon.CopyFromBitmap(bitmap);
+		return icon;
 
-		return GetIcon();
 	}
 
 	
@@ -153,11 +149,6 @@ public:
 	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
 	virtual ~BaseWindow();
 
-	virtual constexpr const WindowNames WindowName() = 0;
-	virtual void CleanUp() {
-
-		_windowElements.clear();
-	};
 protected:
 	
 	// Previous Windows
@@ -185,7 +176,8 @@ protected:
 
 	void GoBack();
 
-
+	virtual constexpr const WindowNames WindowName() = 0;
+	virtual void CleanUp();
 
 };
 
@@ -193,7 +185,7 @@ class PopUp : public wxPopupTransientWindow {
 
 public:
 
-	PopUp(BaseWindow* parent, const std::string& message = std::string(), const Action& OnClose = []() {});
+	PopUp(BaseWindow* parent, const string& message = string(), const Action& OnClose = []() {});
 	~PopUp();
 
 	// Delete copy and move constructors and assignment operators

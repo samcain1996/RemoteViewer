@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Networking/Packet.h"
 #include "Messages.h"
+#include "Config.h"
 
 using std::chrono::seconds;
 using boost::asio::ip::tcp;
@@ -13,8 +14,6 @@ using boost::asio::io_context;
 using boost::asio::ip::address;
 using std::chrono::steady_clock;
 using boost::system::error_code;
-
-constexpr const int VIDEO_THREADS = 4;
 
 using SocketPtr = unique_ptr<tcp::socket>;
 using IOContPtr = unique_ptr<io_context>;

@@ -3,22 +3,20 @@
 Client::Client(const string& hostname) {
     _hostname = hostname;
     
-    for (int i = 0; i < VIDEO_THREADS; ++i) {
+    for (int i = 0; i < Configs::VIDEO_THREADS; ++i) {
         ConnectionPtr pConnection = make_unique<Connection>(Connection::CLIENT_BASE_PORT + i);
         connections.emplace_back(move(pConnection));
     }
 }
 
-const void Client::Connect(const Ushort remotePort, const Action& onConnect) {
+void Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection, const Action& onConnect) {
 
-    static int idx = 0;
-    ConnectionPtr& pConnection = connections[idx++];
     pConnection->remotePort = remotePort;
 
     tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
     pConnection->pSocket->connect(endpoint, pConnection->errorcode);
 
-    if (pConnection->errorcode.value() != 0) { std::terminate(); }
+    if (pConnection->errorcode.value() != 0) { return; } // std::terminate(); }
    
     Handshake(pConnection);
 
@@ -75,34 +73,34 @@ void Client::Receive(ConnectionPtr& pConnection) {
 // TODO: CLEAN THIS UP
 void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
 
-    static std::pair<PacketBuffer, int>* current = nullptr;
-    
+    static std::optional<std::pair<PacketBuffer, int>> current = std::nullopt;
+
     const PacketPtr packet = Packet::VerifyPacket(buf);
 
-    if ( packet == nullptr || size > MAX_PACKET_SIZE ) { return; }
+    if (packet == nullptr || size > MAX_PACKET_SIZE) { return; }
 
     // Full Packet
-    if ( packet->Header().Size() - size == 0 ) {
-        current = nullptr;
+    if (packet->Header().Size() - size == 0) {
+        current = std::nullopt;
         msgWriter->WriteMessage(make_shared<Packet>(move(Packet(buf))));
         return;
     }
 
     // Split Packet
-    if (current != nullptr) {
+    if (current.has_value()) {
 
-        const Packet& currentPacket = current->first;
-        const int remaining = currentPacket.Header().Size() - current->second - size;
+        const Packet& currentPacket = current.value().first;
+        const int remaining = currentPacket.Header().Size() - current.value().second - size;
 
-        if (remaining == 0) { 
+        if (remaining == 0) {
             std::copy(buf.begin(), buf.begin() + size,
-                current->first.begin() + current->second);
-            msgWriter->WriteMessage(make_shared<Packet>(move(Packet(current->first)))); 
+                current.value().first.begin() + current.value().second);
+            msgWriter->WriteMessage(make_shared<Packet>(move(Packet(current.value().first))));
         }
 
         else if (remaining > 0) {
             std::copy(buf.begin(), buf.begin() + size,
-                current->first.begin() + current->second);
+                current.value().first.begin() + current.value().second);
         }
 
         return;
@@ -111,7 +109,7 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
     int remaining = packet->Header().Size() - size;
     if (remaining == 0) { msgWriter->WriteMessage(make_shared<Packet>(move(Packet(buf)))); }
     else {
-        *current = { buf, packet->Header().Size() };
+        current = { buf, packet->Header().Size() };
     }
 }
 

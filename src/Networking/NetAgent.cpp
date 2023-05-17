@@ -1,5 +1,7 @@
 #include "Networking/NetAgent.h"
 
+NetAgent::NetAgent() {}
+
 bool NetAgent::Connected() const {
     return connections.empty() ? false : std::all_of(connections.begin(), connections.end(), 
         [](const ConnectionPtr& pConnection) {
@@ -62,7 +64,7 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
     Uint32 group = randomGenerator();
 
     // Calculate the number of packets that will
-    // need to be send in order to send entire message
+    // need to be sent in order to send entire message
     Uint32 numberOfPackets = (Uint32)std::ceil(
         ((double)data.size() / MAX_PACKET_PAYLOAD_SIZE));
 

@@ -35,7 +35,7 @@ public:
 
 protected:
 
-	NetAgent() {};
+	NetAgent();
 
 	NetAgent(NetAgent&&) noexcept = delete;
 	NetAgent(const NetAgent&) = delete;

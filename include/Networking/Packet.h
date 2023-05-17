@@ -65,7 +65,7 @@ protected:
 	PacketMetadata _metadata;
 
 	PacketHeader(const PacketHeader& header);
-	PacketHeader(PacketHeader&& header);
+	PacketHeader(PacketHeader&& header) noexcept;
 
 public:
 

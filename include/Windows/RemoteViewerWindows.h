@@ -79,7 +79,7 @@ private:
 	
 	std::shared_ptr<Client> _client;
 	std::vector<std::thread> _clientThrs;
-	std::vector<std::future<bool>> connectionResults;
+	std::vector<std::future<bool>> _connectionResults;
 
 	const int TARGET_FRAME_TIME = 1000 / 60;
 

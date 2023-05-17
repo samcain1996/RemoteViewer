@@ -26,7 +26,7 @@ ClientStreamWindow::ClientStreamWindow(const string& ip, const wxPoint& pos, con
 
 			// Attempt to connect to other computer on separate thread so
 			// program is still responsive
-			connectionResults.push_back(async(std::launch::async, &ClientStreamWindow::Connect, this, ref(pConnection), counter++));
+			_connectionResults.push_back(async(std::launch::async, &ClientStreamWindow::Connect, this, ref(pConnection), counter++));
 		});
 
 }
@@ -38,7 +38,7 @@ bool ClientStreamWindow::Connect(ConnectionPtr& pConnection, int counter) {
 
 		const Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter + attempt;
 
-		_client->Connect(portToConnectTo, bind(&ClientStreamWindow::OnConnect, this, ref(pConnection)));
+		_client->Connect(portToConnectTo, ref(pConnection), bind(&ClientStreamWindow::OnConnect, this, ref(pConnection)));
 	}
 
 	
@@ -90,7 +90,7 @@ void ClientStreamWindow::ImageBuilder() {
 		const ImagePacketHeader& header = packet->Header();
 		const PacketPayload& imageFragment = packet->Payload();
 
-		int offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
+		const int offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
 
 		std::copy(imageFragment.begin(), imageFragment.end(), pixelData + offset);
 	}
@@ -126,7 +126,7 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_initialized) {
-		if (connectionResults.size() == VIDEO_THREADS) { 
+		if (_connectionResults.size() == Configs::VIDEO_THREADS) { 
 			
 			// Allows this window and the client to communicate across threads
 			ConnectMessageables(*this, *_client);
@@ -148,6 +148,8 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 		for_each(_clientThrs.begin(), _clientThrs.end(), [](thread& _clientThr) {	if (_clientThr.joinable()) { _clientThr.join(); }});
 		_popup = make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();
+		_initialized = false;
+		_connectionResults.clear();
 	}
 
 }

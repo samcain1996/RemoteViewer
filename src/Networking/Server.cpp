@@ -1,9 +1,8 @@
 #include "Networking/Server.h"
-#include <future>
 
 Server::Server(const Ushort listenPort) : _screen() {
 
-    for (int i = 0; i < VIDEO_THREADS; ++i) {
+    for (int i = 0; i < Configs::VIDEO_THREADS; ++i) {
         ConnectionPtr pConnection = make_unique<Connection>(listenPort + i, true);
         connections.emplace_back(move(pConnection));
     }
@@ -52,10 +51,11 @@ void Server::Listen (ConnectionPtr& pConnection) {
 bool Server::Serve() {
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
-    vector<std::future<bool>> stillConnected;
-    const int PACKETS_PER_THREAD = packets.size() / VIDEO_THREADS;
 
-    for (int threadIndex = 0; threadIndex < VIDEO_THREADS; ++threadIndex) {
+    vector<std::future<bool>> stillConnected;
+    const int PACKETS_PER_THREAD = packets.size() / Configs::VIDEO_THREADS;
+
+    for (int threadIndex = 0; threadIndex < Configs::VIDEO_THREADS; ++threadIndex) {
 
         ConnectionPtr& pConnection = connections[threadIndex];
 

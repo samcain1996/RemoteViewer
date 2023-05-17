@@ -21,8 +21,19 @@ BaseWindow::~BaseWindow() {
 	
 }
 
+void BaseWindow::CleanUp() {
+
+	_windowElements.clear();
+
+}
+
 void BaseWindow::OpenWindow(const WindowNames windowName, const string& ip,
 	const bool close) {
+
+	if (windowName == WindowNames::StartUp && _prevWindows.empty()) {
+		Close(true);
+		return;
+	}
 
 	// Don't allow a ClientStream window because user should reconnect anyways
 	if (WindowName() != WindowNames::ClientStream) {

@@ -19,8 +19,10 @@
 #include <memory>
 #include <thread>
 #include <cstring>
+#include <fstream>
 #include <optional>
 #include <functional>
+#include <unordered_map>
 
 #include "Logger/Logger.h"
 
@@ -58,6 +60,8 @@ using std::for_each;
 using std::atomic;
 using std::string;
 using std::thread;
+using std::ifstream;
+using std::getline;
 using std::vector;
 using std::make_shared;
 using std::shared_ptr;

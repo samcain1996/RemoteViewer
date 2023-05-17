@@ -40,8 +40,8 @@ constexpr void EncodeAsByte(ByteSpan encodedNumber, const Uint32 numberToEncode)
 
     encodedNumber[3] = (numberToEncode >> 24) & 0xFF;
     encodedNumber[2] = (numberToEncode >> 16) & 0xFF;
-    encodedNumber[1] = (numberToEncode >> 8) & 0xFF;
-    encodedNumber[0] = (numberToEncode) & 0xFF;
+    encodedNumber[1] = (numberToEncode >> 8)  & 0xFF;
+    encodedNumber[0] = (numberToEncode)       & 0xFF;
 
 }
 
@@ -64,7 +64,7 @@ constexpr const Ushort BITS_PER_CHANNEL = 8;
 
 // Types
 using BmpFileHeader = std::array<MyByte, BMP_HEADER_SIZE>;
-using PixelData = std::vector<MyByte>;
+using PixelData     = std::vector<MyByte>;
 
 /*------------------RESOLUTIONS--------------------*/
 
@@ -130,18 +130,18 @@ constexpr static const Resolution RES_2X2 = { 2, 2 };
 constexpr static const Resolution RES_4X4 = { 4, 4 };
 
 // Low definition
-constexpr static const Resolution RES_144 = { 256, 144 };
+constexpr static const Resolution RES_144   = { 256, 144 };
 constexpr static const Resolution RES_DEBUG = { 256, 144 };
 
 // Standard definition
 constexpr static const Resolution RES_480 = { 640, 480 };
 
 // High definition
-constexpr static const Resolution RES_720 = { 1280, 720 };
+constexpr static const Resolution RES_720  = { 1280, 720 };
 constexpr static const Resolution RES_1080 = { 1920, 1080 };
 constexpr static const Resolution RES_1440 = { 2560, 1440 };
-constexpr static const Resolution RES_2K = { 2560, 1440 };
-constexpr static const Resolution RES_4K = { 3840, 2160 };
+constexpr static const Resolution RES_2K   = { 2560, 1440 };
+constexpr static const Resolution RES_4K   = { 3840, 2160 };
 
 /*--------------------------------------------------*/
 
