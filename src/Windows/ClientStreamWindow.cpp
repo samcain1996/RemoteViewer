@@ -19,7 +19,7 @@ ClientStreamWindow::ClientStreamWindow(const string& ip, const wxPoint& pos, con
 	_popup->Popup();
 
 	int counter = 0;
-
+	
 	// Set up data streams
 	for_each(_client->connections.begin(), _client->connections.end(),
 		[this, &counter](ConnectionPtr& pConnection) {
@@ -41,7 +41,6 @@ bool ClientStreamWindow::Connect(ConnectionPtr& pConnection, int counter) {
 		_client->Connect(portToConnectTo, ref(pConnection), bind(&ClientStreamWindow::OnConnect, this, ref(pConnection)));
 	}
 
-	
 	return pConnection->connected;
 }
 
@@ -126,14 +125,15 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_initialized) {
-		if (_connectionResults.size() == Configs::VIDEO_THREADS) { 
-			
+		if (_connectionResults.size() == Configs::VIDEO_THREADS) {
+
 			// Allows this window and the client to communicate across threads
 			ConnectMessageables(*this, *_client);
 
 			// Initialize image header
 			const BmpFileHeader header = ConstructBMPHeader();
 			std::copy(header.begin(), header.end(), _imageData.begin());
+			
 			_initialized = true; 
 		}
 		return;

@@ -9,14 +9,14 @@ Client::Client(const string& hostname) {
     }
 }
 
-void Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection, const Action& onConnect) {
+bool Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection, const Action& onConnect) {
 
     pConnection->remotePort = remotePort;
 
     tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
     pConnection->pSocket->connect(endpoint, pConnection->errorcode);
 
-    if (pConnection->errorcode.value() != 0) { return; } // std::terminate(); }
+    if (pConnection->errorcode.value() != 0) { return false; } // std::terminate(); }
    
     Handshake(pConnection);
 
@@ -25,6 +25,7 @@ void Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection, const 
 
     if (pConnection->connected) { onConnect(); }
 
+    return true;
 
 }
 

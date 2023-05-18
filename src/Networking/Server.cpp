@@ -43,7 +43,6 @@ void Server::Listen (ConnectionPtr& pConnection) {
 
     pIO_context->run_until(steady_clock::now() + pConnection->timeout);
     pIO_context->restart();
-
     if (pConnection->connected) { _packetGroups.push_back(PacketList()); }
 
 }
@@ -66,7 +65,7 @@ bool Server::Serve() {
         stillConnected.push_back(async(std::launch::async, &Server::ThreadFunction, 
             this, ref(_packetGroups[threadIndex]), ref(pConnection)));
     }
-    
+
     return std::all_of(stillConnected.begin(), stillConnected.end(), [](auto& x) { return x.get(); });
 }
 

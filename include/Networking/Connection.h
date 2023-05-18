@@ -38,6 +38,7 @@ struct Connection {
 	SocketPtr pSocket;
 	AccptrPtr pAcceptor;
 
+
 	Connection(const Ushort localPort = 0, const bool listen = false) {
 
 		pIO_cont = make_unique<io_context>();
