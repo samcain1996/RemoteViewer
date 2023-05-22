@@ -60,8 +60,8 @@ void ClientStreamWindow::ImageBuilder() {
 		const PacketPayload& imageFragment = packet->Payload();
 
 		const int offset = header.Position() * MAX_PACKET_PAYLOAD_SIZE;
-
-		std::copy(imageFragment.begin(), imageFragment.end(), pixelData + offset);
+		const size_t size = header.Size() - PACKET_HEADER_SIZE;
+		std::copy(imageFragment.begin(), imageFragment.begin() + size, pixelData + offset);
 	}
 
 }

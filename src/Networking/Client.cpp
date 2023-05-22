@@ -16,7 +16,7 @@ bool Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection) {
     tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
     pConnection->pSocket->connect(endpoint, pConnection->errorcode);
 
-    if (pConnection->errorcode.value() != 0) { return false; } // std::terminate(); }
+    if (pConnection->errorcode.value() != 0) { return false; }
 
     Handshake(pConnection);
 
@@ -41,7 +41,7 @@ bool Client::Connect(Ushort port) {
 
     if (connected) {
         transform(connections.begin(), connections.end(), back_inserter(threads), [this](ConnectionPtr& pCon) {
-            return thread([this, &pCon]() {  Receive(pCon);  pCon->pIO_cont->run(); });
+            return thread([this, &pCon]() { Receive(pCon); pCon->pIO_cont->run(); });
         });
     }
 
@@ -137,6 +137,7 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
 Client::~Client() {
 
     for (thread& thread : threads) { thread.join(); }
+    threads.clear();
 
 }
 

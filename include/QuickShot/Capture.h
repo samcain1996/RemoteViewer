@@ -148,3 +148,74 @@ static const inline BmpFileHeader ConstructBMPHeader(const Resolution& resolutio
 
     return header;
 }
+
+class Scaler {
+    struct ScaleRatio {
+        double xRatio = 1;
+        double yRatio = 1;
+
+        ScaleRatio(const double x, const double y) : xRatio(x), yRatio(y) {}
+        ScaleRatio(const std::pair<double, double>& ratio) : xRatio(ratio.first), yRatio(ratio.second) {}
+        ScaleRatio(const Resolution& ratio) : xRatio(ratio.width), yRatio(ratio.height) {}
+    };
+    using Coordinate = std::pair<int, int>;
+
+    using Pixel = std::span<MyByte>;
+    using ConstPixel = std::span<const MyByte>;
+    // Get the ratio in the x and y directions between dest and source images
+    ScaleRatio GetScaleRatio(const Resolution& source, const Resolution& dest) {
+        return { (dest.width / (double)source.width), (dest.height / (double)source.height) };
+    }
+    size_t CoordinateToIndex(const Resolution& res, const Coordinate& coord) {
+        return coord.second * res.width + coord.first;
+    }
+
+    size_t ConvertIndex(const size_t index, const bool toAbsoluteIndex) {
+        return toAbsoluteIndex ? index * 4 : index / 4;
+    }
+
+    Coordinate IndexToCoordinate(const Resolution& res, const size_t index) {
+        return { index % res.width , index / res.width };
+    }
+
+    Pixel GetPixel(PixelData& data, const size_t index, const bool isAbsoluteIndex) {
+        const size_t idx = isAbsoluteIndex ? index : ConvertIndex(index, true);
+        return Pixel{ data }.subspan(idx, 4);
+    }
+
+    ConstPixel GetPixel(const PixelData& data, const size_t index, const bool isAbsoluteIndex) {
+        const size_t idx = isAbsoluteIndex ? index : ConvertIndex(index, true);
+        return ConstPixel{ data }.subspan(idx, 4);
+    }
+    void AssignPixel(Pixel& assignee, const ConstPixel& other) {
+        for (size_t channel = 0; channel < 4; ++channel) {
+            assignee[channel] = other[channel];
+        }
+    }
+
+    // Upscale using nearest neighbor technique
+    PixelData NearestNeighbor(const PixelData& source, const Resolution& src, const Resolution& dest) {
+
+        PixelData scaled(CalculateBMPFileSize(dest));
+        const auto [scaleX, scaleY] = GetScaleRatio(src, dest);
+
+        for (size_t absIndex = 0; absIndex < scaled.size(); absIndex += 4) {
+
+            // Convert pixel index to x,y coordinates
+            const auto [destX, destY] = IndexToCoordinate(dest, ConvertIndex(absIndex, false));
+            Pixel scaledPixel = GetPixel(scaled, absIndex, true);
+
+            // Scale the coordinates
+            const Coordinate mappedCoord = { destX / scaleX, destY / scaleY };
+
+            // Convert the coordinates to index
+            const size_t indexToMap = CoordinateToIndex(src, mappedCoord);
+            ConstPixel sourcePixel = GetPixel(source, indexToMap, false);
+
+            // Set scaledPixel equal to corresponding sourcePixel 
+            AssignPixel(scaledPixel, sourcePixel);
+        }
+
+        return scaled;
+    }
+};
