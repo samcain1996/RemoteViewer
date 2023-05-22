@@ -17,46 +17,26 @@ ClientStreamWindow::ClientStreamWindow(const string& ip, const wxPoint& pos, con
 
 	_popup->SetText("Connecting to " + ip);
 	_popup->Popup();
-
-	int counter = 0;
-	
-	// Set up data streams
-	for_each(_client->connections.begin(), _client->connections.end(),
-		[this, &counter](ConnectionPtr& pConnection) {
-
-			// Attempt to connect to other computer on separate thread so
-			// program is still responsive
-			_connectionResults.push_back(async(std::launch::async, &ClientStreamWindow::Connect, this, ref(pConnection), counter++));
-		});
-
 }
 
-bool ClientStreamWindow::Connect(ConnectionPtr& pConnection, int counter) {
+bool ClientStreamWindow::Connect() {
 	// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
-// or the system has successfully connected
-	for (int attempt = 0; attempt < 5 && !pConnection->connected; attempt++) {
+	// or the system has successfully connected
+	const Ushort portToConnectTo = Connection::SERVER_BASE_PORT;
+	bool connected = _client->Connect(portToConnectTo);
 
-		const Ushort portToConnectTo = Connection::SERVER_BASE_PORT + counter + attempt;
+	if (!connected) { return false; }
+	// Allows this window and the client to communicate across threads
+	ConnectMessageables(*this, *_client);
 
-		_client->Connect(portToConnectTo, ref(pConnection), bind(&ClientStreamWindow::OnConnect, this, ref(pConnection)));
-	}
+	// Initialize image header
+	const BmpFileHeader header = ConstructBMPHeader();
+	std::copy(header.begin(), header.end(), _imageData.begin());
 
-	return pConnection->connected;
+	return true;
 }
 
 ClientStreamWindow::~ClientStreamWindow() {}
-
-// What happens when connection to server is made
-void ClientStreamWindow::OnConnect(ConnectionPtr& pConnection) {
-
-
-	// Start receiving data on separate thread
-	_clientThrs.push_back(thread([this, &pConnection] {
-
-		_client->Receive(pConnection);
-		pConnection->pIO_cont->run();
-	}));
-}
 
 void ClientStreamWindow::CleanUp() {
 
@@ -125,18 +105,8 @@ void ClientStreamWindow::OnPaint(wxPaintEvent& evt) {
 void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 
 	if (!_initialized) {
-		if (_connectionResults.size() == Configs::VIDEO_THREADS) {
-
-			// Allows this window and the client to communicate across threads
-			ConnectMessageables(*this, *_client);
-
-			// Initialize image header
-			const BmpFileHeader header = ConstructBMPHeader();
-			std::copy(header.begin(), header.end(), _imageData.begin());
-			
-			_initialized = true; 
-		}
-		return;
+		
+		_initialized = Connect();
 	}
 
 	else if (!_timer.IsRunning()) { 
@@ -144,12 +114,11 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 		_timer.Start(TARGET_FRAME_TIME); 
 	}
 
-	else if (!_client->Connected() && _clientThrs.size() > 0) {
+	else if (!_client->Connected()) {
 		for_each(_clientThrs.begin(), _clientThrs.end(), [](thread& _clientThr) {	if (_clientThr.joinable()) { _clientThr.join(); }});
 		_popup = make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();
 		_initialized = false;
-		_connectionResults.clear();
 	}
 
 }

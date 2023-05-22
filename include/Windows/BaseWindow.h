@@ -78,7 +78,7 @@ static void CenterElements(ElementList& elements, const wxSize& padding = wxSize
 		( PARENT_SIZE.GetHeight() - (bottom - top) ) / 2
 	};
 
-	std::for_each(elements.begin(), elements.end(), [x_1 = left, y_1 = top, OFFSET](auto& element) {
+	for_each(elements.begin(), elements.end(), [x_1 = left, y_1 = top, OFFSET](auto& element) {
 		
 		const wxPoint RELATIVE_OFFSET
 		{
@@ -98,15 +98,9 @@ static void CenterElements(ElementList& elements, const wxSize& padding = wxSize
 class BaseWindow : public wxFrame
 {
 
-private:
-
-	static inline int _nextIdPrefix = 0;
-
 protected:
 
 	bool _initialized = false;
-
-	int _idPrefix = 0;
 
 	enum class Asset {
 		ICON
@@ -140,7 +134,7 @@ protected:
 	
 public:
 
-	void OpenWindow(const WindowNames windowName, const std::string& ip = "", const bool close = true);
+	void OpenWindow(const WindowNames windowName, const string& ip = "", const bool close = true);
 
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
@@ -159,7 +153,7 @@ protected:
 	static inline const wxPoint DEFAULT_POS = wxPoint(ScreenCapture::NativeResolution().width / 2 - DEFAULT_SIZE.GetWidth() / 2,
 		ScreenCapture::NativeResolution().height / 2 - DEFAULT_SIZE.GetHeight() / 2);
 
-	BaseWindow(const std::string& name, const wxPoint& pos = DEFAULT_POS,
+	BaseWindow(const string& name, const wxPoint& pos = DEFAULT_POS,
 		const wxSize& size = DEFAULT_SIZE, const bool show = true);
 
 	// Delete copy and move constructors and assignment operators
@@ -170,7 +164,6 @@ protected:
 
 	// All Window elements on the current window
 	ElementList _windowElements;
-	const int _windowId = -1;
 
 	PopUpPtr _popup;
 

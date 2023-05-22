@@ -22,6 +22,7 @@
 #include <fstream>
 #include <optional>
 #include <functional>
+#include <future>
 #include <unordered_map>
 
 #include "Logger/Logger.h"
@@ -72,6 +73,10 @@ using std::function;
 using std::bind;
 using std::ref;
 using std::move;
+using std::transform;
+using std::all_of;
+using std::future;
+using std::back_inserter;
 
 /*----------------FUNCTIONS--------------------*/
 

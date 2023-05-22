@@ -6,6 +6,7 @@ private:
 
 	static inline Loggette log = Logger::newStream("Client.log").value();
 
+
 	std::string _hostname {};  // Hostname of computer to connect to
 	MessageWriter<PacketPtr>*& groupWriter = msgWriter;  // Alias for message queue
 
@@ -17,13 +18,14 @@ private:
 	void Handshake(ConnectionPtr& pConnection) override;
 
 public:
-
+	bool Connect(const Ushort);
+	vector<thread> threads;
 	// Constructors
 	Client() = delete;
 	Client(const Client&) = delete;
 	Client(Client&&) noexcept = delete;
 
-	Client(const std::string& hostname);
+	Client(const string& hostname);
 	~Client();
 
 	Client& operator=(const Client&) = delete;
@@ -37,7 +39,7 @@ public:
 	 * @return true 		Connection succeeded
 	 * @return false 		Connection failed
 	 */
-	bool Connect(const Ushort remotePort, ConnectionPtr& pConnection, const Action& onConnect);
+	bool Connect(const Ushort remotePort, ConnectionPtr& pConnection);
 
 	void Receive(ConnectionPtr& pConnection) override;
 	void Send(PacketList& data, ConnectionPtr& pConnection) override;

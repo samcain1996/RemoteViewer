@@ -1,5 +1,6 @@
 #include "Networking/Client.h"
 
+
 Client::Client(const string& hostname) {
     _hostname = hostname;
     
@@ -9,23 +10,42 @@ Client::Client(const string& hostname) {
     }
 }
 
-bool Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection, const Action& onConnect) {
-
+bool Client::Connect(const Ushort remotePort, ConnectionPtr& pConnection) {
     pConnection->remotePort = remotePort;
 
     tcp::endpoint endpoint(address::from_string(_hostname), pConnection->remotePort);
     pConnection->pSocket->connect(endpoint, pConnection->errorcode);
 
     if (pConnection->errorcode.value() != 0) { return false; } // std::terminate(); }
-   
+
     Handshake(pConnection);
 
     pConnection->pIO_cont->run_until(steady_clock::now() + pConnection->timeout);
     pConnection->pIO_cont->restart();
 
-    if (pConnection->connected) { onConnect(); }
-
     return true;
+
+}
+
+bool Client::Connect(Ushort port) {
+    using namespace std::placeholders;
+
+    vector<future<bool>> results;
+    auto tryConnect = bind(static_cast<bool(Client::*)(const Ushort, ConnectionPtr&)>(&Client::Connect), this, _1, _2);
+    transform(connections.begin(), connections.end(), back_inserter(results), [&port, &tryConnect](ConnectionPtr& pCon) {
+        
+        return async(std::launch::deferred, tryConnect, port++, ref(pCon));
+    });
+
+    bool connected = all_of(results.begin(), results.end(), [](auto& res) { return res.get(); });
+
+    if (connected) {
+        transform(connections.begin(), connections.end(), back_inserter(threads), [this](ConnectionPtr& pCon) {
+            return thread([this, &pCon]() {  Receive(pCon);  pCon->pIO_cont->run(); });
+        });
+    }
+
+    return connected;
 
 }
 

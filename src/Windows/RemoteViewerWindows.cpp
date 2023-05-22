@@ -5,8 +5,6 @@
 BaseWindow::BaseWindow(const string& name, const wxPoint& pos, const wxSize& size, const bool show) : 
 	wxFrame(nullptr, wxID_ANY, name, pos, size) {
 
-	_idPrefix = _nextIdPrefix++;
-
 	SetIcon(FetchIcon());
 	IP_VALIDATOR.SetCharIncludes("0123456789.");
 

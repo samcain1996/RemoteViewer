@@ -78,8 +78,7 @@ private:
 	Resolution _resolution = ScreenCapture::DefaultResolution;
 	
 	std::shared_ptr<Client> _client;
-	std::vector<std::thread> _clientThrs;
-	std::vector<std::future<bool>> _connectionResults;
+	std::vector<thread>& _clientThrs = _client->threads;
 
 	const int TARGET_FRAME_TIME = 1000 / 60;
 
@@ -100,10 +99,9 @@ public:
 	
 	void OnPaint(wxPaintEvent& evt);
 	void Resize(const Resolution& resolution);
-	void OnConnect(ConnectionPtr& pConnection);
 	void CleanUp() override;
 	
-	bool Connect(ConnectionPtr&, int);
+	bool Connect();
 	void PaintNow();
 	void BackgroundTask(wxIdleEvent& evt);
 

@@ -43,15 +43,17 @@ void Server::Listen (ConnectionPtr& pConnection) {
 
     pIO_context->run_until(steady_clock::now() + pConnection->timeout);
     pIO_context->restart();
-    if (pConnection->connected) { _packetGroups.push_back(PacketList()); }
 
 }
 
 bool Server::Serve() {
+
+    using std::packaged_task;
+    using std::future;
  
     PacketList packets = ConvertToPackets(_screen.CaptureScreen(), PacketType::Image);
 
-    vector<std::future<bool>> stillConnected;
+    vector<future<bool>> stillConnected;
     const int PACKETS_PER_THREAD = packets.size() / Configs::VIDEO_THREADS;
 
     for (int threadIndex = 0; threadIndex < Configs::VIDEO_THREADS; ++threadIndex) {
@@ -61,15 +63,17 @@ bool Server::Serve() {
         const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
         const auto& end   = begin + PACKETS_PER_THREAD;
 
-        _packetGroups[threadIndex] = move(PacketList(begin, end));
-        stillConnected.push_back(async(std::launch::async, &Server::ThreadFunction, 
-            this, ref(_packetGroups[threadIndex]), ref(pConnection)));
+        packaged_task<bool()> sendPacketGroup(bind(&Server::SendThread, this,
+            PacketList(begin, end), ref(pConnection)));
+
+        stillConnected.push_back(sendPacketGroup.get_future());
+        thread(move(sendPacketGroup)).detach();
     }
 
     return std::all_of(stillConnected.begin(), stillConnected.end(), [](auto& x) { return x.get(); });
 }
 
-bool Server::ThreadFunction(PacketList& packets, ConnectionPtr& pConn) {    
+bool Server::SendThread(PacketList& packets, ConnectionPtr& pConn) {    
     Send(packets, pConn);
     pConn->pIO_cont->run_until(steady_clock::now() + pConn->timeout);
     pConn->pIO_cont->restart();
