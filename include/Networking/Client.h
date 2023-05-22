@@ -7,7 +7,7 @@ private:
 	static inline Loggette log = Logger::newStream("Client.log").value();
 
 
-	std::string _hostname {};  // Hostname of computer to connect to
+	string _hostname {};  // Hostname of computer to connect to
 	MessageWriter<PacketPtr>*& groupWriter = msgWriter;  // Alias for message queue
 
 	/**
@@ -16,10 +16,11 @@ private:
 	 * @param pConnection 	The connection
 	 */
 	void Handshake(ConnectionPtr& pConnection) override;
+	vector<thread> threads;
 
 public:
-	bool Connect(const Ushort);
-	vector<thread> threads;
+	bool Connect(const Ushort = Connection::SERVER_BASE_PORT);
+
 	// Constructors
 	Client() = delete;
 	Client(const Client&) = delete;

@@ -60,10 +60,6 @@ void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 	if (_server->Connected()) {
 		_timer.Start(TARGET_FRAME_TIME);
 	}
-	else {
-		_server.reset(nullptr);
-		_initialized = false;
-	}
 
 }
 

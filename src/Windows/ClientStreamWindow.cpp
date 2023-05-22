@@ -20,12 +20,8 @@ ClientStreamWindow::ClientStreamWindow(const string& ip, const wxPoint& pos, con
 }
 
 bool ClientStreamWindow::Connect() {
-	// Repeatedly try to connect until maximum number of MAX_ATTEMPTS have been reached
-	// or the system has successfully connected
-	const Ushort portToConnectTo = Connection::SERVER_BASE_PORT;
-	bool connected = _client->Connect(portToConnectTo);
 
-	if (!connected) { return false; }
+	if (!_client->Connect()) { return false; }
 	// Allows this window and the client to communicate across threads
 	ConnectMessageables(*this, *_client);
 
@@ -42,12 +38,6 @@ void ClientStreamWindow::CleanUp() {
 
 	// Disconnect each connection
 	if (_client->Connected()) { _client->Disconnect(); }
-
-	for_each(_clientThrs.begin(), _clientThrs.end(), [](thread& _clientThr) {	if (_clientThr.joinable()) { _clientThr.join(); }});
-
-	if (HAS_BEEN_CONNECTED) { packetReader->Clear(); }
-
-	_client->connections.clear();
 
 	BaseWindow::CleanUp();
 }
@@ -115,10 +105,10 @@ void ClientStreamWindow::BackgroundTask(wxIdleEvent& evt) {
 	}
 
 	else if (!_client->Connected()) {
-		for_each(_clientThrs.begin(), _clientThrs.end(), [](thread& _clientThr) {	if (_clientThr.joinable()) { _clientThr.join(); }});
 		_popup = make_unique<PopUp>(this, "Disconnected from server!", [this] { GoBack(); });
 		_popup->Popup();
-		_initialized = false;
+
+		
 	}
 
 }

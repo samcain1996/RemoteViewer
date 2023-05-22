@@ -11,7 +11,7 @@ private:
 
 	ScreenCapture _screen;
 
-	bool SendThread(PacketList&, ConnectionPtr&);
+	void SendThread(PacketList&&, ConnectionPtr&);
 
 	void Send(PacketList& packets, ConnectionPtr& pConnection) override;
 	void Receive(ConnectionPtr& pConnection) override {};

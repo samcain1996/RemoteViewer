@@ -5,7 +5,8 @@ PacketPtr Packet::VerifyPacket(const PacketBuffer& packet) {
 	TempHeader header = TempHeader{ packet }.subspan(0, PACKET_HEADER_SIZE);
 
 	bool match = PacketHeader::GetType(header) != PacketType::Invalid;
-	if (match &= PacketHeader::Size(header) <= MAX_PACKET_SIZE) {
+	match &= PacketHeader::Size(header) <= MAX_PACKET_SIZE;
+	if (match) {
 		return make_shared<Packet>(packet);
 	}
 	return nullptr;

@@ -77,8 +77,7 @@ private:
 	PixelData _imageData {};
 	Resolution _resolution = ScreenCapture::DefaultResolution;
 	
-	std::shared_ptr<Client> _client;
-	std::vector<thread>& _clientThrs = _client->threads;
+	shared_ptr<Client> _client;
 
 	const int TARGET_FRAME_TIME = 1000 / 60;
 

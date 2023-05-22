@@ -14,9 +14,7 @@ BaseWindow::BaseWindow(const string& name, const wxPoint& pos, const wxSize& siz
 }
 
 BaseWindow::~BaseWindow() {
-
 	CleanUp();
-	
 }
 
 void BaseWindow::CleanUp() {
@@ -27,16 +25,6 @@ void BaseWindow::CleanUp() {
 
 void BaseWindow::OpenWindow(const WindowNames windowName, const string& ip,
 	const bool close) {
-
-	if (windowName == WindowNames::StartUp && _prevWindows.empty()) {
-		Close(true);
-		return;
-	}
-
-	// Don't allow a ClientStream window because user should reconnect anyways
-	if (WindowName() != WindowNames::ClientStream) {
-		_prevWindows.push(WindowName());
-	}
 
 	BaseWindow* newWindow = nullptr;
 
@@ -70,9 +58,9 @@ void BaseWindow::GoBack() {
 	// Return to the previous window
 	if (_prevWindows.empty()) { wxExit(); return; }
 	 
-	OpenWindow(_prevWindows.top());
-
+	auto window = _prevWindows.top();
 	_prevWindows.pop();
+	OpenWindow(window);
 
 }
 
@@ -104,10 +92,12 @@ StartUpWindow::StartUpWindow(const wxPoint& pos, const wxSize& size) : BaseWindo
 StartUpWindow::~StartUpWindow() {}
 
 void StartUpWindow::ClientButtonClick(wxCommandEvent& evt) {
+	_prevWindows.push(WindowName());
 	OpenWindow(WindowNames::ClientInit);
 }
 
 void StartUpWindow::ServerButtonClick(wxCommandEvent& evt) {
+	_prevWindows.push(WindowName());
 	OpenWindow(WindowNames::ServerInit);
 }
 
@@ -131,7 +121,7 @@ ClientInitWindow::ClientInitWindow(const wxPoint& pos, const wxSize& size) : Bas
 ClientInitWindow::~ClientInitWindow() {}
 
 void ClientInitWindow::ConnectButtonClick(wxCommandEvent& evt) {
-
+	_prevWindows.push(WindowName());
 	OpenWindow(WindowNames::ClientStream, _ipInput.GetValue().ToStdString());
 }
 /*------------Pop Up------------*/

@@ -31,10 +31,10 @@ bool Client::Connect(Ushort port) {
     using namespace std::placeholders;
 
     vector<future<bool>> results;
-    auto tryConnect = bind(static_cast<bool(Client::*)(const Ushort, ConnectionPtr&)>(&Client::Connect), this, _1, _2);
+    auto tryConnect = bind((bool(Client::*)(const Ushort, ConnectionPtr&))(&Client::Connect), this, _1, _2);
     transform(connections.begin(), connections.end(), back_inserter(results), [&port, &tryConnect](ConnectionPtr& pCon) {
         
-        return async(std::launch::deferred, tryConnect, port++, ref(pCon));
+        return async(tryConnect, port++, ref(pCon));
     });
 
     bool connected = all_of(results.begin(), results.end(), [](auto& res) { return res.get(); });
@@ -134,5 +134,9 @@ void Client::AdjustForPacketLoss(const PacketBuffer& buf, const int size) {
     }
 }
 
-Client::~Client() {}
+Client::~Client() {
+
+    for (thread& thread : threads) { thread.join(); }
+
+}
 
