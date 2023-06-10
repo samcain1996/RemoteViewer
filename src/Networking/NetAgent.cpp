@@ -26,6 +26,26 @@ bool NetAgent::portAvailable(unsigned short port) {
 
 }
 
+void NetAgent::Send(PacketList& packets, ConnectionPtr& pConnection) {
+    if (packets.size() <= 0) { return; }
+
+    const Packet& packet = packets.front();
+
+    pConnection->pSocket->async_send(boost::asio::buffer(packet.RawData(), packet.Header().Size()),
+        [this, &packets, &pConnection](const error_code& error, const size_t size) {
+            if (error) {
+                Disconnect();
+            }
+
+            else {
+                packets.erase(packets.begin());
+                Send(packets, pConnection);
+            }
+
+        });
+}
+
+
 void NetAgent::Handshake(ConnectionPtr& pConnection) {
 
     // Determine operating system
@@ -73,15 +93,16 @@ PacketList NetAgent::ConvertToPackets(const PixelData& data, const PacketType& p
     // Break message down into packets
     for (size_t bytesRemaining = data.size(), iteration = 0; bytesRemaining > 0; iteration++) {
 
-        size_t offset = iteration * MAX_PACKET_PAYLOAD_SIZE; // Current offset in message for current packet
-
         // Payload will always be the maximum size, unless less room is needed
         Ushort payloadSize = bytesRemaining < MAX_PACKET_PAYLOAD_SIZE ? bytesRemaining : MAX_PACKET_PAYLOAD_SIZE;
         Ushort totalSize = payloadSize + PACKET_HEADER_SIZE;  // Size of the entire packet
 
+        auto start = data.begin() + iteration * MAX_PACKET_PAYLOAD_SIZE; // Current offset in message for current packet
+        auto end   = start + payloadSize;
+
         // Assemble packet
         PacketPayload payload(payloadSize);
-        std::copy(data.begin() + offset, data.begin() + offset + payloadSize, payload.begin());
+        std::copy(start, end, payload.begin());
 
         ImagePacketHeader header(group, totalSize, iteration);
         packets[iteration] = Packet(header, payload);

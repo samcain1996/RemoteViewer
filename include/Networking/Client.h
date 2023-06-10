@@ -19,7 +19,7 @@ private:
 	vector<thread> threads;
 
 public:
-	bool Connect(const Ushort = Connection::SERVER_BASE_PORT);
+	bool TryConnect(const Ushort = Connection::SERVER_BASE_PORT);
 
 	// Constructors
 	Client() = delete;
@@ -43,7 +43,7 @@ public:
 	bool Connect(const Ushort remotePort, ConnectionPtr& pConnection);
 
 	void Receive(ConnectionPtr& pConnection) override;
-	void Send(PacketList& data, ConnectionPtr& pConnection) override;
+	//void Send(PacketList& data, ConnectionPtr& pConnection) override;
 
 	/**
 	 * @brief Starts a connection that has already connected

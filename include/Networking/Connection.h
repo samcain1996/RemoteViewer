@@ -25,7 +25,7 @@ struct Connection {
 	static constexpr inline Ushort SERVER_BASE_PORT = BASE_PORT + 1000;
 	static constexpr inline Ushort CLIENT_BASE_PORT = BASE_PORT + 2000;
 
-	seconds timeout { 30 };
+	seconds timeout { Configs::TIMEOUT };
 	bool connected = false;
 
 	Ushort remotePort = 0;

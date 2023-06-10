@@ -30,6 +30,7 @@ using TempHeader = std::span<const MyByte>;
 
 enum class PacketType : MyByte {
 	Image = static_cast<MyByte>('I'),
+	Mouse = static_cast<MyByte>('M'),
 	Invalid = static_cast<MyByte>('\0')
 };
 
@@ -46,6 +47,7 @@ public:
 		switch (header._metadata.data()[0]) {
 
 			case 'I': return PacketType::Image;
+			case 'M': return PacketType::Mouse;
 			default:  return PacketType::Invalid;
 
 		}
@@ -54,6 +56,7 @@ public:
 		switch (header.data()[0]) {
 
 		case 'I': return PacketType::Image;
+		case 'M': return PacketType::Mouse;
 		default:  return PacketType::Invalid;
 
 		}
@@ -88,6 +91,12 @@ struct ImagePacketHeader : public PacketHeader {
 
 	ImagePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
 	ImagePacketHeader(const Uint32 group, const Uint32 size, const Uint32 position);
+};
+
+struct MousePacketHeader : public PacketHeader {
+
+	MousePacketHeader(const PacketHeader& header) : PacketHeader(header) {}
+	MousePacketHeader(const Uint32 group, const Uint32 size);
 };
 
 

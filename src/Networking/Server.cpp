@@ -7,6 +7,49 @@ Server::Server(const Ushort listenPort) : _screen() {
         connections.emplace_back(move(pConnection));
     }
 
+    dataCon = make_unique<Connection>(listenPort + Configs::VIDEO_THREADS, true);
+
+}
+
+void Server::StreamVideoStream(ConnectionPtr& c, MessageReader<PacketList>& reader) {
+
+    while (c->connected) {
+
+        // Wait for all streams to connect
+        while (Connected() && !reader.Empty()) {
+
+            PacketList list = reader.ReadMessage();
+            Send(list, c);
+
+            c->pIO_cont->run_until(steady_clock::now() + c->timeout);
+            c->pIO_cont->restart();
+        }
+    }
+}
+
+void Server::Receive(ConnectionPtr& pConnection) {
+    const SocketPtr& pSocket = pConnection->pSocket;
+    PacketBuffer& buffer = pConnection->buffer;
+
+    pSocket->async_receive(boost::asio::buffer(buffer),
+        [this, &pConnection, &buffer](const error_code& ec, const size_t size)
+        {
+            if (pConnection->connected && ec.value() == 0 && size > 0) {
+
+                const Packet& packet(buffer);
+                if (PacketHeader::GetType(packet.Header()) == PacketType::Mouse) {
+                    //const PacketPayload& p = packet.Payload();
+                    //int x = DecodeAsByte(&p.data()[0]);
+                    //int y = DecodeAsByte(&p.data()[4]);
+                    //SetCursorPos(x, y);
+                }
+                if (IsDisconnectMsg(buffer)) { Disconnect(); }
+                else { Receive(pConnection); }
+            }
+            else {
+                Disconnect();
+            }
+        });
 }
 
 void Server::Handshake(ConnectionPtr& pConnection) {
@@ -28,7 +71,7 @@ void Server::Handshake(ConnectionPtr& pConnection) {
 
 }
 
-void Server::Listen (ConnectionPtr& pConnection) {
+bool Server::Listen (ConnectionPtr& pConnection) {
 
     SocketPtr& pSocket           = pConnection->pSocket;
     const AccptrPtr& pAcceptor   = pConnection->pAcceptor;
@@ -44,6 +87,16 @@ void Server::Listen (ConnectionPtr& pConnection) {
     pIO_context->run_until(steady_clock::now() + pConnection->timeout);
     pIO_context->restart();
 
+    if (streams.size() != Configs::VIDEO_THREADS) {
+        
+        writers.push_back(new MessageWriter<PacketList>);
+        streams.push_back(new VideoStream(*writers[writers.size() - 1]));
+
+        VideoStream* stream = streams[streams.size() - 1];
+        stream->thr = thread(&Server::StreamVideoStream, this, ref(pConnection), ref(stream->reader));
+    }
+
+    return pConnection->connected;
 }
 
 bool Server::Serve() {
@@ -52,46 +105,21 @@ bool Server::Serve() {
 
     const int PACKETS_PER_THREAD = packets.size() / Configs::VIDEO_THREADS;
 
+    // Write current screen data to each video stream
     for (int threadIndex = 0; threadIndex < Configs::VIDEO_THREADS; ++threadIndex) {
-
         ConnectionPtr& pConnection = connections[threadIndex];
-
+        
         const auto& begin = packets.begin() + (threadIndex * PACKETS_PER_THREAD);
         const auto& end   = begin + PACKETS_PER_THREAD;
 
-        thread(&Server::SendThread, this, PacketList(begin, end), ref(pConnection)).detach();
+        writers[threadIndex]->WriteMessage(PacketList(begin, end));
     }
 
     return Connected();
 }
 
-void Server::SendThread(PacketList&& packets, ConnectionPtr& pConn) {    
-    Send(packets, pConn);
-    pConn->pIO_cont->run_until(steady_clock::now() + pConn->timeout);
-    pConn->pIO_cont->restart();
+Server::~Server() {
+    Disconnect();
+    for (auto& s : streams) { s->thr.join(); delete s; }
+    for (auto& w : writers) { delete w; }
 }
-
-void Server::Send(PacketList& packets, ConnectionPtr& pConnection) {
-
-    if (packets.size() <= 0) { return; }
-
-    const Packet& packet = packets.front();
-
-    pConnection->pSocket->async_send(boost::asio::buffer(packet.RawData(), packet.Header().Size()),
-        [this, &packets, &pConnection](const error_code& error, const size_t size) {
-        if (error) {
-            log.WriteLine("async_write: " + error.message());
-            Disconnect();
-        }
-
-        else {
-            packets.erase(packets.begin());
-            Send(packets, pConnection);
-        }
-
-    });
-
-}
-
-
-Server::~Server() {}

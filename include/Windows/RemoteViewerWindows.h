@@ -4,7 +4,7 @@
 #include "Messageable.h"
 #include "Networking/Client.h"
 #include "Networking/Server.h"
-
+#include "Timer.h"
 
 //--------------Start Up Window Class-----------------------------//
 
@@ -73,19 +73,19 @@ class ClientStreamWindow : public BaseWindow, public Messageable<PacketPtr> {
 	MessageReader<PacketPtr>*& packetReader = msgReader;
 
 private:
-
+	steady_clock::time_point prev;
 	PixelData _imageData {};
 	Resolution _resolution = ScreenCapture::DefaultResolution;
 	
-	shared_ptr<Client> _client;
+	unique_ptr<Client> _client;
 
-	const int TARGET_FRAME_TIME = 1000 / 60;
+	const int TARGET_FRAME_TIME = 1000 / Configs::TARGET_FPS;
 
-	wxTimer _timer;
+	unique_ptr<Timer> pTimer;
 
 
 public:
-	ClientStreamWindow(const std::string& ip, 
+	ClientStreamWindow(const string& ip, 
 		const wxPoint& pos = DEFAULT_POS, const wxSize& size = DEFAULT_SIZE);
 	~ClientStreamWindow();
 
@@ -94,17 +94,16 @@ public:
 	ClientStreamWindow& operator=(const ClientStreamWindow&) = delete;
 	ClientStreamWindow& operator=(ClientStreamWindow&&) = delete;
 
+	void OnClick(wxMouseEvent& mouseEvent);
+
 	void ImageBuilder();  // Assemble image from packet queue
 	
-	void OnPaint(wxPaintEvent& evt);
 	void Resize(const Resolution& resolution);
 	void CleanUp() override;
 	
 	bool Connect();
 	void PaintNow();
 	void BackgroundTask(wxIdleEvent& evt);
-
-	void OnTick(wxTimerEvent& timerEvent);
 
 	constexpr const WindowNames WindowName() override { return WindowNames::ClientStream; }
 
@@ -120,10 +119,13 @@ private:
 
 	wxButton _startServerButton;
 	wxTimer _timer;
+	unique_ptr<Timer> pTimer;
 
-	std::unique_ptr<Server> _server;
+	future<bool> listenRes;
+	unique_ptr<Server> _server;
+	thread listenThr;
 	
-	const int TARGET_FRAME_TIME = 1000 / 60;
+	const int TARGET_FRAME_TIME = 1000 / Configs::TARGET_FPS;
 
 public:
 	ServerInitWindow(const wxPoint& pos, const wxSize& size);
@@ -137,7 +139,7 @@ public:
 	
 	void StartServer(wxCommandEvent& evt);
 	void BackgroundTask(wxIdleEvent& evt);	
-	void Listen();
+	bool Listen();
 
 	void CleanUp() override;
 

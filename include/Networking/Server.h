@@ -3,6 +3,14 @@
 #include "Networking/NetAgent.h"
 #include "QuickShot/Capture.h"
 
+struct VideoStream {
+	MessageReader<PacketList> reader;
+	thread thr;
+
+	VideoStream(const MessageWriter<PacketList>& const writer) : reader(writer) {};
+	VideoStream() = delete;
+};
+
 class Server : public NetAgent {
 
 	static inline Loggette log = Logger::newStream("Server.log").value();
@@ -11,11 +19,11 @@ private:
 
 	ScreenCapture _screen;
 
-	void SendThread(PacketList&&, ConnectionPtr&);
-
-	void Send(PacketList& packets, ConnectionPtr& pConnection) override;
-	void Receive(ConnectionPtr& pConnection) override {};
 	void Handshake(ConnectionPtr& pConnection) override;
+	void StreamVideoStream(ConnectionPtr&, MessageReader<PacketList>&);
+
+	vector<MessageWriter<PacketList>*> writers;
+	vector<VideoStream*> streams;
 
 public:
 
@@ -25,12 +33,13 @@ public:
 	Server(const Server&) = delete;
 	Server(Server&&) = delete;
 
+	void Receive(ConnectionPtr& pConnection) override;
 	Server& operator=(const Server&) = delete;
 	Server& operator=(Server&&) = delete;
 
 	// Serve content to client
 	bool Serve();
-	void Listen(ConnectionPtr& pConnection);
+	bool Listen(ConnectionPtr& pConnection);
 
 	~Server();
 };

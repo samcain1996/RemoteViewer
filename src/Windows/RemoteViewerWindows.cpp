@@ -66,9 +66,14 @@ void BaseWindow::GoBack() {
 
 void BaseWindow::HandleInput(wxKeyEvent& keyEvent) {
 
-	int keycode = keyEvent.GetKeyCode();
-
-	if (keycode == WXK_BACK) { GoBack(); }
+	switch (keyEvent.GetKeyCode()) {
+		case WXK_BACK: 
+			GoBack();
+			break;
+		case WXK_ESCAPE:
+			wxExit();
+			break;
+	}
 }
 
 //-----------------------Start Up Window-----------------------//

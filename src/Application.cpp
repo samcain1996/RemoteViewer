@@ -7,9 +7,7 @@ Application::Application() {}
 Application::~Application() {}
 
 bool Application::OnInit() {
-	ScreenCapture screen;
-	screen.CaptureScreen();
-	screen.SaveToFile();
+
 	Logger::newStream("global.log", std::ios_base::binary);
 	ScreenCapture::CalibrateResolution();
 	wxInitAllImageHandlers();

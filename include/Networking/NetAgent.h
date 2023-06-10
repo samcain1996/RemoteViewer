@@ -11,6 +11,7 @@ class NetAgent {
 public:
 	// Remove this maybe
 	ConnectionList connections;
+	ConnectionPtr dataCon;
 
 protected:
 
@@ -52,7 +53,8 @@ protected:
 	virtual PacketList ConvertToPackets(const PixelData& data, const PacketType& packetType = PacketType::Invalid);
 
 	virtual void Receive(ConnectionPtr& pConnection) = 0;
-	virtual void Send(PacketList& packets, ConnectionPtr& pConnection) = 0;
+public:
+	virtual void Send(PacketList& packets, ConnectionPtr& pConnection);
 
 	virtual ~NetAgent() = default;
 

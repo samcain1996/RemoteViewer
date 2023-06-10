@@ -130,7 +130,7 @@ protected:
 
 	}
 
-	
+
 	
 public:
 
@@ -139,19 +139,19 @@ public:
 	// Handle events shared across all windows such as going back to the previous window
 	virtual void HandleInput(wxKeyEvent& keyEvent);
 
-	// Textbox validators used
-	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
+
 	virtual ~BaseWindow();
 
 protected:
-	
+	// Textbox validators used
+	wxTextValidator IP_VALIDATOR = wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST);
 	// Previous Windows
 	static inline WindowStack _prevWindows {};
 	
 	static inline const wxSize DEFAULT_SIZE = wxSize(ScreenCapture::DefaultResolution.width, ScreenCapture::DefaultResolution.height);
 	static inline const wxSize MINIMIZED_SIZE = DEFAULT_SIZE * 0.25;
-	static inline const wxPoint DEFAULT_POS = wxPoint(ScreenCapture::NativeResolution().width / 2 - DEFAULT_SIZE.GetWidth() / 2,
-		ScreenCapture::NativeResolution().height / 2 - DEFAULT_SIZE.GetHeight() / 2);
+	static inline const wxPoint DEFAULT_POS = wxPoint(0, 0);//wxPoint(ScreenCapture::NativeResolution().width / 2 - DEFAULT_SIZE.GetWidth() / 2,
+		//ScreenCapture::NativeResolution().height / 2 - DEFAULT_SIZE.GetHeight() / 2);
 
 	BaseWindow(const string& name, const wxPoint& pos = DEFAULT_POS,
 		const wxSize& size = DEFAULT_SIZE, const bool show = true);

@@ -134,3 +134,9 @@ ImagePacketHeader::ImagePacketHeader(const Uint32 group, const Uint32 size, cons
 	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], size);
 	EncodeAsByte(&_metadata.data()[POSITION_OFFSET], position);
 }
+
+MousePacketHeader::MousePacketHeader(const Uint32 group, const Uint32 size) : PacketHeader() {
+	_metadata[0] = static_cast<MyByte>(PacketType::Mouse);
+	EncodeAsByte(&_metadata.data()[GROUP_OFFSET], group);
+	EncodeAsByte(&_metadata.data()[SIZE_OFFSET], size);
+}

@@ -77,6 +77,8 @@ using std::transform;
 using std::all_of;
 using std::future;
 using std::back_inserter;
+using std::pair;
+using std::optional;
 
 /*----------------FUNCTIONS--------------------*/
 

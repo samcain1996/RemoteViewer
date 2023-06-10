@@ -11,25 +11,26 @@ wxEND_EVENT_TABLE()
 
 ServerInitWindow::ServerInitWindow(const wxPoint& pos, const wxSize& size) :
 	BaseWindow("Server Initialization", pos, size), _timer(this, 9123), 
-	_startServerButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50)) {}
+	_startServerButton(this, 30001, "Listen", wxPoint(400, 400), wxSize(200, 50)) {
+
+	//pTimer = make_unique<Timer>(TARGET_FRAME_TIME, [this]() {
+	//	
+	//	_server->Serve();
+	//	
+	//	});
+}
 
 ServerInitWindow::~ServerInitWindow() {}
 
 void ServerInitWindow::CleanUp() {
 
 	_timer.Stop();
-
-	if (_initialized) {
-		_server->Disconnect();
-	}
-
+	//pTimer->stop();
 	BaseWindow::CleanUp();
 
 }
 
 void ServerInitWindow::StartServer(wxCommandEvent& evt) {
-
-	_initialized = false;
 
 	// Find a port to listen on
 	Ushort port = Connection::SERVER_BASE_PORT;
@@ -40,25 +41,43 @@ void ServerInitWindow::StartServer(wxCommandEvent& evt) {
 	_popup->SetText("Listening on port " + std::to_string(port));
 	_popup->Popup();
 
+	std::packaged_task<bool()> listen(bind(&ServerInitWindow::Listen, this));
+	listenRes = listen.get_future();
 	// Listen on separate thread so window is still responsive
-	thread(&ServerInitWindow::Listen, this).detach();
+	listenThr = thread(move(listen));
 	// Race condition if reinit modifies after object deletion?
 
 }
 
-void ServerInitWindow::Listen() {
-	for_each(_server->connections.begin(), _server->connections.end(),
-		[this](ConnectionPtr& pCon) { _server->Listen(pCon); });
+bool ServerInitWindow::Listen() {
 
-	_initialized = _server->Connected();
+	// Listen for connection
+	for (ConnectionPtr& connection : _server->connections) {
+		if (!_server->Listen(connection)) { return false; }
+	}
+
+	if (_server->Connected()) {
+
+		_server->Listen(_server->dataCon);
+
+		// Start separate thread to receive data
+		thread([this]() { 
+			_server->Receive(_server->dataCon); 
+			_server->dataCon->pIO_cont->run(); }).detach();
+
+	}
+
+	return _server->Connected();
 }
 
 void ServerInitWindow::BackgroundTask(wxIdleEvent& evt) {
 
-	if (!_initialized || _timer.IsRunning()) { return; }
-
-	if (_server->Connected()) {
-		_timer.Start(TARGET_FRAME_TIME);
+	if (listenThr.joinable()) {
+		if (listenRes.wait_for(seconds(0)) == std::future_status::ready) {
+			listenThr.join();
+			if (listenRes.get()) { /*pTimer->start(); */ _timer.Start(TARGET_FRAME_TIME); }
+			else { _server.reset(); }
+		}
 	}
 
 }
